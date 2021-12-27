@@ -1,0 +1,21 @@
+rabbitmq:
+  host: localhost
+  port: 5672
+  virtual-host: /
+  password: guest
+  username: guest
+  exchange: merchloan.exchange
+  account:
+    createaccount:
+      queue: account.createaccount.queue
+      routing-key: account.createaccount.routingkey
+    funding:
+      queue: account.funding.queue
+      routing-key: account.funding.routingkey
+  ledger:
+    credittoloan:
+      routingkey: ledger.credittoloan.routingkey
+    debitfromloan:
+      routingkey: ledger.debitfromloan.routingkey
+jpa:
+  show-sql: true

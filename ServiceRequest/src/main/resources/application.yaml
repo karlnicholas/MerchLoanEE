@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    open-in-view: false
+    show-sql: true
+rabbitmq:
+  host: localhost
+  port: 5672
+  virtual-host: /
+  password: guest
+  username: guest
+  exchange: merchloan.exchange
+  account:
+    createaccount:
+      routing-key: account.createaccount.routingkey
+    funding:
+      routing-key: account.funding.routingkey
+  ledger:
+    routingkey: ledger.routingkey
+  servicerequest:
+    queue: servicerequest.queue
+    routingkey: servicerequest.routingkey
