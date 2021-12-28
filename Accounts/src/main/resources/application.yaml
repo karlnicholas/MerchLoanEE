@@ -1,21 +1,21 @@
+spring:
+  jpa:
+    show-sql: true
 rabbitmq:
-  host: localhost
-  port: 5672
-  virtual-host: /
-  password: guest
-  username: guest
-  exchange: merchloan.exchange
   account:
     createaccount:
       queue: account.createaccount.queue
-      routing-key: account.createaccount.routingkey
     funding:
       queue: account.funding.queue
-      routing-key: account.funding.routingkey
-  ledger:
-    credittoloan:
-      routingkey: ledger.credittoloan.routingkey
-    debitfromloan:
-      routingkey: ledger.debitfromloan.routingkey
-jpa:
-  show-sql: true
+    query:
+      account:
+        id:
+          queue: account.query.account.id.queue
+      loan:
+        id:
+          queue: account.query.loan.id.queue
+      lender:
+        id:
+          queue: account.query.lender.id.queue
+        lender:
+          queue: account.query.lender.lender.queue

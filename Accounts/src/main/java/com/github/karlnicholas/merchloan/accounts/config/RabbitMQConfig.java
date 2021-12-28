@@ -1,53 +1,111 @@
 package com.github.karlnicholas.merchloan.accounts.config;
 
+import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import org.springframework.amqp.core.*;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+    private final RabbitMqProperties rabbitMqProperties;
     @Value("${rabbitmq.account.createaccount.queue}")
-    private String accountCreateAccountQueue;
-    @Value("${rabbitmq.account.createaccount.routingkey}")
-    private String accountCreateAccountRoutingkey;
+    String accountCreateaccountQueue;
     @Value("${rabbitmq.account.funding.queue}")
-    private String accountFundingQueue;
-    @Value("${rabbitmq.account.funding.routingkey}")
-    private String accountFundingRoutingkey;
-    @Value("${rabbitmq.exchange}")
-    private String exchange;
+    String accountFundingaccountQueue;
+    @Value("${rabbitmq.account.query.account.id.queue}")
+    String accountQueryAccountIdQueue;
+    @Value("${rabbitmq.account.query.lender.id.queue}")
+    String accountQueryLenderIdQueue;
+    @Value("${rabbitmq.account.query.lender.lender.queue}")
+    String accountQueryLenderLenderQueue;
+    @Value("${rabbitmq.account.query.loan.id.queue}")
+    String accountQueryLoanIdQueue;
+
+    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
+        this.rabbitMqProperties = rabbitMqProperties;
+    }
 
     @Bean
     public Exchange exchange() {
-        return ExchangeBuilder.directExchange(exchange).durable(false).build();
+        return ExchangeBuilder.directExchange(rabbitMqProperties.getExchange()).durable(false).build();
     }
 
     @Bean
-    Queue accountCreateAccountQueue() {
-        return new Queue(accountCreateAccountQueue, false);
+    public Queue accountCreateAccountQueue() {
+        return new Queue(accountCreateaccountQueue, false);
     }
     @Bean
-    Binding createAccountBinding() {
+    public Binding createAccountBinding() {
         return BindingBuilder
                 .bind(accountCreateAccountQueue())
                 .to(exchange())
-                .with(accountCreateAccountRoutingkey)
+                .with(rabbitMqProperties.getAccountCreateaccountRoutingKey())
                 .noargs();
     }
     @Bean
-    Queue accountFundingQueue() {
-        return new Queue(accountFundingQueue, false);
+    public Queue accountFundingQueue() {
+        return new Queue(accountFundingaccountQueue, false);
     }
     @Bean
-    Binding fundingBinding() {
+    public Binding fundingBinding() {
         return BindingBuilder
                 .bind(accountFundingQueue())
                 .to(exchange())
-                .with(accountFundingRoutingkey)
+                .with(rabbitMqProperties.getAccountFundingRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountQueryAccountIdQueue() {
+        return new Queue(accountQueryAccountIdQueue, false);
+    }
+    @Bean
+    public Binding createAccountQueryAccountIdBinding() {
+        return BindingBuilder
+                .bind(accountQueryAccountIdQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountQueryAccountIdRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountQueryLenderIdQueue() {
+        return new Queue(accountQueryLenderIdQueue, false);
+    }
+    @Bean
+    public Binding createAccountQueryLenderIdBinding() {
+        return BindingBuilder
+                .bind(accountQueryLenderIdQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountQueryLenderIdRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountQueryLenderLenderQueue() {
+        return new Queue(accountQueryLenderLenderQueue, false);
+    }
+    @Bean
+    public Binding createAccountQueryLenderLenderBinding() {
+        return BindingBuilder
+                .bind(accountQueryLenderLenderQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountQueryLenderLenderRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountQueryLoanIdQueue() {
+        return new Queue(accountQueryLoanIdQueue, false);
+    }
+    @Bean
+    public Binding createAccountQueryLoanIdBinding() {
+        return BindingBuilder
+                .bind(accountQueryLoanIdQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountQueryLoanIdRoutingKey())
                 .noargs();
     }
 }

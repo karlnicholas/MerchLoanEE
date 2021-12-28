@@ -29,12 +29,12 @@ rabbitmq:
             queue: account.lender.querybyname.queue
             routing-key: account.lender.querybyname.routingkey
   ledger:
-    credittoloan:
-      queue: ledger.credittoloan.queue
-      routingkey: ledger.credittoloan.routingkey
-    debitfromloan:
-      queue: ledger.debitfromloan.queue
-      routingkey: ledger.debitfromloan.routingkey
+    creditaccount:
+      queue: ledger.creditaccount.queue
+      routingkey: ledger.creditaccount.routingkey
+    debitaccount:
+      queue: ledger.debitaccount.queue
+      routingkey: ledger.debitaccount.routingkey
     query:
       loan:
         id:

@@ -3,8 +3,7 @@ package com.github.karlnicholas.merchloan.ledger.model;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
 

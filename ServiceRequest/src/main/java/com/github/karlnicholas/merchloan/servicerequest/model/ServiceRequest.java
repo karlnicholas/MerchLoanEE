@@ -20,4 +20,6 @@ public class ServiceRequest {
     private String requestType;
     private LocalDateTime localDateTime;
     private Boolean transacted;
+    private String status;
+    private String statusMessage;
 }

@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
-import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.CreditToLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitFromLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -61,8 +59,8 @@ public class ServiceRequestService {
 
     public UUID creditRequest(CreditRequest creditRequest) throws JsonProcessingException {
         UUID id = persistRequest(creditRequest);
-        rabbitMqSender.sendCreditRequest(
-                CreditToLoan.builder()
+        rabbitMqSender.sendCreditAccount(
+                CreditAccount.builder()
                         .id(id)
                         .loanId(creditRequest.getLoanId())
                         .date(LocalDate.now())
@@ -72,10 +70,23 @@ public class ServiceRequestService {
         return id;
     }
 
+    public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) {
+        Optional<ServiceRequest> srQ = serviceRequestRepository.findById(serviceRequestResponse.getId());
+        if ( srQ.isPresent() ) {
+            ServiceRequest sr = srQ.get();
+            sr.setTransacted(Boolean.TRUE);
+            sr.setStatus(serviceRequestResponse.getStatus());
+            sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
+            serviceRequestRepository.save(sr);
+        } else {
+            log.error("void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) not found: {}", serviceRequestResponse);
+        }
+    }
+
     public UUID debitRequest(DebitRequest debitRequest) throws JsonProcessingException {
         UUID id = persistRequest(debitRequest);
-        rabbitMqSender.sendDebitRequest(
-                DebitFromLoan.builder()
+        rabbitMqSender.sendDebitAccount(
+                DebitAccount.builder()
                         .loanId(debitRequest.getLoanId())
                         .date(LocalDate.now())
                         .amount(debitRequest.getAmount())

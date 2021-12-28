@@ -1,12 +1,9 @@
 package com.github.karlnicholas.merchloan.jms.message;
 
-import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.CreditToLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitFromLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
+import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -14,49 +11,55 @@ import java.util.UUID;
 @Service
 public class RabbitMqSender {
     private final RabbitTemplate rabbitTemplate;
+    private final RabbitMqProperties rabbitMqProperties;
 
     @Autowired
-    public RabbitMqSender(RabbitTemplate rabbitTemplate) {
+    public RabbitMqSender(RabbitTemplate rabbitTemplate, RabbitMqProperties rabbitMqProperties) {
         this.rabbitTemplate = rabbitTemplate;
+        this.rabbitMqProperties = rabbitMqProperties;
     }
 
-    @Value("${rabbitmq.exchange}")
-    private String exchange;
-    @Value("${rabbitmq.account.createaccount.routingkey}")
-    private String accountCreateAccountRoutingkey;
-    @Value("${rabbitmq.account.funding.routingkey}")
-    private String accountFundingRoutingkey;
-    @Value("${rabbitmq.ledger.credittoloan.routingkey}")
-    private String ledgerCreditToLoanRoutingkey;
-    @Value("${rabbitmq.ledger.debitfromloan.routingkey}")
-    private String ledgerDebitFromLoanRoutingkey;
-    @Value("${rabbitmq.account.query.account.id.routingkey}")
-    private String accountQueryAccountQuerybyidRoutingkey;
-    @Value("${rabbitmq.servicerequest.query.id.routingkey}")
-    private String servicerequestQueryIdRoutingkey;
-
-
     public void sendCreateAccount(CreateAccount createAccount) {
-        rabbitTemplate.convertAndSend(exchange, accountCreateAccountRoutingkey, createAccount);
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountRoutingKey(), createAccount);
     }
 
     public void sendFundingRequest(FundLoan fundLoan) {
-        rabbitTemplate.convertAndSend(exchange, accountFundingRoutingkey, fundLoan);
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingRoutingKey(), fundLoan);
     }
 
-    public void sendCreditRequest(CreditToLoan creditToLoan) {
-        rabbitTemplate.convertAndSend(exchange, ledgerCreditToLoanRoutingkey, creditToLoan);
+    public void sendCreditAccount(CreditAccount creditAccount) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getLedgerCreditAccountRoutingkey(), creditAccount);
     }
 
-    public void sendDebitRequest(DebitFromLoan debitFromLoan) {
-        rabbitTemplate.convertAndSend(exchange, ledgerDebitFromLoanRoutingkey, debitFromLoan);
+    public void sendDebitAccount(DebitAccount debitAccount) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getLedgerDebitAccountRoutingkey(), debitAccount);
     }
 
-    public void sendDebitFr0mLoan(DebitFromLoan debitFromLoan) {
-        rabbitTemplate.convertAndSend(exchange, ledgerDebitFromLoanRoutingkey, debitFromLoan);
+    public void sendServiceRequest(ServiceRequestResponse serviceRequest) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestRoutingkey(), serviceRequest);
     }
 
     public Object queryServiceRequest(UUID id) {
-        return rabbitTemplate.convertSendAndReceive(exchange, servicerequestQueryIdRoutingkey, id);
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueryIdRoutingkey(), id);
+    }
+
+    public Object queryAccount(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
+    }
+
+    public Object queryLender(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLenderIdRoutingKey(), id);
+    }
+
+    public Object queryLenderLender(String lender) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLenderLenderRoutingKey(), lender);
+    }
+
+    public Object queryLoan(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdRoutingKey(), id);
+    }
+
+    public Object queryLedger(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getLedgerQueryLoanIdRoutingkey(), id);
     }
 }

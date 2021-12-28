@@ -17,23 +17,32 @@ public class ApiHandler {
     }
 
     public Mono<ServerResponse> getId(ServerRequest serverReqest) {
-        return ServerResponse.ok()
-                .bodyValue(rabbitMqSender.queryServiceRequest(UUID.fromString(serverReqest.pathVariable("id"))
-            ));
+        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
+                .map(rabbitMqSender::queryServiceRequest), String.class);
     }
+
     public Mono<ServerResponse> getAccount(ServerRequest serverReqest) {
-        return ServerResponse.ok().bodyValue(serverReqest.pathVariable("id"));
+        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
+                .map(rabbitMqSender::queryAccount), String.class);
     }
+
     public Mono<ServerResponse> getLender(ServerRequest serverReqest) {
-        return ServerResponse.ok().bodyValue(serverReqest.pathVariable("id"));
+        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
+                .map(rabbitMqSender::queryLender), String.class);
     }
+
     public Mono<ServerResponse> getLenderLender(ServerRequest serverReqest) {
-        return ServerResponse.ok().bodyValue(serverReqest.queryParam("lender"));
+        return ServerResponse.ok().body(Mono.just(serverReqest.queryParam("lender").orElseThrow(() -> new IllegalArgumentException("lender query param not found")))
+                .map(rabbitMqSender::queryLenderLender), String.class);
     }
+
     public Mono<ServerResponse> getLoan(ServerRequest serverReqest) {
-        return ServerResponse.ok().bodyValue(serverReqest.pathVariable("id"));
+        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
+                .map(rabbitMqSender::queryLoan), String.class);
     }
+
     public Mono<ServerResponse> getLedger(ServerRequest serverReqest) {
-        return ServerResponse.ok().bodyValue(serverReqest.pathVariable("id"));
+        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
+                .map(rabbitMqSender::queryLedger), String.class);
     }
 }

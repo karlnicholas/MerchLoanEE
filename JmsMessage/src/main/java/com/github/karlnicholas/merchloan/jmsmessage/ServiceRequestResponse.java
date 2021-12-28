@@ -3,8 +3,6 @@ package com.github.karlnicholas.merchloan.jmsmessage;
 import lombok.*;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.UUID;
 
 @Builder
@@ -13,9 +11,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class CreditToLoan implements Serializable {
+public class ServiceRequestResponse implements Serializable {
     private UUID id;
-    private UUID loanId;
-    private BigDecimal amount;
-    private LocalDate date;
+    private String status;
+    private String statusMessage;
 }

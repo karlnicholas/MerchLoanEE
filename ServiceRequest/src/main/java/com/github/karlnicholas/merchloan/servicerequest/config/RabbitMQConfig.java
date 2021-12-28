@@ -1,29 +1,26 @@
 package com.github.karlnicholas.merchloan.servicerequest.config;
 
+import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import org.springframework.amqp.core.*;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+    private final RabbitMqProperties rabbitMqProperties;
     @Value("${rabbitmq.servicerequest.queue}")
     private String servicerequestQueue;
-    @Value("${rabbitmq.servicerequest.routingkey}")
-    private String servicerequestRoutingKey;
     @Value("${rabbitmq.servicerequest.query.id.queue}")
     private String servicerequestQueryIdQueue;
-    @Value("${rabbitmq.servicerequest.query.id.routingkey}")
-    private String servicerequestQueryIdRoutingkey;
-    @Value("${rabbitmq.exchange}")
-    private String exchange;
+
+    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
+        this.rabbitMqProperties = rabbitMqProperties;
+    }
 
     @Bean
     Exchange exchange() {
-        return ExchangeBuilder.directExchange(exchange).durable(false).build();
+        return ExchangeBuilder.directExchange(rabbitMqProperties.getExchange()).durable(false).build();
     }
     @Bean
     Queue servicerequestQueue() {
@@ -34,7 +31,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(servicerequestQueue())
                 .to(exchange())
-                .with(servicerequestRoutingKey)
+                .with(rabbitMqProperties.getServicerequestRoutingkey())
                 .noargs();
     }
     @Bean
@@ -46,7 +43,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(servicerequestQueryIdQueue())
                 .to(exchange())
-                .with(servicerequestQueryIdRoutingkey)
+                .with(rabbitMqProperties.getServicerequestQueryIdRoutingkey())
                 .noargs();
     }
 }

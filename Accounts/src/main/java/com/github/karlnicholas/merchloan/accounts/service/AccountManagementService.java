@@ -8,14 +8,17 @@ import com.github.karlnicholas.merchloan.accounts.repository.LenderRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitFromLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.DebitAccount;
 import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -34,6 +37,7 @@ public class AccountManagementService {
     }
 
     public void createAccount(CreateAccount createAccount) {
+        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {
             accountRepository.save(Account.builder()
                     .id(createAccount.getId())
@@ -41,44 +45,66 @@ public class AccountManagementService {
                     .createDate(createAccount.getCreateDate())
                     .build()
             );
+            serviceRequest.setStatus("Success");
+            serviceRequest.setStatusMessage("Success");
+
         } catch (DuplicateKeyException dke) {
             log.warn("Create Account duplicate key exception: {}", dke.getMessage());
+            serviceRequest.setStatus("Failure");
+            serviceRequest.setStatusMessage(dke.getMessage());
         }
+        rabbitMqSender.sendServiceRequest(serviceRequest);
     }
 
     public void fundAccount(FundLoan fundLoan) {
         Lender lender = lenderRepository.findByLender(fundLoan.getLender()).orElseGet(() ->
                 persistLender(fundLoan)
         );
-        accountRepository.findById(fundLoan.getAccountId()).ifPresent(account -> {
+        Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
+        if (accountQ.isPresent()) {
             Loan loan = loanRepository.save(
                     Loan.builder()
                             .id(fundLoan.getId())
-                            .account(account)
+                            .account(accountQ.get())
                             .lender(lender)
                             .startDate(fundLoan.getStartDate())
                             .build());
-            rabbitMqSender.sendDebitFr0mLoan(
-                    DebitFromLoan.builder()
+            rabbitMqSender.sendDebitAccount(
+                    DebitAccount.builder()
                             .id(fundLoan.getId())
                             .amount(fundLoan.getAmount())
                             .date(fundLoan.getStartDate())
                             .loanId(loan.getId())
                             .build()
             );
-        });
+        } else {
+            rabbitMqSender.sendServiceRequest(
+                    ServiceRequestResponse.builder()
+                            .id(fundLoan.getId())
+                            .status("Failure")
+                            .statusMessage("Account not found for " + fundLoan.getAccountId())
+                            .build()
+            );
+        }
     }
 
     private Lender persistLender(FundLoan fundLoan) {
-        Lender lender = Lender.builder()
-                .id(fundLoan.getId())
-                .lender(fundLoan.getLender())
-                .createDate(LocalDate.now()).build();
-        try {
-            return lenderRepository.save(lender);
-        } catch (DuplicateKeyException dke) {
-            log.error("Lender persistLender(FundLoan fundLoan) duplicate key: {}", dke.getMessage());
+        return lenderRepository.findByLender(fundLoan.getLender()).orElseGet(() -> {
+            Lender lender = Lender.builder()
+                    .id(UUID.randomUUID())
+                    .lender(fundLoan.getLender())
+                    .createDate(LocalDate.now()).build();
+            boolean retry;
+            do {
+                retry = false;
+                try {
+                    lenderRepository.save(lender);
+                } catch (DuplicateKeyException dke) {
+                    lender.setId(UUID.randomUUID());
+                    retry = true;
+                }
+            } while (retry);
             return lender;
-        }
+        });
     }
 }

@@ -9,7 +9,6 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -21,7 +20,7 @@ public class ApiRouter implements WebFluxConfigurer {
     public RouterFunction<ServerResponse> monoRouterFunction(ApiHandler apiHandler) {
 
         return RouterFunctions
-                .nest(path("/api/query").and(accept(APPLICATION_JSON)),
+                .nest(path("/api/query").and(accept(MediaType.TEXT_PLAIN)),
                         route(GET("/id/{id}"), apiHandler::getId)
                                 .andRoute(GET("/account/{id}"), apiHandler::getAccount)
                                 .andRoute(GET("/lender/{id}"), apiHandler::getLender)
@@ -31,5 +30,4 @@ public class ApiRouter implements WebFluxConfigurer {
                 );
 
     }
-
 }

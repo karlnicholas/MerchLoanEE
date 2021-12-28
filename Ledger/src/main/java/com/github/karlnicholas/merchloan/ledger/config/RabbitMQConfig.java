@@ -1,54 +1,63 @@
 package com.github.karlnicholas.merchloan.ledger.config;
 
+import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import org.springframework.amqp.core.*;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-    @Value("${rabbitmq.exchange}")
-    private String exchange;
-    @Value("${rabbitmq.ledger.debitfromloan.routingkey}")
-    private String ledgerDebitFromLoanRoutingKey;
-    @Value("${rabbitmq.ledger.debitfromloan.queue}")
-    private String ledgerDebitFromLoanQueue;
-    @Value("${rabbitmq.ledger.credittoloan.routingkey}")
-    private String ledgerCreditToLoanRoutingKey;
-    @Value("${rabbitmq.ledger.credittoloan.queue}")
-    private String ledgerCreditToLoanQueue;
+    private final RabbitMqProperties rabbitMqProperties;
+    @Value("${rabbitmq.ledger.debitaccount.queue}")
+    private String ledgerDebitAccountQueue;
+    @Value("${rabbitmq.ledger.creditaccount.queue}")
+    private String ledgerCreditAccountQueue;
+    @Value("${rabbitmq.ledger.query.loan.id.queue}")
+    private String ledgerQueryLoanIdQueue;
+
+    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
+        this.rabbitMqProperties = rabbitMqProperties;
+    }
 
     @Bean
     public Exchange exchange() {
-        return ExchangeBuilder.directExchange(exchange).durable(false).build();
+        return ExchangeBuilder.directExchange(rabbitMqProperties.getExchange()).durable(false).build();
     }
     @Bean
-    Queue ledgerDebitFromLoanQueue() {
-        return new Queue(ledgerDebitFromLoanQueue, false);
+    Queue ledgerDebitAccountQueue() {
+        return new Queue(ledgerDebitAccountQueue, false);
     }
     @Bean
-    Binding DebitFromLoanBinding() {
+    Binding debitAccountBinding() {
         return BindingBuilder
-                .bind(ledgerDebitFromLoanQueue())
+                .bind(ledgerDebitAccountQueue())
                 .to(exchange())
-                .with(ledgerDebitFromLoanRoutingKey)
+                .with(rabbitMqProperties.getLedgerDebitAccountRoutingkey())
                 .noargs();
     }
     @Bean
-    Queue ledgerCreditToLoanQueue() {
-        return new Queue(ledgerCreditToLoanQueue, false);
+    Queue ledgerCreditAccountQueue() {
+        return new Queue(ledgerCreditAccountQueue, false);
     }
     @Bean
-    Binding CreditToLoanBinding() {
+    Binding creditAccountBinding() {
         return BindingBuilder
-                .bind(ledgerCreditToLoanQueue())
+                .bind(ledgerCreditAccountQueue())
                 .to(exchange())
-                .with(ledgerCreditToLoanRoutingKey)
+                .with(rabbitMqProperties.getLedgerCreditAccountRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue ledgerQueryLoanIdQueue() {
+        return new Queue(ledgerQueryLoanIdQueue, false);
+    }
+    @Bean
+    Binding queryLoanIdBinding() {
+        return BindingBuilder
+                .bind(ledgerQueryLoanIdQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getLedgerQueryLoanIdRoutingkey())
                 .noargs();
     }
 }

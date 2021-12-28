@@ -2,34 +2,5 @@ spring:
   jpa:
     open-in-view: false
     show-sql: true
-rabbitmq:
-  host: localhost
-  port: 5672
-  virtual-host: /
-  password: guest
-  username: guest
-  exchange: merchloan.exchange
-  account:
-    query:
-      account:
-        id:
-          routing-key: account.account.querybyid.routingkey
-      loan:
-        id:
-          routing-key: account.loan.querybyid.routingkey
-        lender:
-          id:
-            routing-key: account.lender.querybyid.routingkey
-          name:
-            routing-key: account.lender.querybyname.routingkey
-  ledger:
-    query:
-      loan:
-        id:
-          routingkey: ledger.querybyloanid.routingkey
-  servicerequest:
-    query:
-      id:
-        routingkey: servicerequest.querybyid.routingkey
 server:
   port: 8090

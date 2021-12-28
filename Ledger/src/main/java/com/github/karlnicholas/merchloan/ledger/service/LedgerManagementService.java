@@ -1,13 +1,12 @@
 package com.github.karlnicholas.merchloan.ledger.service;
 
-import com.github.karlnicholas.merchloan.jmsmessage.CreditToLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitFromLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.CreditAccount;
+import com.github.karlnicholas.merchloan.jmsmessage.DebitAccount;
 import com.github.karlnicholas.merchloan.ledger.model.CreditEntry;
 import com.github.karlnicholas.merchloan.ledger.model.DebitEntry;
 import com.github.karlnicholas.merchloan.ledger.repository.CreditEntryRepository;
 import com.github.karlnicholas.merchloan.ledger.repository.DebitEntryRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,32 +20,23 @@ public class LedgerManagementService {
         this.debitEntryRepository = debitEntryRepository;
     }
 
-    public DebitEntry debitFromLoan(DebitFromLoan debitFromLoan) {
+    public DebitEntry debitAccount(DebitAccount debitAccount) {
         DebitEntry debitEntry = DebitEntry.builder()
-                .id(debitFromLoan.getId())
-                .loanId(debitFromLoan.getLoanId())
-                .date(debitFromLoan.getDate())
-                .amount(debitFromLoan.getAmount())
+                .id(debitAccount.getId())
+                .loanId(debitAccount.getLoanId())
+                .date(debitAccount.getDate())
+                .debit(debitAccount.getAmount())
                 .build();
-        try {
-            return debitEntryRepository.save(debitEntry);
-        } catch ( DuplicateKeyException dke) {
-            log.warn("DebitEntry debitFromLoan(DebitFromLoan debitFromLoan) duplicate key: {}", dke.getMessage());
-            return debitEntry;
-        }
+        return debitEntryRepository.save(debitEntry);
     }
-    public CreditEntry creditToLoan(CreditToLoan creditToLoan) {
+
+    public CreditEntry creditAccount(CreditAccount creditAccount) {
         CreditEntry creditEntry = CreditEntry.builder()
-                .id(creditToLoan.getId())
-                .loanId(creditToLoan.getLoanId())
-                .date(creditToLoan.getDate())
-                .amount(creditToLoan.getAmount())
+                .id(creditAccount.getId())
+                .loanId(creditAccount.getLoanId())
+                .date(creditAccount.getDate())
+                .credit(creditAccount.getAmount())
                 .build();
-        try {
-            return creditEntryRepository.save(creditEntry);
-        } catch ( DuplicateKeyException dke) {
-            log.warn("CreditEntry creditToLoan(CreditToLoan creditToLoan) duplicate key: {}", dke.getMessage());
-            return creditEntry;
-        }
+        return creditEntryRepository.save(creditEntry);
     }
 }

@@ -1,22 +1,35 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.karlnicholas.merchloan.accounts.model.Account;
+import com.github.karlnicholas.merchloan.accounts.model.Lender;
+import com.github.karlnicholas.merchloan.accounts.model.Loan;
+import com.github.karlnicholas.merchloan.accounts.service.QueryService;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
 import com.github.karlnicholas.merchloan.accounts.service.AccountManagementService;
 import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
-@Component
-public class RabbitMqReceiver implements RabbitListenerConfigurer {
-    private static final Logger logger = LoggerFactory.getLogger(RabbitMqReceiver.class);
-    private final AccountManagementService accountManagementService;
+import java.util.Optional;
+import java.util.UUID;
 
-    public RabbitMqReceiver(AccountManagementService accountManagementService) {
+@Component
+@Slf4j
+public class RabbitMqReceiver implements RabbitListenerConfigurer {
+    private final AccountManagementService accountManagementService;
+    private final QueryService queryService;
+    private final ObjectMapper objectMapper;
+
+    public RabbitMqReceiver(AccountManagementService accountManagementService, QueryService queryService) {
         this.accountManagementService = accountManagementService;
+        this.queryService = queryService;
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     }
 
     @Override
@@ -25,14 +38,83 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
 
     @RabbitListener(queues = "${rabbitmq.account.createaccount.queue}")
     public void receivedAccountMessage(CreateAccount createAccount) {
-        logger.info("CreateAccount Details Received is.. " + createAccount);
+        log.info("CreateAccount Details Received is.. {}", createAccount);
         accountManagementService.createAccount(createAccount);
     }
 
     @RabbitListener(queues = "${rabbitmq.account.funding.queue}")
     public void receivedFundingMessage(FundLoan funding) {
-        logger.info("FundLoan Details Received is.. " + funding);
-        accountManagementService.fundAccount(funding);
+        try {
+            log.info("FundLoan Received {} ", funding);
+            accountManagementService.fundAccount(funding);
+        } catch ( Exception ex) {
+            log.error("void receivedFundingMessage(FundLoan funding) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+
     }
 
+    @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
+    public String receivedQueryAccountIdMessage(UUID id) {
+        try {
+            log.info("QueryAccountId Received {}}", id);
+            Optional<Account> r = queryService.queryAccountId(id);
+            if ( r.isPresent() ) {
+                return objectMapper.writeValueAsString(r.get());
+            } else {
+                return "ERROR: id not found: " + id;
+            }
+        } catch ( Exception ex) {
+            log.error("String receivedQueryAccountIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.account.query.lender.id.queue}")
+    public String receivedQueryLenderIdMessage(UUID id) {
+        try {
+            log.info("QueryLenderId Received {} ", id);
+            Optional<Lender> r = queryService.queryLenderId(id);
+            if ( r.isPresent() ) {
+                return objectMapper.writeValueAsString(r.get());
+            } else {
+                return "ERROR: id not found: " + id;
+            }
+        } catch ( Exception ex) {
+            log.error("String receivedQueryLenderIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.account.query.lender.lender.queue}")
+    public String receivedQueryLenderLenderMessage(String lender) {
+        try {
+            log.info("QueryLenderLender Received {}", lender);
+            Optional<Lender> r = queryService.queryLenderLender(lender);
+            if ( r.isPresent() ) {
+                return objectMapper.writeValueAsString(r.get());
+            } else {
+                return "ERROR: lender not found: " + lender;
+            }
+        } catch ( Exception ex) {
+            log.error("String receivedQueryLenderLenderMessage(String lender) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.account.query.loan.id.queue}")
+    public String receivedQueryLoanIdMessage(UUID id) {
+        try {
+            log.info("QueryLoanId Received {}", id);
+            Optional<Loan> r = queryService.queryLoanId(id);
+            if ( r.isPresent() ) {
+                return objectMapper.writeValueAsString(r.get());
+            } else {
+                return "ERROR: id not found: " + id;
+            }
+        } catch ( Exception ex) {
+            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
 }
