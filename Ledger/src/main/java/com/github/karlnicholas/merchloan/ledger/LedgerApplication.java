@@ -3,7 +3,7 @@ package com.github.karlnicholas.merchloan.ledger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.github.karlnicholas.merchloan"})
 public class LedgerApplication {
 
     public static void main(String[] args) {

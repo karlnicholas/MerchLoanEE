@@ -3,15 +3,14 @@ package com.github.karlnicholas.merchloan.servicerequest.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
+import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
 import com.github.karlnicholas.merchloan.jmsmessage.CreditToLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.DebitFromLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
-import com.github.karlnicholas.merchloan.servicerequest.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.jni.Local;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -96,7 +95,8 @@ public class ServiceRequestService {
                                 .id(id)
                                 .request(objectMapper.writeValueAsString(requestMessage))
                                 .localDateTime(LocalDateTime.now())
-                                .requestType(requestMessage.getClass().getCanonicalName())
+                                .requestType(requestMessage.getClass().getName())
+                                .transacted(Boolean.FALSE)
                                 .build()
                 );
             } catch (DuplicateKeyException dke) {

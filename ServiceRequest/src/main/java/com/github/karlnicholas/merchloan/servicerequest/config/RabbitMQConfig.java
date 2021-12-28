@@ -12,30 +12,25 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
     @Value("${rabbitmq.servicerequest.queue}")
     private String servicerequestQueue;
-    @Value("${rabbitmq.exchange}")
-    private String exchange;
     @Value("${rabbitmq.servicerequest.routingkey}")
     private String servicerequestRoutingKey;
-    @Value("${rabbitmq.username}")
-    private String username;
-    @Value("${rabbitmq.password}")
-    private String password;
-    @Value("${rabbitmq.host}")
-    private String host;
-    @Value("${rabbitmq.port}")
-    private Integer port;
-    @Value("${rabbitmq.virtual-host}")
-    private String virtualHost;
-    @Bean
-    Queue servicerequestQueue() {
-        return new Queue(servicerequestQueue, false);
-    }
+    @Value("${rabbitmq.servicerequest.query.id.queue}")
+    private String servicerequestQueryIdQueue;
+    @Value("${rabbitmq.servicerequest.query.id.routingkey}")
+    private String servicerequestQueryIdRoutingkey;
+    @Value("${rabbitmq.exchange}")
+    private String exchange;
+
     @Bean
     Exchange exchange() {
         return ExchangeBuilder.directExchange(exchange).durable(false).build();
     }
     @Bean
-    Binding binding() {
+    Queue servicerequestQueue() {
+        return new Queue(servicerequestQueue, false);
+    }
+    @Bean
+    Binding servicerequestBinding() {
         return BindingBuilder
                 .bind(servicerequestQueue())
                 .to(exchange())
@@ -43,21 +38,15 @@ public class RabbitMQConfig {
                 .noargs();
     }
     @Bean
-    public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(host, port);
-        cachingConnectionFactory.setUsername(username);
-        cachingConnectionFactory.setPassword(password);
-        cachingConnectionFactory.setVirtualHost(virtualHost);
-        return cachingConnectionFactory;
+    Queue servicerequestQueryIdQueue() {
+        return new Queue(servicerequestQueryIdQueue, false);
     }
-//    @Bean
-//    public MessageConverter jsonMessageConverter() {
-//        return new Jackson2JsonMessageConverter();
-//    }
     @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-//        rabbitTemplate.setMessageConverter(jsonMessageConverter());
-        return rabbitTemplate;
+    Binding servicerequestQueryIdBinding() {
+        return BindingBuilder
+                .bind(servicerequestQueryIdQueue())
+                .to(exchange())
+                .with(servicerequestQueryIdRoutingkey)
+                .noargs();
     }
 }

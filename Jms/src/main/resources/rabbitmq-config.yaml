@@ -1,0 +1,49 @@
+rabbitmq:
+  host: localhost
+  port: 5672
+  virtual-host: /
+  password: guest
+  username: guest
+  exchange: merchloan.exchange
+  account:
+    createaccount:
+      queue: account.createaccount.queue
+      routing-key: account.createaccount.routingkey
+    funding:
+      queue: account.funding.queue
+      routing-key: account.funding.routingkey
+    query:
+      account:
+        id:
+          queue: account.account.querybyid.queue
+          routing-key: account.account.querybyid.routingkey
+      loan:
+        id:
+          queue: account.loan.querybyid.queue
+          routing-key: account.loan.querybyid.routingkey
+        lender:
+          id:
+            queue: account.lender.querybyid.queue
+            routing-key: account.lender.querybyid.routingkey
+          name:
+            queue: account.lender.querybyname.queue
+            routing-key: account.lender.querybyname.routingkey
+  ledger:
+    credittoloan:
+      queue: ledger.credittoloan.queue
+      routingkey: ledger.credittoloan.routingkey
+    debitfromloan:
+      queue: ledger.debitfromloan.queue
+      routingkey: ledger.debitfromloan.routingkey
+    query:
+      loan:
+        id:
+          queue: ledger.querybyloanid.queue
+          routingkey: ledger.querybyloanid.routingkey
+  servicerequest:
+    queue: servicerequest.queue
+    routingkey: servicerequest.routingkey
+    query:
+      id:
+        queue: servicerequest.querybyid.queue
+        routingkey: servicerequest.querybyid.routingkey

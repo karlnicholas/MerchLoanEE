@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.github.karlnicholas.merchloan"})
 public class ServiceRequestApplication {
 
     public static void main(String[] args) {

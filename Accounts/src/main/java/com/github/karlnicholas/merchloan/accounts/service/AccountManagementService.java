@@ -1,12 +1,12 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
-import com.github.karlnicholas.merchloan.accounts.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Lender;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LenderRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
+import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
 import com.github.karlnicholas.merchloan.jmsmessage.DebitFromLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;

@@ -20,20 +20,12 @@ public class RabbitMQConfig {
     private String accountFundingRoutingkey;
     @Value("${rabbitmq.exchange}")
     private String exchange;
-    @Value("${rabbitmq.username}")
-    private String username;
-    @Value("${rabbitmq.password}")
-    private String password;
-    @Value("${rabbitmq.host}")
-    private String host;
-    @Value("${rabbitmq.port}")
-    private Integer port;
-    @Value("${rabbitmq.virtual-host}")
-    private String virtualHost;
+
     @Bean
-    Exchange exchange() {
+    public Exchange exchange() {
         return ExchangeBuilder.directExchange(exchange).durable(false).build();
     }
+
     @Bean
     Queue accountCreateAccountQueue() {
         return new Queue(accountCreateAccountQueue, false);
@@ -57,23 +49,5 @@ public class RabbitMQConfig {
                 .to(exchange())
                 .with(accountFundingRoutingkey)
                 .noargs();
-    }
-    @Bean
-    public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(host, port);
-        cachingConnectionFactory.setUsername(username);
-        cachingConnectionFactory.setPassword(password);
-        cachingConnectionFactory.setVirtualHost(virtualHost);
-        return cachingConnectionFactory;
-    }
-//    @Bean
-//    public MessageConverter jsonMessageConverter() {
-//        return new Jackson2JsonMessageConverter();
-//    }
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-//        rabbitTemplate.setMessageConverter(jsonMessageConverter());
-        return rabbitTemplate;
     }
 }

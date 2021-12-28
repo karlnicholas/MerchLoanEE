@@ -15,7 +15,14 @@ rabbitmq:
     funding:
       routing-key: account.funding.routingkey
   ledger:
-    routingkey: ledger.routingkey
+    credittoloan:
+      routingkey: ledger.credittoloan.routingkey
+    debitfromloan:
+      routingkey: ledger.debitfromloan.routingkey
   servicerequest:
     queue: servicerequest.queue
     routingkey: servicerequest.routingkey
+    query:
+      id:
+        queue: servicerequest.querybyid.queue
+        routingkey: servicerequest.querybyid.routingkey

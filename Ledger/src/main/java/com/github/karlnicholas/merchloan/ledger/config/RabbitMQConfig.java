@@ -12,16 +12,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-    @Value("${rabbitmq.username}")
-    private String username;
-    @Value("${rabbitmq.password}")
-    private String password;
-    @Value("${rabbitmq.host}")
-    private String host;
-    @Value("${rabbitmq.port}")
-    private Integer port;
-    @Value("${rabbitmq.virtual-host}")
-    private String virtualHost;
     @Value("${rabbitmq.exchange}")
     private String exchange;
     @Value("${rabbitmq.ledger.debitfromloan.routingkey}")
@@ -32,6 +22,11 @@ public class RabbitMQConfig {
     private String ledgerCreditToLoanRoutingKey;
     @Value("${rabbitmq.ledger.credittoloan.queue}")
     private String ledgerCreditToLoanQueue;
+
+    @Bean
+    public Exchange exchange() {
+        return ExchangeBuilder.directExchange(exchange).durable(false).build();
+    }
     @Bean
     Queue ledgerDebitFromLoanQueue() {
         return new Queue(ledgerDebitFromLoanQueue, false);
@@ -55,27 +50,5 @@ public class RabbitMQConfig {
                 .to(exchange())
                 .with(ledgerCreditToLoanRoutingKey)
                 .noargs();
-    }
-    @Bean
-    Exchange exchange() {
-        return ExchangeBuilder.directExchange(exchange).durable(false).build();
-    }
-    @Bean
-    public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(host, port);
-        cachingConnectionFactory.setUsername(username);
-        cachingConnectionFactory.setPassword(password);
-        cachingConnectionFactory.setVirtualHost(virtualHost);
-        return cachingConnectionFactory;
-    }
-//    @Bean
-//    public MessageConverter jsonMessageConverter() {
-//        return new Jackson2JsonMessageConverter();
-//    }
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-//        rabbitTemplate.setMessageConverter(jsonMessageConverter());
-        return rabbitTemplate;
     }
 }
