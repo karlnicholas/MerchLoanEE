@@ -13,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class CreditAccount implements Serializable {
+public class DebitLoan implements Serializable {
     private UUID id;
     private UUID loanId;
     private BigDecimal amount;

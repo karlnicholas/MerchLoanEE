@@ -6,7 +6,7 @@ import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitAccount;
+import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +65,8 @@ public class AccountManagementService {
                                 .startDate(fundLoan.getStartDate())
                                 .build());
 
-                rabbitMqSender.sendDebitAccount(
-                        DebitAccount.builder()
+                rabbitMqSender.sendDebitLoan(
+                        DebitLoan.builder()
                                 .id(fundLoan.getId())
                                 .amount(fundLoan.getAmount())
                                 .date(fundLoan.getStartDate())

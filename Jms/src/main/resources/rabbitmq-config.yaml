@@ -22,12 +22,12 @@ rabbitmq:
           queue: account.loan.querybyid.queue
           routing-key: account.loan.querybyid.routingkey
   register:
-    creditaccount:
-      queue: register.creditaccount.queue
-      routingkey: register.creditaccount.routingkey
-    debitaccount:
-      queue: register.debitaccount.queue
-      routingkey: register.debitaccount.routingkey
+    creditloan:
+      queue: register.creditloan.queue
+      routingkey: register.creditloan.routingkey
+    debitloan:
+      queue: register.debitloan.queue
+      routingkey: register.debitloan.routingkey
     query:
       loan:
         id:

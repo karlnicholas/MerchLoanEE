@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
     private final RabbitMqProperties rabbitMqProperties;
-    @Value("${rabbitmq.register.debitaccount.queue}")
-    private String registerDebitAccountQueue;
-    @Value("${rabbitmq.register.creditaccount.queue}")
-    private String registerCreditAccountQueue;
+    @Value("${rabbitmq.register.debitloan.queue}")
+    private String registerDebitLoanQueue;
+    @Value("${rabbitmq.register.creditloan.queue}")
+    private String registerCreditLoanQueue;
     @Value("${rabbitmq.register.query.loan.id.queue}")
     private String registerQueryLoanIdQueue;
 
@@ -25,27 +25,27 @@ public class RabbitMQConfig {
         return ExchangeBuilder.directExchange(rabbitMqProperties.getExchange()).durable(false).build();
     }
     @Bean
-    Queue registerDebitAccountQueue() {
-        return new Queue(registerDebitAccountQueue, false);
+    Queue registerDebitLoanQueue() {
+        return new Queue(registerDebitLoanQueue, false);
     }
     @Bean
-    Binding debitAccountBinding() {
+    Binding debitLoanBinding() {
         return BindingBuilder
-                .bind(registerDebitAccountQueue())
+                .bind(registerDebitLoanQueue())
                 .to(exchange())
-                .with(rabbitMqProperties.getRegisterDebitAccountRoutingkey())
+                .with(rabbitMqProperties.getRegisterDebitLoanRoutingkey())
                 .noargs();
     }
     @Bean
-    Queue registerCreditAccountQueue() {
-        return new Queue(registerCreditAccountQueue, false);
+    Queue registerCreditLoanQueue() {
+        return new Queue(registerCreditLoanQueue, false);
     }
     @Bean
-    Binding creditAccountBinding() {
+    Binding creditLoanBinding() {
         return BindingBuilder
-                .bind(registerCreditAccountQueue())
+                .bind(registerCreditLoanQueue())
                 .to(exchange())
-                .with(rabbitMqProperties.getRegisterCreditAccountRoutingkey())
+                .with(rabbitMqProperties.getRegisterCreditLoanRoutingkey())
                 .noargs();
     }
     @Bean

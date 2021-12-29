@@ -2,8 +2,8 @@ package com.github.karlnicholas.merchloan.register.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.karlnicholas.merchloan.jmsmessage.CreditAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitAccount;
+import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
 import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.register.service.RegisterManagementService;
 import com.github.karlnicholas.merchloan.register.service.QueryService;
@@ -34,24 +34,24 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void configureRabbitListeners(RabbitListenerEndpointRegistrar rabbitListenerEndpointRegistrar) {
     }
 
-    @RabbitListener(queues = "${rabbitmq.register.creditaccount.queue}")
-    public void receivedCreditAccountMessage(CreditAccount creditAccount) {
+    @RabbitListener(queues = "${rabbitmq.register.creditloan.queue}")
+    public void receivedCreditLoanMessage(CreditLoan creditLoan) {
         try {
-            log.info("CreditAccount Received {}", creditAccount);
-            registerManagementService.creditAccount(creditAccount);
+            log.info("CreditLoan Received {}", creditLoan);
+            registerManagementService.creditLoan(creditLoan);
         } catch ( Exception ex) {
-            log.error("void receivedCreditMessage(CreditAccount creditAccount) exception {}", ex.getMessage());
+            log.error("void receivedCreditLoanMessage(CreditLoan creditLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
 
-    @RabbitListener(queues = "${rabbitmq.register.debitaccount.queue}")
-    public void receivedDebitAccountMessage(DebitAccount debitAccount) {
+    @RabbitListener(queues = "${rabbitmq.register.debitloan.queue}")
+    public void receivedDebitLoanMessage(DebitLoan debitLoan) {
         try {
-            log.info("DebitAccount Received {}", debitAccount);
-            registerManagementService.debitAccount(debitAccount);
+            log.info("DebitLoan Received {}", debitLoan);
+            registerManagementService.debitLoan(debitLoan);
         } catch ( Exception ex) {
-            log.error("void receivedDebitAccountMessage(DebitAccount debitAccount) exception {}", ex.getMessage());
+            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }

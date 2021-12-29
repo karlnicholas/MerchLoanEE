@@ -1,8 +1,8 @@
 package com.github.karlnicholas.merchloan.register.service;
 
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
-import com.github.karlnicholas.merchloan.jmsmessage.CreditAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitAccount;
+import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.register.model.CreditEntry;
 import com.github.karlnicholas.merchloan.register.model.DebitEntry;
@@ -25,25 +25,25 @@ public class RegisterManagementService {
         this.rabbitMqSender = rabbitMqSender;
     }
 
-    public void debitAccount(DebitAccount debitAccount) {
+    public void debitLoan(DebitLoan debitLoan) {
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
-                .id(debitAccount.getId())
+                .id(debitLoan.getId())
                 .build();
         try {
             DebitEntry debitEntry = DebitEntry.builder()
-                    .id(debitAccount.getId())
-                    .loanId(debitAccount.getLoanId())
-                    .date(debitAccount.getDate())
-                    .debit(debitAccount.getAmount())
-                    .description(debitAccount.getDescription())
+                    .id(debitLoan.getId())
+                    .loanId(debitLoan.getLoanId())
+                    .date(debitLoan.getDate())
+                    .debit(debitLoan.getAmount())
+                    .description(debitLoan.getDescription())
                     .build();
             debitEntryRepository.save(debitEntry);
             serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
             serviceRequestResponse.setStatusMessage("Success");
         } catch (DuplicateKeyException dke) {
-            log.warn("CreditEntry creditAccount(CreditAccount creditAccount) duplicate key: {}", dke.getMessage());
+            log.warn("void debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
-                    debitAccount.getRetryCount() == 0
+                    debitLoan.getRetryCount() == 0
                             ? ServiceRequestResponse.STATUS.FAILURE
                             : ServiceRequestResponse.STATUS.SUCCESS
             );
@@ -52,25 +52,25 @@ public class RegisterManagementService {
         rabbitMqSender.sendServiceRequest(serviceRequestResponse);
     }
 
-    public void creditAccount(CreditAccount creditAccount) {
+    public void creditLoan(CreditLoan creditLoan) {
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
-                .id(creditAccount.getId())
+                .id(creditLoan.getId())
                 .build();
         try {
             CreditEntry creditEntry = CreditEntry.builder()
-                    .id(creditAccount.getId())
-                    .loanId(creditAccount.getLoanId())
-                    .date(creditAccount.getDate())
-                    .credit(creditAccount.getAmount())
-                    .description(creditAccount.getDescription())
+                    .id(creditLoan.getId())
+                    .loanId(creditLoan.getLoanId())
+                    .date(creditLoan.getDate())
+                    .credit(creditLoan.getAmount())
+                    .description(creditLoan.getDescription())
                     .build();
             creditEntryRepository.save(creditEntry);
             serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
             serviceRequestResponse.setStatusMessage("Success");
         } catch (DuplicateKeyException dke) {
-            log.warn("CreditEntry creditAccount(CreditAccount creditAccount) duplicate key: {}", dke.getMessage());
+            log.warn("void creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
-                            creditAccount.getRetryCount() == 0
+                            creditLoan.getRetryCount() == 0
                                     ? ServiceRequestResponse.STATUS.FAILURE
                                     : ServiceRequestResponse.STATUS.SUCCESS
                     );

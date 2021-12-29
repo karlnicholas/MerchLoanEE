@@ -27,12 +27,12 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingRoutingKey(), fundLoan);
     }
 
-    public void sendCreditAccount(CreditAccount creditAccount) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCreditAccountRoutingkey(), creditAccount);
+    public void sendCreditLoan(CreditLoan creditLoan) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCreditLoanRoutingkey(), creditLoan);
     }
 
-    public void sendDebitAccount(DebitAccount debitAccount) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitAccountRoutingkey(), debitAccount);
+    public void sendDebitLoan(DebitLoan debitLoan) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitLoanRoutingkey(), debitLoan);
     }
 
     public void sendServiceRequest(ServiceRequestResponse serviceRequest) {

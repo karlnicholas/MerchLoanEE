@@ -3,10 +3,10 @@ spring:
     show-sql: true
 rabbitmq:
   register:
-    creditaccount:
-      queue: register.creditaccount.queue
-    debitaccount:
-      queue: register.debitaccount.queue
+    creditloan:
+      queue: register.creditloan.queue
+    debitloan:
+      queue: register.debitloan.queue
     query:
       loan:
         id:

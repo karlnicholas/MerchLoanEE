@@ -61,8 +61,8 @@ public class ServiceRequestService {
 
     public UUID creditRequest(CreditRequest creditRequest) throws JsonProcessingException {
         UUID id = persistRequest(creditRequest);
-        rabbitMqSender.sendCreditAccount(
-                CreditAccount.builder()
+        rabbitMqSender.sendCreditLoan(
+                CreditLoan.builder()
                         .id(id)
                         .loanId(creditRequest.getLoanId())
                         .date(LocalDate.now())
@@ -74,22 +74,10 @@ public class ServiceRequestService {
         return id;
     }
 
-    public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) {
-        Optional<ServiceRequest> srQ = serviceRequestRepository.findById(serviceRequestResponse.getId());
-        if (srQ.isPresent()) {
-            ServiceRequest sr = srQ.get();
-            sr.setStatus(serviceRequestResponse.getStatus());
-            sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
-            serviceRequestRepository.save(sr);
-        } else {
-            log.error("void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) not found: {}", serviceRequestResponse);
-        }
-    }
-
     public UUID debitRequest(DebitRequest debitRequest) throws JsonProcessingException {
         UUID id = persistRequest(debitRequest);
-        rabbitMqSender.sendDebitAccount(
-                DebitAccount.builder()
+        rabbitMqSender.sendDebitLoan(
+                DebitLoan.builder()
                         .loanId(debitRequest.getLoanId())
                         .date(LocalDate.now())
                         .amount(debitRequest.getAmount())
@@ -121,4 +109,17 @@ public class ServiceRequestService {
         } while (retry);
         return id;
     }
+
+    public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) {
+        Optional<ServiceRequest> srQ = serviceRequestRepository.findById(serviceRequestResponse.getId());
+        if (srQ.isPresent()) {
+            ServiceRequest sr = srQ.get();
+            sr.setStatus(serviceRequestResponse.getStatus());
+            sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
+            serviceRequestRepository.save(sr);
+        } else {
+            log.error("void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) not found: {}", serviceRequestResponse);
+        }
+    }
+
 }
