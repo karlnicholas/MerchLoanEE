@@ -7,6 +7,11 @@ rabbitmq:
       queue: account.createaccount.queue
     funding:
       queue: account.funding.queue
+    validate:
+      credit:
+        queue: account.validate.credit.queue
+      debit:
+        queue: account.validate.debit.queue
     query:
       account:
         id:

@@ -14,6 +14,10 @@ public class RabbitMQConfig {
     String accountCreateaccountQueue;
     @Value("${rabbitmq.account.funding.queue}")
     String accountFundingaccountQueue;
+    @Value("${rabbitmq.account.validate.credit.queue}")
+    String accountValidateCreditQueue;
+    @Value("${rabbitmq.account.validate.debit.queue}")
+    String accountValidateDebitQueue;
     @Value("${rabbitmq.account.query.account.id.queue}")
     String accountQueryAccountIdQueue;
     @Value("${rabbitmq.account.query.loan.id.queue}")
@@ -50,6 +54,32 @@ public class RabbitMQConfig {
                 .bind(accountFundingQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getAccountFundingRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountValidateCreditQueue() {
+        return new Queue(accountValidateCreditQueue, false);
+    }
+    @Bean
+    public Binding validateCreditBinding() {
+        return BindingBuilder
+                .bind(accountValidateCreditQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountValidateCreditRoutingkey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountValidateDebitQueue() {
+        return new Queue(accountValidateDebitQueue, false);
+    }
+    @Bean
+    public Binding validateDebit() {
+        return BindingBuilder
+                .bind(accountValidateDebitQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountValidateDebitRoutingkey())
                 .noargs();
     }
 

@@ -5,10 +5,7 @@ import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
-import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -90,6 +87,58 @@ public class AccountManagementService {
                             .id(fundLoan.getId())
                             .status(ServiceRequestResponse.STATUS.FAILURE)
                             .statusMessage("Account not found for " + fundLoan.getAccountId())
+                            .build()
+            );
+        }
+    }
+
+    public void validateCreditLoad(CreditLoan creditLoan) {
+        Optional<Loan> loanQ = loanRepository.findById(creditLoan.getLoanId());
+        if (loanQ.isPresent()) {
+            try {
+                rabbitMqSender.sendCreditLoan(creditLoan);
+            } catch (DuplicateKeyException dke) {
+                log.warn("Create Account duplicate key exception: {}", dke.getMessage());
+                if (creditLoan.getRetryCount() == 0) {
+                    rabbitMqSender.sendServiceRequest(ServiceRequestResponse.builder()
+                            .id(creditLoan.getId())
+                            .status(ServiceRequestResponse.STATUS.FAILURE)
+                            .statusMessage(dke.getMessage())
+                            .build());
+                }
+            }
+        } else {
+            rabbitMqSender.sendServiceRequest(
+                    ServiceRequestResponse.builder()
+                            .id(creditLoan.getId())
+                            .status(ServiceRequestResponse.STATUS.FAILURE)
+                            .statusMessage("Loan not found for " + creditLoan.getLoanId())
+                            .build()
+            );
+        }
+    }
+
+    public void validateDebitLoad(DebitLoan debitLoan) {
+        Optional<Loan> loanQ = loanRepository.findById(debitLoan.getLoanId());
+        if (loanQ.isPresent()) {
+            try {
+                rabbitMqSender.sendDebitLoan(debitLoan);
+            } catch (DuplicateKeyException dke) {
+                log.warn("Create Account duplicate key exception: {}", dke.getMessage());
+                if (debitLoan.getRetryCount() == 0) {
+                    rabbitMqSender.sendServiceRequest(ServiceRequestResponse.builder()
+                            .id(debitLoan.getId())
+                            .status(ServiceRequestResponse.STATUS.FAILURE)
+                            .statusMessage(dke.getMessage())
+                            .build());
+                }
+            }
+        } else {
+            rabbitMqSender.sendServiceRequest(
+                    ServiceRequestResponse.builder()
+                            .id(debitLoan.getId())
+                            .status(ServiceRequestResponse.STATUS.FAILURE)
+                            .statusMessage("Loan not found for " + debitLoan.getLoanId())
                             .build()
             );
         }

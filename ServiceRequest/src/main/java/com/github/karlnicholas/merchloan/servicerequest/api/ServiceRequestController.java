@@ -33,10 +33,10 @@ public class ServiceRequestController {
     }
     @PostMapping(value = "creditRequest", produces = MediaType.TEXT_PLAIN_VALUE)
     public UUID creditRequest(@RequestBody CreditRequest creditRequest) throws JsonProcessingException {
-        return serviceRequestService.creditRequest(creditRequest);
+        return serviceRequestService.accountValidateCreditRequest(creditRequest);
     }
     @PostMapping(value = "debitRequest", produces = MediaType.TEXT_PLAIN_VALUE)
     public UUID debitRequest(@RequestBody DebitRequest debitRequest) throws JsonProcessingException {
-        return serviceRequestService.debitRequest(debitRequest);
+        return serviceRequestService.accountValidateDebitRequest(debitRequest);
     }
 }

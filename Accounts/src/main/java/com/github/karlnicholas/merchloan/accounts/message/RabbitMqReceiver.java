@@ -7,6 +7,8 @@ import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
 import com.github.karlnicholas.merchloan.accounts.service.AccountManagementService;
+import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
+import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -50,7 +52,28 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.error("void receivedFundingMessage(FundLoan funding) {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
+    }
 
+    @RabbitListener(queues = "${rabbitmq.account.validate.credit.queue}")
+    public void receivedValidateCreditMessage(CreditLoan creditLoan) {
+        try {
+            log.info("CreditLoan Received {} ", creditLoan);
+            accountManagementService.validateCreditLoad(creditLoan);
+        } catch ( Exception ex) {
+            log.error("void receivedValidateCreditMessage(CreditLoan creditLoan) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.account.validate.debit.queue}")
+    public void receivedValidateDebitMessage(DebitLoan debitLoan) {
+        try {
+            log.info("DebitLoan Received {} ", debitLoan);
+            accountManagementService.validateDebitLoad(debitLoan);
+        } catch ( Exception ex) {
+            log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
     }
 
     @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
