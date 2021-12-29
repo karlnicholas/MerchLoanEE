@@ -12,6 +12,6 @@ import java.util.UUID;
 @ToString
 public class FundingRequest implements ServiceRequestMessage {
     private UUID accountId;
-    private String lender;
     private BigDecimal amount;
+    private String description;
 }

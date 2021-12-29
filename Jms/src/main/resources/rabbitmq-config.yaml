@@ -21,25 +21,18 @@ rabbitmq:
         id:
           queue: account.loan.querybyid.queue
           routing-key: account.loan.querybyid.routingkey
-        lender:
-          id:
-            queue: account.lender.querybyid.queue
-            routing-key: account.lender.querybyid.routingkey
-          name:
-            queue: account.lender.querybyname.queue
-            routing-key: account.lender.querybyname.routingkey
-  ledger:
+  register:
     creditaccount:
-      queue: ledger.creditaccount.queue
-      routingkey: ledger.creditaccount.routingkey
+      queue: register.creditaccount.queue
+      routingkey: register.creditaccount.routingkey
     debitaccount:
-      queue: ledger.debitaccount.queue
-      routingkey: ledger.debitaccount.routingkey
+      queue: register.debitaccount.queue
+      routingkey: register.debitaccount.routingkey
     query:
       loan:
         id:
-          queue: ledger.querybyloanid.queue
-          routingkey: ledger.querybyloanid.routingkey
+          queue: register.querybyloanid.queue
+          routingkey: register.querybyloanid.routingkey
   servicerequest:
     queue: servicerequest.queue
     routingkey: servicerequest.routingkey

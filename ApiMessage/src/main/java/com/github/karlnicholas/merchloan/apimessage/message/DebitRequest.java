@@ -13,4 +13,5 @@ import java.util.UUID;
 public class DebitRequest implements ServiceRequestMessage {
     private UUID loanId;
     private BigDecimal amount;
+    private String description;
 }

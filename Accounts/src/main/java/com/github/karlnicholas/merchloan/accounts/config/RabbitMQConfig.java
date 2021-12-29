@@ -16,10 +16,6 @@ public class RabbitMQConfig {
     String accountFundingaccountQueue;
     @Value("${rabbitmq.account.query.account.id.queue}")
     String accountQueryAccountIdQueue;
-    @Value("${rabbitmq.account.query.lender.id.queue}")
-    String accountQueryLenderIdQueue;
-    @Value("${rabbitmq.account.query.lender.lender.queue}")
-    String accountQueryLenderLenderQueue;
     @Value("${rabbitmq.account.query.loan.id.queue}")
     String accountQueryLoanIdQueue;
 
@@ -67,32 +63,6 @@ public class RabbitMQConfig {
                 .bind(accountQueryAccountIdQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getAccountQueryAccountIdRoutingKey())
-                .noargs();
-    }
-
-    @Bean
-    public Queue accountQueryLenderIdQueue() {
-        return new Queue(accountQueryLenderIdQueue, false);
-    }
-    @Bean
-    public Binding createAccountQueryLenderIdBinding() {
-        return BindingBuilder
-                .bind(accountQueryLenderIdQueue())
-                .to(exchange())
-                .with(rabbitMqProperties.getAccountQueryLenderIdRoutingKey())
-                .noargs();
-    }
-
-    @Bean
-    public Queue accountQueryLenderLenderQueue() {
-        return new Queue(accountQueryLenderLenderQueue, false);
-    }
-    @Bean
-    public Binding createAccountQueryLenderLenderBinding() {
-        return BindingBuilder
-                .bind(accountQueryLenderLenderQueue())
-                .to(exchange())
-                .with(rabbitMqProperties.getAccountQueryLenderLenderRoutingKey())
                 .noargs();
     }
 

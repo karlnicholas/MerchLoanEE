@@ -19,8 +19,9 @@
         <module>JmsMessage</module>
         <module>Jms</module>
         <module>Accounts</module>
-        <module>Ledger</module>
+        <module>Register</module>
         <module>ServiceRequest</module>
+        <module>Query</module>
     </modules>
     <dependencyManagement>
         <dependencies>

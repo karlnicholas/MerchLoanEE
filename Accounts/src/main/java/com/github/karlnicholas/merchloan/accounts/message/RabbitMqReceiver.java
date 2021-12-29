@@ -3,7 +3,6 @@ package com.github.karlnicholas.merchloan.accounts.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
-import com.github.karlnicholas.merchloan.accounts.model.Lender;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
 import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
@@ -66,38 +65,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             }
         } catch ( Exception ex) {
             log.error("String receivedQueryAccountIdMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    @RabbitListener(queues = "${rabbitmq.account.query.lender.id.queue}")
-    public String receivedQueryLenderIdMessage(UUID id) {
-        try {
-            log.info("QueryLenderId Received {} ", id);
-            Optional<Lender> r = queryService.queryLenderId(id);
-            if ( r.isPresent() ) {
-                return objectMapper.writeValueAsString(r.get());
-            } else {
-                return "ERROR: id not found: " + id;
-            }
-        } catch ( Exception ex) {
-            log.error("String receivedQueryLenderIdMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    @RabbitListener(queues = "${rabbitmq.account.query.lender.lender.queue}")
-    public String receivedQueryLenderLenderMessage(String lender) {
-        try {
-            log.info("QueryLenderLender Received {}", lender);
-            Optional<Lender> r = queryService.queryLenderLender(lender);
-            if ( r.isPresent() ) {
-                return objectMapper.writeValueAsString(r.get());
-            } else {
-                return "ERROR: lender not found: " + lender;
-            }
-        } catch ( Exception ex) {
-            log.error("String receivedQueryLenderLenderMessage(String lender) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }

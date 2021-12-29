@@ -12,7 +12,8 @@ import java.util.UUID;
 @Setter
 @ToString
 public class ServiceRequestResponse implements Serializable {
+    public enum STATUS {PENDING, SUCCESS, FAILURE}
     private UUID id;
-    private String status;
+    private STATUS status;
     private String statusMessage;
 }

@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.servicerequest.model;
 
+import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.*;
 
 import javax.persistence.*;
@@ -19,7 +20,6 @@ public class ServiceRequest {
     private String request;
     private String requestType;
     private LocalDateTime localDateTime;
-    private Boolean transacted;
-    private String status;
+    private ServiceRequestResponse.STATUS status;
     private String statusMessage;
 }

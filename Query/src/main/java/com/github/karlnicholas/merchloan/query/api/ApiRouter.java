@@ -23,10 +23,8 @@ public class ApiRouter implements WebFluxConfigurer {
                 .nest(path("/api/query").and(accept(MediaType.TEXT_PLAIN)),
                         route(GET("/id/{id}"), apiHandler::getId)
                                 .andRoute(GET("/account/{id}"), apiHandler::getAccount)
-                                .andRoute(GET("/lender/{id}"), apiHandler::getLender)
-                                .andRoute(GET("/lenderbyname"), apiHandler::getLenderLender)
                                 .andRoute(GET("/loan/{id}"), apiHandler::getLoan)
-                                .andRoute(GET("/ledger/{id}"), apiHandler::getLedger)
+                                .andRoute(GET("/register/{id}"), apiHandler::getRegister)
                 );
 
     }

@@ -14,8 +14,3 @@ rabbitmq:
       loan:
         id:
           queue: account.query.loan.id.queue
-      lender:
-        id:
-          queue: account.query.lender.id.queue
-        lender:
-          queue: account.query.lender.lender.queue

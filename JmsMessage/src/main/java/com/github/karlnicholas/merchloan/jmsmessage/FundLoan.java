@@ -16,7 +16,8 @@ import java.util.UUID;
 public class FundLoan implements Serializable {
     private UUID id;
     private UUID accountId;
-    private String lender;
     private BigDecimal amount;
     private LocalDate startDate;
+    private String description;
+    private int retryCount;
 }

@@ -36,6 +36,7 @@ public class ServiceRequestService {
                     .id(id)
                     .customer(accountRequest.getCustomer())
                     .createDate(LocalDate.now())
+                    .retryCount(0)
                     .build());
         } catch (Exception e) {
             log.error("Send account create message failed: {}", e.getMessage());
@@ -49,9 +50,10 @@ public class ServiceRequestService {
                 FundLoan.builder()
                         .id(id)
                         .accountId(fundingRequest.getAccountId())
-                        .lender(fundingRequest.getLender())
                         .amount(fundingRequest.getAmount())
                         .startDate(LocalDate.now())
+                        .description(fundingRequest.getDescription())
+                        .retryCount(0)
                         .build()
         );
         return id;
@@ -65,6 +67,8 @@ public class ServiceRequestService {
                         .loanId(creditRequest.getLoanId())
                         .date(LocalDate.now())
                         .amount(creditRequest.getAmount())
+                        .description(creditRequest.getDescription())
+                        .retryCount(0)
                         .build()
         );
         return id;
@@ -72,9 +76,8 @@ public class ServiceRequestService {
 
     public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) {
         Optional<ServiceRequest> srQ = serviceRequestRepository.findById(serviceRequestResponse.getId());
-        if ( srQ.isPresent() ) {
+        if (srQ.isPresent()) {
             ServiceRequest sr = srQ.get();
-            sr.setTransacted(Boolean.TRUE);
             sr.setStatus(serviceRequestResponse.getStatus());
             sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
             serviceRequestRepository.save(sr);
@@ -90,6 +93,7 @@ public class ServiceRequestService {
                         .loanId(debitRequest.getLoanId())
                         .date(LocalDate.now())
                         .amount(debitRequest.getAmount())
+                        .description(debitRequest.getDescription())
                         .build()
         );
         return id;
@@ -107,14 +111,14 @@ public class ServiceRequestService {
                                 .request(objectMapper.writeValueAsString(requestMessage))
                                 .localDateTime(LocalDateTime.now())
                                 .requestType(requestMessage.getClass().getName())
-                                .transacted(Boolean.FALSE)
+                                .status(ServiceRequestResponse.STATUS.PENDING)
                                 .build()
                 );
             } catch (DuplicateKeyException dke) {
                 id = UUID.randomUUID();
                 retry = true;
             }
-        } while ( retry );
+        } while (retry);
         return id;
     }
 }

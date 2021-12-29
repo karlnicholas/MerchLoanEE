@@ -26,23 +26,13 @@ public class ApiHandler {
                 .map(rabbitMqSender::queryAccount), String.class);
     }
 
-    public Mono<ServerResponse> getLender(ServerRequest serverReqest) {
-        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
-                .map(rabbitMqSender::queryLender), String.class);
-    }
-
-    public Mono<ServerResponse> getLenderLender(ServerRequest serverReqest) {
-        return ServerResponse.ok().body(Mono.just(serverReqest.queryParam("lender").orElseThrow(() -> new IllegalArgumentException("lender query param not found")))
-                .map(rabbitMqSender::queryLenderLender), String.class);
-    }
-
     public Mono<ServerResponse> getLoan(ServerRequest serverReqest) {
         return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
                 .map(rabbitMqSender::queryLoan), String.class);
     }
 
-    public Mono<ServerResponse> getLedger(ServerRequest serverReqest) {
+    public Mono<ServerResponse> getRegister(ServerRequest serverReqest) {
         return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
-                .map(rabbitMqSender::queryLedger), String.class);
+                .map(rabbitMqSender::queryRegister), String.class);
     }
 }

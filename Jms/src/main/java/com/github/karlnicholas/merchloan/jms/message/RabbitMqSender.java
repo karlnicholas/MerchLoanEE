@@ -28,11 +28,11 @@ public class RabbitMqSender {
     }
 
     public void sendCreditAccount(CreditAccount creditAccount) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getLedgerCreditAccountRoutingkey(), creditAccount);
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCreditAccountRoutingkey(), creditAccount);
     }
 
     public void sendDebitAccount(DebitAccount debitAccount) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getLedgerDebitAccountRoutingkey(), debitAccount);
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitAccountRoutingkey(), debitAccount);
     }
 
     public void sendServiceRequest(ServiceRequestResponse serviceRequest) {
@@ -47,19 +47,11 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
     }
 
-    public Object queryLender(UUID id) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLenderIdRoutingKey(), id);
-    }
-
-    public Object queryLenderLender(String lender) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLenderLenderRoutingKey(), lender);
-    }
-
     public Object queryLoan(UUID id) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdRoutingKey(), id);
     }
 
-    public Object queryLedger(UUID id) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getLedgerQueryLoanIdRoutingkey(), id);
+    public Object queryRegister(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterQueryLoanIdRoutingkey(), id);
     }
 }

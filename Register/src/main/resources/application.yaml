@@ -1,0 +1,13 @@
+spring:
+  jpa:
+    show-sql: true
+rabbitmq:
+  register:
+    creditaccount:
+      queue: register.creditaccount.queue
+    debitaccount:
+      queue: register.debitaccount.queue
+    query:
+      loan:
+        id:
+          queue: register.query.loan.id.queue

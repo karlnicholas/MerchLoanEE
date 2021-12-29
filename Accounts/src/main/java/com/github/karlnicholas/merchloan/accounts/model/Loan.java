@@ -17,8 +17,6 @@ public class Loan {
     private UUID id;
     @ManyToOne
     private Account account;
-    @ManyToOne
-    private Lender lender;
     private LocalDate startDate;
 
 }

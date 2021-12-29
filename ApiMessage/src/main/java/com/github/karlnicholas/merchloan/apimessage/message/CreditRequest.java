@@ -13,4 +13,5 @@ import java.util.UUID;
 public class CreditRequest implements ServiceRequestMessage {
     private UUID loanId;
     private BigDecimal amount;
+    private String description;
 }

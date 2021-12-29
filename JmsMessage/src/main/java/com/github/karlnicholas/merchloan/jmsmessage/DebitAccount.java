@@ -18,4 +18,6 @@ public class DebitAccount implements Serializable {
     private UUID loanId;
     private BigDecimal amount;
     private LocalDate date;
+    private String description;
+    private int retryCount;
 }
