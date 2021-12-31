@@ -17,22 +17,26 @@ public class ApiHandler {
     }
 
     public Mono<ServerResponse> getId(ServerRequest serverReqest) {
-        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
-                .map(rabbitMqSender::queryServiceRequest), String.class);
+        return ServerResponse.ok().body(
+                Mono.just(UUID.fromString(serverReqest.pathVariable("id"))).map(rabbitMqSender::queryServiceRequest)
+                , String.class);
     }
 
     public Mono<ServerResponse> getAccount(ServerRequest serverReqest) {
-        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
-                .map(rabbitMqSender::queryAccount), String.class);
+        return ServerResponse.ok().body(
+                Mono.just(UUID.fromString(serverReqest.pathVariable("id"))).map(rabbitMqSender::queryAccount)
+                , String.class);
     }
 
     public Mono<ServerResponse> getLoan(ServerRequest serverReqest) {
-        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
-                .map(rabbitMqSender::queryLoan), String.class);
+        return ServerResponse.ok().body(
+                Mono.just(UUID.fromString(serverReqest.pathVariable("id"))).map(rabbitMqSender::queryLoan)
+                , String.class);
     }
 
     public Mono<ServerResponse> getRegister(ServerRequest serverReqest) {
-        return ServerResponse.ok().body(Mono.just(UUID.fromString(serverReqest.pathVariable("id")))
-                .map(rabbitMqSender::queryRegister), String.class);
+        return ServerResponse.ok().body(
+                Mono.just(UUID.fromString(serverReqest.pathVariable("id"))).map(rabbitMqSender::queryRegister)
+                , String.class);
     }
 }
