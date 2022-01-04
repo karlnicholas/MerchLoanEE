@@ -4,7 +4,6 @@ import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,22 +11,21 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
 public class AccountManagementService {
     private final AccountRepository accountRepository;
     private final LoanRepository loanRepository;
-    private final RabbitMqSender rabbitMqSender;
 
     @Autowired
-    public AccountManagementService(AccountRepository accountRepository, LoanRepository loanRepository, RabbitMqSender rabbitMqSender) {
+    public AccountManagementService(AccountRepository accountRepository, LoanRepository loanRepository) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
-        this.rabbitMqSender = rabbitMqSender;
     }
 
-    public void createAccount(CreateAccount createAccount) {
+    public ServiceRequestResponse createAccount(CreateAccount createAccount) {
         ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {
             accountRepository.save(Account.builder()
@@ -48,10 +46,13 @@ public class AccountManagementService {
             }
             serviceRequest.setStatusMessage(dke.getMessage());
         }
-        rabbitMqSender.sendServiceRequest(serviceRequest);
+        return serviceRequest;
     }
 
-    public void fundAccount(FundLoan fundLoan) {
+    public ServiceRequestResponse fundAccount(FundLoan fundLoan) {
+        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder()
+                .id(fundLoan.getId())
+                .build();
         Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
         if (accountQ.isPresent()) {
             try {
@@ -61,86 +62,34 @@ public class AccountManagementService {
                                 .account(accountQ.get())
                                 .startDate(fundLoan.getStartDate())
                                 .build());
-
-                rabbitMqSender.sendDebitLoan(
-                        DebitLoan.builder()
-                                .id(fundLoan.getId())
-                                .amount(fundLoan.getAmount())
-                                .date(fundLoan.getStartDate())
-                                .loanId(loan.getId())
-                                .description(fundLoan.getDescription())
-                                .build()
-                );
+                serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
+                serviceRequest.setStatusMessage("Success");
             } catch (DuplicateKeyException dke) {
                 log.warn("Create Account duplicate key exception: {}", dke.getMessage());
                 if (fundLoan.getRetryCount() == 0) {
-                    rabbitMqSender.sendServiceRequest(ServiceRequestResponse.builder()
-                            .id(fundLoan.getId())
-                            .status(ServiceRequestResponse.STATUS.FAILURE)
-                            .statusMessage(dke.getMessage())
-                            .build());
+                    serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
+                    serviceRequest.setStatusMessage(dke.getMessage());
                 }
             }
         } else {
-            rabbitMqSender.sendServiceRequest(
-                    ServiceRequestResponse.builder()
-                            .id(fundLoan.getId())
-                            .status(ServiceRequestResponse.STATUS.FAILURE)
-                            .statusMessage("Account not found for " + fundLoan.getAccountId())
-                            .build()
-            );
+            serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
+            serviceRequest.setStatusMessage("Account not found for " + fundLoan.getAccountId());
         }
+        return serviceRequest;
     }
 
-    public void validateCreditLoad(CreditLoan creditLoan) {
-        Optional<Loan> loanQ = loanRepository.findById(creditLoan.getLoanId());
+    public ServiceRequestResponse validateLoan(UUID loanId) {
+        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder()
+                .id(loanId)
+                .build();
+        Optional<Loan> loanQ = loanRepository.findById(loanId);
         if (loanQ.isPresent()) {
-            try {
-                rabbitMqSender.sendCreditLoan(creditLoan);
-            } catch (DuplicateKeyException dke) {
-                log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-                if (creditLoan.getRetryCount() == 0) {
-                    rabbitMqSender.sendServiceRequest(ServiceRequestResponse.builder()
-                            .id(creditLoan.getId())
-                            .status(ServiceRequestResponse.STATUS.FAILURE)
-                            .statusMessage(dke.getMessage())
-                            .build());
-                }
-            }
+            serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
+            serviceRequest.setStatusMessage("Success");
         } else {
-            rabbitMqSender.sendServiceRequest(
-                    ServiceRequestResponse.builder()
-                            .id(creditLoan.getId())
-                            .status(ServiceRequestResponse.STATUS.FAILURE)
-                            .statusMessage("Loan not found for " + creditLoan.getLoanId())
-                            .build()
-            );
+            serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
+            serviceRequest.setStatusMessage("Loan not found for " + loanId);
         }
-    }
-
-    public void validateDebitLoad(DebitLoan debitLoan) {
-        Optional<Loan> loanQ = loanRepository.findById(debitLoan.getLoanId());
-        if (loanQ.isPresent()) {
-            try {
-                rabbitMqSender.sendDebitLoan(debitLoan);
-            } catch (DuplicateKeyException dke) {
-                log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-                if (debitLoan.getRetryCount() == 0) {
-                    rabbitMqSender.sendServiceRequest(ServiceRequestResponse.builder()
-                            .id(debitLoan.getId())
-                            .status(ServiceRequestResponse.STATUS.FAILURE)
-                            .statusMessage(dke.getMessage())
-                            .build());
-                }
-            }
-        } else {
-            rabbitMqSender.sendServiceRequest(
-                    ServiceRequestResponse.builder()
-                            .id(debitLoan.getId())
-                            .status(ServiceRequestResponse.STATUS.FAILURE)
-                            .statusMessage("Loan not found for " + debitLoan.getLoanId())
-                            .build()
-            );
-        }
+        return serviceRequest;
     }
 }

@@ -19,31 +19,35 @@ public class RabbitMqSender {
         this.rabbitMqProperties = rabbitMqProperties;
     }
 
-    public void sendCreateAccount(CreateAccount createAccount) {
+    public void accountCreateAccount(CreateAccount createAccount) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountRoutingKey(), createAccount);
     }
 
-    public void sendFundingRequest(FundLoan fundLoan) {
+    public void accountFundLoan(FundLoan fundLoan) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingRoutingKey(), fundLoan);
     }
 
-    public void sendAccountValidateCredit(CreditLoan creditLoan) {
+    public void accountValidateCredit(CreditLoan creditLoan) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditRoutingkey(), creditLoan);
     }
 
-    public void sendAccountValidateDebit(DebitLoan debitLoan) {
+    public void accountValidateDebit(DebitLoan debitLoan) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitRoutingkey(), debitLoan);
     }
 
-    public void sendCreditLoan(CreditLoan creditLoan) {
+    public void registerFundLoan(DebitLoan debitLoan) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterFundLoanRoutingkey(), debitLoan);
+    }
+
+    public void registerCreditLoan(CreditLoan creditLoan) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCreditLoanRoutingkey(), creditLoan);
     }
 
-    public void sendDebitLoan(DebitLoan debitLoan) {
+    public void registerDebitLoan(DebitLoan debitLoan) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitLoanRoutingkey(), debitLoan);
     }
 
-    public void sendServiceRequest(ServiceRequestResponse serviceRequest) {
+    public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestRoutingkey(), serviceRequest);
     }
 

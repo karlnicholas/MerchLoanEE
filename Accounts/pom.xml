@@ -31,7 +31,6 @@
             <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>jms</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Loan {
     @Id
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
     @ManyToOne
     private Account account;

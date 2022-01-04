@@ -15,6 +15,7 @@ import java.util.UUID;
 @Builder
 public class ServiceRequest {
     @Id
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
     @Lob
     private String request;

@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Account {
     @Id
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
     private String customer;

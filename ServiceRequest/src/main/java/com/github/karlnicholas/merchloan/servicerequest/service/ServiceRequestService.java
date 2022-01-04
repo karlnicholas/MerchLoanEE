@@ -32,7 +32,7 @@ public class ServiceRequestService {
     public UUID accountRequest(AccountRequest accountRequest) throws JsonProcessingException {
         UUID id = persistRequest(accountRequest);
         try {
-            rabbitMqSender.sendCreateAccount(CreateAccount.builder()
+            rabbitMqSender.accountCreateAccount(CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
                     .createDate(LocalDate.now())
@@ -46,7 +46,7 @@ public class ServiceRequestService {
 
     public UUID fundingRequest(FundingRequest fundingRequest) throws JsonProcessingException {
         UUID id = persistRequest(fundingRequest);
-        rabbitMqSender.sendFundingRequest(
+        rabbitMqSender.accountFundLoan(
                 FundLoan.builder()
                         .id(id)
                         .accountId(fundingRequest.getAccountId())
@@ -61,7 +61,7 @@ public class ServiceRequestService {
 
     public UUID accountValidateCreditRequest(CreditRequest creditRequest) throws JsonProcessingException {
         UUID id = persistRequest(creditRequest);
-        rabbitMqSender.sendAccountValidateCredit(
+        rabbitMqSender.accountValidateCredit(
                 CreditLoan.builder()
                         .id(id)
                         .loanId(creditRequest.getLoanId())
@@ -76,7 +76,7 @@ public class ServiceRequestService {
 
     public UUID accountValidateDebitRequest(DebitRequest debitRequest) throws JsonProcessingException {
         UUID id = persistRequest(debitRequest);
-        rabbitMqSender.sendAccountValidateDebit(
+        rabbitMqSender.accountValidateDebit(
                 DebitLoan.builder()
                         .loanId(debitRequest.getLoanId())
                         .date(LocalDate.now())

@@ -23,6 +23,7 @@ public class RabbitMqProperties {
     private String accountValidateDebitRoutingkey;
     private String accountQueryAccountIdRoutingKey;
     private String accountQueryLoanIdRoutingKey;
+    private String registerFundLoanRoutingkey;
     private String registerCreditLoanRoutingkey;
     private String registerDebitLoanRoutingkey;
     private String registerQueryLoanIdRoutingkey;

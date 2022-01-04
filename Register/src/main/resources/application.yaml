@@ -1,8 +1,18 @@
 spring:
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: create
+  datasource:
+    password: play
+    username: play
+    url: jdbc:mysql://localhost:3306/play
+  transaction:
+    default-timeout: 60000
 rabbitmq:
   register:
+    fundloan:
+      queue: register.fundloan.queue
     creditloan:
       queue: register.creditloan.queue
     debitloan:
@@ -11,3 +21,9 @@ rabbitmq:
       loan:
         id:
           queue: register.query.loan.id.queue
+logging:
+  level:
+    org:
+      springframework:
+        orm:
+          jpa: debug

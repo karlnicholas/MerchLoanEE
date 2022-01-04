@@ -22,6 +22,8 @@ rabbitmq:
           queue: account.loan.querybyid.queue
           routing-key: account.loan.querybyid.routingkey
   register:
+    fundloan:
+      queue: regsiter.fundloan.queue
     creditloan:
       queue: register.creditloan.queue
       routingkey: register.creditloan.routingkey
