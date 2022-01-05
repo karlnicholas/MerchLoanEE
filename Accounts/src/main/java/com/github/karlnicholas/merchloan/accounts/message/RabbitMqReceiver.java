@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
@@ -30,7 +31,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         this.accountManagementService = accountManagementService;
         this.queryService = queryService;
         this.rabbitMqSender = rabbitMqSender;
-        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     @Override

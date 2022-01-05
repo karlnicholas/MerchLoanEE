@@ -22,6 +22,7 @@
         <module>Register</module>
         <module>ServiceRequest</module>
         <module>Query</module>
+        <module>Statement</module>
     </modules>
     <dependencyManagement>
         <dependencies>

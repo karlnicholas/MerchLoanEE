@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.register.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
@@ -32,7 +33,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         this.registerManagementService = registerManagementService;
         this.queryService = queryService;
         this.rabbitMqSender = rabbitMqSender;
-        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     @Override
@@ -45,7 +47,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("FundLoan Received {}", debitLoan);
             ServiceRequestResponse serviceRequestResponse = registerManagementService.fundLoan(debitLoan);
             rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
-        } catch ( Exception ex) {
+        } catch (Exception ex) {
             log.error("void receivedCreditLoanMessage(CreditLoan creditLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
@@ -57,7 +59,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("CreditLoan Received {}", creditLoan);
             ServiceRequestResponse serviceRequestResponse = registerManagementService.creditLoan(creditLoan);
             rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
-        } catch ( Exception ex) {
+        } catch (Exception ex) {
             log.error("void receivedCreditLoanMessage(CreditLoan creditLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
@@ -69,7 +71,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("DebitLoan Received {}", debitLoan);
             ServiceRequestResponse serviceRequestResponse = registerManagementService.debitLoan(debitLoan);
             rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
-        } catch ( Exception ex) {
+        } catch (Exception ex) {
             log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
@@ -81,7 +83,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("QueryLoanId Received {}", id);
             List<? extends RegisterEntry> es = queryService.queryRegisterByLoanId(id);
             return objectMapper.writeValueAsString(es);
-        } catch ( Exception ex) {
+        } catch (Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }

@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.persistence.EntityManagerFactory;
 
 @SpringBootApplication(scanBasePackages = {"com.github.karlnicholas.merchloan"})
-@Configuration
 public class RegisterApplication {
 
     public static void main(String[] args) {

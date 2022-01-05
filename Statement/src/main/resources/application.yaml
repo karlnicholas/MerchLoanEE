@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    show-sql:true
+rabbitmq:
+  statement:
+    statement:
+      queue: statement.statement.queue
+  query:
+    statement:
+      statement:
+        queue: statement.query.statement.queue
+logging:
+  level:
+    org:
+      springframework:
+        orm:
+          jpa: debug
+
