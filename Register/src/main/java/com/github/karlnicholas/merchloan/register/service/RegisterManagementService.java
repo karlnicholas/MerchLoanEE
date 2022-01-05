@@ -12,7 +12,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -95,7 +94,6 @@ public class RegisterManagementService {
             );
             serviceRequestResponse.setStatusMessage(dke.getMessage());
         }
-        ThreadSleep(9000);
         return serviceRequestResponse;
     }
 
@@ -133,12 +131,12 @@ public class RegisterManagementService {
         }
         return serviceRequestResponse;
     }
-    private void ThreadSleep(long time) {
-        try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
-    }
+//    private void ThreadSleep(long time) {
+//        try {
+//            Thread.sleep(time);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }
