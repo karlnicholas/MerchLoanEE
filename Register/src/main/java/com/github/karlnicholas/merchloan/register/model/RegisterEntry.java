@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.register.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import javax.persistence.*;
@@ -18,6 +19,7 @@ import java.util.UUID;
         @Index(columnList = "rowNum"),
         @Index(unique = true, columnList = "loanId, rowNum")
 })
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegisterEntry {
     enum CREDITDEBIT {CREDIT, DEBIT}
     @Id
