@@ -5,8 +5,7 @@ rabbitmq:
   statement:
     statement:
       queue: statement.statement.queue
-  query:
-    statement:
+    query:
       statement:
         queue: statement.query.statement.queue
 logging:

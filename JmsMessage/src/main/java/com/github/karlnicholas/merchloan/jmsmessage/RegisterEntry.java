@@ -1,18 +1,18 @@
-package com.github.karlnicholas.merchloan.statement.dto;
+package com.github.karlnicholas.merchloan.jmsmessage;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class StatementRegisterEntry {
+@Getter
+@Setter
+@ToString
+public class RegisterEntry implements Serializable {
     private Integer rowNum;
     private LocalDate date;
     private String description;

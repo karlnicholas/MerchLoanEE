@@ -12,6 +12,8 @@ rabbitmq:
         queue: account.validate.credit.queue
       debit:
         queue: account.validate.debit.queue
+    statementheader:
+      queue: account.statementheader.queue
     query:
       account:
         id:

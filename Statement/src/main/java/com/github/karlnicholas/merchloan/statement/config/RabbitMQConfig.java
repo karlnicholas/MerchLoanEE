@@ -27,7 +27,7 @@ public class RabbitMQConfig {
         return new Queue(statementStatementQueue, false);
     }
     @Bean
-    Binding servicerequestBinding() {
+    Binding statementBinding() {
         return BindingBuilder
                 .bind(statementQueue())
                 .to(exchange())

@@ -20,6 +20,7 @@ public class QueryService {
     }
 
     public List<RegisterEntry> queryRegisterByLoanId(UUID id) {
-        return registerEntryRepository.queryByLoanIdOrderByRowNum(id);
+        return registerEntryRepository.findByLoanIdOrderByRowNum(id);
     }
+
 }

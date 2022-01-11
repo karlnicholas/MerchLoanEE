@@ -18,6 +18,8 @@ public class RabbitMQConfig {
     String accountValidateCreditQueue;
     @Value("${rabbitmq.account.validate.debit.queue}")
     String accountValidateDebitQueue;
+    @Value("${rabbitmq.account.statementheader.queue}")
+    String accountStatementHeaderQueue;
     @Value("${rabbitmq.account.query.account.id.queue}")
     String accountQueryAccountIdQueue;
     @Value("${rabbitmq.account.query.loan.id.queue}")
@@ -84,6 +86,19 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue statementHeaderQueue() {
+        return new Queue(accountStatementHeaderQueue, false);
+    }
+    @Bean
+    public Binding statementHeaderBinding() {
+        return BindingBuilder
+                .bind(statementHeaderQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountStatementHeaderRoutingKey())
+                .noargs();
+    }
+
+    @Bean
     public Queue accountQueryAccountIdQueue() {
         return new Queue(accountQueryAccountIdQueue, false);
     }
@@ -108,4 +123,5 @@ public class RabbitMQConfig {
                 .with(rabbitMqProperties.getAccountQueryLoanIdRoutingKey())
                 .noargs();
     }
+
 }

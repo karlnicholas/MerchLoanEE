@@ -74,6 +74,22 @@ public class ServiceRequestService {
         return id;
     }
 
+    public UUID statementStatementRequest(StatementRequest statementRequest) throws JsonProcessingException {
+        UUID id = persistRequest(statementRequest);
+        rabbitMqSender.statementStatement(
+                StatementHeader.builder()
+                        .id(id)
+                        .accountId(statementRequest.getAccountId())
+                        .loanId(statementRequest.getLoanId())
+                        .statementDate(statementRequest.getStatementDate())
+                        .startDate(statementRequest.getStartDate())
+                        .endDate(statementRequest.getEndDate())
+                        .retryCount(0)
+                        .build()
+        );
+        return id;
+    }
+
     public UUID accountValidateDebitRequest(DebitRequest debitRequest) throws JsonProcessingException {
         UUID id = persistRequest(debitRequest);
         rabbitMqSender.accountValidateDebit(

@@ -24,7 +24,7 @@ public class ApiHandler {
 
     public Mono<ServerResponse> getAccount(ServerRequest serverReqest) {
         return ServerResponse.ok().body(
-                Mono.just(UUID.fromString(serverReqest.pathVariable("id"))).map(rabbitMqSender::queryAccount)
+                Mono.just(UUID.fromString(serverReqest.pathVariable("id"))).map(rabbitMqSender::accountQueryAccount)
                 , String.class);
     }
 

@@ -1,10 +1,7 @@
 package com.github.karlnicholas.merchloan.servicerequest.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.karlnicholas.merchloan.apimessage.message.AccountRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.CreditRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.DebitRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.FundingRequest;
+import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -38,5 +35,9 @@ public class ServiceRequestController {
     @PostMapping(value = "debitRequest", produces = MediaType.TEXT_PLAIN_VALUE)
     public UUID debitRequest(@RequestBody DebitRequest debitRequest) throws JsonProcessingException {
         return serviceRequestService.accountValidateDebitRequest(debitRequest);
+    }
+    @PostMapping(value = "statementRequest", produces = MediaType.APPLICATION_JSON_VALUE)
+    public UUID statementRequest(@RequestBody StatementRequest statementRequest) throws JsonProcessingException {
+        return serviceRequestService.statementStatementRequest(statementRequest);
     }
 }

@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
-import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.FundLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.register.service.RegisterManagementService;
 import com.github.karlnicholas.merchloan.register.service.QueryService;
@@ -77,6 +74,17 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
+    @RabbitListener(queues = "${rabbitmq.register.statementheader.queue}")
+    public StatementHeader receivedStatementHeaderMessage(StatementHeader statementHeader) {
+        try {
+            log.info("StatementHeader Received {}", statementHeader);
+            ServiceRequestResponse serviceRequestResponse = registerManagementService.statementHeader(statementHeader);
+            return statementHeader;
+        } catch (Exception ex) {
+            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
     @RabbitListener(queues = "${rabbitmq.register.query.loan.id.queue}")
     public String receivedQueryLoanIdMessage(UUID id) {
         try {
@@ -88,4 +96,5 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
+
 }

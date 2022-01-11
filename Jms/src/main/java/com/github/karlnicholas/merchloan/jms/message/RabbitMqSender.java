@@ -4,6 +4,7 @@ import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -35,6 +36,14 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitRoutingkey(), debitLoan);
     }
 
+    public Object accountQueryAccount(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
+    }
+
+    public Object accountStatementHeader(StatementHeader statementHeader) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountStatementHeaderRoutingKey(), statementHeader);
+    }
+
     public void registerFundLoan(DebitLoan debitLoan) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterFundLoanRoutingkey(), debitLoan);
     }
@@ -47,6 +56,18 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitLoanRoutingkey(), debitLoan);
     }
 
+    public void statementStatement(StatementHeader statementHeader) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementRoutingkey(), statementHeader);
+    }
+
+    public Object queryRegister(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterQueryLoanIdRoutingkey(), id);
+    }
+
+    public Object registerStatementHeader(StatementHeader statementHeader) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterStatementHeaderRoutingkey(), statementHeader);
+    }
+
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestRoutingkey(), serviceRequest);
     }
@@ -55,15 +76,8 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueryIdRoutingkey(), id);
     }
 
-    public Object queryAccount(UUID id) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
-    }
-
     public Object queryLoan(UUID id) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdRoutingKey(), id);
     }
 
-    public Object queryRegister(UUID id) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterQueryLoanIdRoutingkey(), id);
-    }
 }

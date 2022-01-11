@@ -92,4 +92,21 @@ public class AccountManagementService {
         }
         return serviceRequest;
     }
+
+    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
+        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder()
+                .id(statementHeader.getId())
+                .build();
+        Optional<Account> accountQ = accountRepository.findById(statementHeader.getAccountId());
+        if (accountQ.isPresent()) {
+            statementHeader.setCustomer(accountQ.get().getCustomer());
+            serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
+            serviceRequest.setStatusMessage("Success");
+        } else {
+            serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
+            serviceRequest.setStatusMessage("Account not found for " + statementHeader.getAccountId());
+        }
+        return serviceRequest;
+
+    }
 }

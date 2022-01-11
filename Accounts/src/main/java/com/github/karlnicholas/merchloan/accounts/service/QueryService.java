@@ -5,6 +5,7 @@ import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,4 +31,5 @@ public class QueryService {
     public Optional<Loan> queryLoanId(UUID id) {
         return loanRepository.findById(id);
     }
+
 }

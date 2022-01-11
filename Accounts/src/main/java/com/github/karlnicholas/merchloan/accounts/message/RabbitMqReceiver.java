@@ -2,7 +2,6 @@ package com.github.karlnicholas.merchloan.accounts.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
@@ -115,6 +114,19 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             }
         } catch ( Exception ex) {
             log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.account.statementheader.queue}")
+    public StatementHeader receivedStatementHeaderMessage(StatementHeader statementHeader) {
+        try {
+            log.info("StatementHeader Received {}", statementHeader);
+            ServiceRequestResponse serviceRequest = accountManagementService.statementHeader(statementHeader);
+            statementHeader = (StatementHeader) rabbitMqSender.registerStatementHeader(statementHeader);
+            return statementHeader;
+        } catch ( Exception ex) {
+            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }

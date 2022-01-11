@@ -9,6 +9,8 @@ rabbitmq:
       queue: register.creditloan.queue
     debitloan:
       queue: register.debitloan.queue
+    statementheader:
+      queue: register.statementheader.queue
     query:
       loan:
         id:

@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.register.service;
 import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
+import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.github.karlnicholas.merchloan.register.model.LoanState;
 import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.register.repository.LoanStateRepository;
@@ -12,6 +13,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -124,6 +127,35 @@ public class RegisterManagementService {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
                     creditLoan.getRetryCount() == 0
+                            ? ServiceRequestResponse.STATUS.FAILURE
+                            : ServiceRequestResponse.STATUS.SUCCESS
+            );
+            serviceRequestResponse.setStatusMessage(dke.getMessage());
+        }
+        return serviceRequestResponse;
+    }
+
+    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
+        ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
+                .id(statementHeader.getId())
+                .build();
+        try {
+            List<RegisterEntry> entries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
+            statementHeader.setRegisterEntries(new ArrayList<>());
+            entries.forEach(e->statementHeader.getRegisterEntries().add(
+                    com.github.karlnicholas.merchloan.jmsmessage.RegisterEntry.builder()
+                            .rowNum(e.getRowNum())
+                            .date(e.getDate())
+                            .credit(e.getCredit())
+                            .debit(e.getDebit())
+                            .description(e.getDescription())
+                            .build()));
+            serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
+            serviceRequestResponse.setStatusMessage("Success");
+        } catch (DuplicateKeyException dke) {
+            log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
+            serviceRequestResponse.setStatus(
+                    statementHeader.getRetryCount() == 0
                             ? ServiceRequestResponse.STATUS.FAILURE
                             : ServiceRequestResponse.STATUS.SUCCESS
             );
