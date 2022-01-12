@@ -1,8 +1,10 @@
 package com.github.karlnicholas.merchloan.statement.message;
 
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.jmsmessage.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
+import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -11,6 +13,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,10 +36,23 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedStatementMessage(StatementHeader statementHeader) {
         try {
             log.info("Statement Received {}", statementHeader);
-            Optional<StatementHeader> statementExistsOpt = statementService.findQueryStatement(statementHeader);
+            Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader);
             if (statementExistsOpt.isEmpty()) {
                 statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
-                statementService.saveQueryStatement(statementHeader);
+                Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader);
+                BigDecimal startingBalance = lastStatement.map(Statement::getEndingBalance).orElse(BigDecimal.ZERO.setScale(2));
+                BigDecimal endingBalance = startingBalance;
+                for (RegisterEntry re: statementHeader.getRegisterEntries()) {
+                    if ( re.getCredit() != null ) {
+                        endingBalance = endingBalance.subtract(re.getCredit());
+                        re.setBalance(endingBalance);
+                    }
+                    if ( re.getDebit() != null ) {
+                        endingBalance = endingBalance.add(re.getDebit());
+                        re.setBalance(endingBalance);
+                    }
+                }
+                statementService.saveStatement(statementHeader, startingBalance, endingBalance);
             }
             rabbitMqSender.serviceRequestServiceRequest(
                     ServiceRequestResponse.builder()

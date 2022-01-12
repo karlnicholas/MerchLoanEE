@@ -10,6 +10,7 @@ import com.github.karlnicholas.merchloan.statement.repository.StatementRepositor
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -25,18 +26,27 @@ public class StatementService {
 
     }
 
-    public Optional<StatementHeader> findQueryStatement(StatementHeader statementHeader) {
-        return Optional.empty();
+    public Optional<Statement> findStatement(StatementHeader statementHeader) {
+        return statementRepository.findById(StatementPK.builder()
+                .loanId(statementHeader.getLoanId())
+                .statementDate(statementHeader.getStatementDate())
+                .build());
     }
 
-    public Statement saveQueryStatement(StatementHeader statementHeader) throws JsonProcessingException {
+    public Statement saveStatement(StatementHeader statementHeader, BigDecimal startingBalance, BigDecimal endingBalance) throws JsonProcessingException {
         return statementRepository.save(Statement.builder()
                 .id(StatementPK.builder()
                         .loanId(statementHeader.getLoanId())
                         .statementDate(statementHeader.getStatementDate())
                         .build())
                 .statement(objectMapper.writeValueAsString(statementHeader))
+                .startingBalance(startingBalance)
+                .endingBalance(endingBalance)
                 .build()
         );
+    }
+
+    public Optional<Statement> findLastStatement(StatementHeader statementHeader) {
+        return statementRepository.findFirstByIdLoanIdOrderByIdStatementDateDesc(statementHeader.getLoanId());
     }
 }
