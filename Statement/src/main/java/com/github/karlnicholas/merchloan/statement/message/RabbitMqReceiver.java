@@ -61,13 +61,20 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     }
                 }
                 statementService.saveStatement(statementHeader, startingBalance, endingBalance);
+                rabbitMqSender.serviceRequestServiceRequest(
+                        ServiceRequestResponse.builder()
+                                .id(statementHeader.getId())
+                                .status(ServiceRequestResponse.STATUS.SUCCESS)
+                                .statusMessage("Statement created")
+                                .build());
+            } else {
+                rabbitMqSender.serviceRequestServiceRequest(
+                        ServiceRequestResponse.builder()
+                                .id(statementHeader.getId())
+                                .status(ServiceRequestResponse.STATUS.FAILURE)
+                                .statusMessage("Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate())
+                                .build());
             }
-            rabbitMqSender.serviceRequestServiceRequest(
-                    ServiceRequestResponse.builder()
-                            .id(statementHeader.getId())
-                            .status(ServiceRequestResponse.STATUS.SUCCESS)
-                            .statusMessage("SUCCESS")
-                            .build());
         } catch ( Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

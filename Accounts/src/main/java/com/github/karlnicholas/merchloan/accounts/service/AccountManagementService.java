@@ -35,7 +35,7 @@ public class AccountManagementService {
                     .build()
             );
             serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequest.setStatusMessage("Success");
+            serviceRequest.setStatusMessage("Account created");
 
         } catch (DuplicateKeyException dke) {
             log.warn("Create Account duplicate key exception: {}", dke.getMessage());
@@ -56,14 +56,14 @@ public class AccountManagementService {
         Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
         if (accountQ.isPresent()) {
             try {
-                Loan loan = loanRepository.save(
+                loanRepository.save(
                         Loan.builder()
                                 .id(fundLoan.getId())
                                 .account(accountQ.get())
                                 .startDate(fundLoan.getStartDate())
                                 .build());
                 serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-                serviceRequest.setStatusMessage("Success");
+                serviceRequest.setStatusMessage("Loan created");
             } catch (DuplicateKeyException dke) {
                 log.warn("Create Account duplicate key exception: {}", dke.getMessage());
                 if (fundLoan.getRetryCount() == 0) {
@@ -85,7 +85,7 @@ public class AccountManagementService {
         Optional<Loan> loanQ = loanRepository.findById(loanId);
         if (loanQ.isPresent()) {
             serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequest.setStatusMessage("Success");
+            serviceRequest.setStatusMessage("Loan Validated");
         } else {
             serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
             serviceRequest.setStatusMessage("Loan not found for " + loanId);
@@ -101,7 +101,7 @@ public class AccountManagementService {
         if (accountQ.isPresent()) {
             statementHeader.setCustomer(accountQ.get().getCustomer());
             serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequest.setStatusMessage("Success");
+            serviceRequest.setStatusMessage("Statement header");
         } else {
             serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
             serviceRequest.setStatusMessage("Account not found for " + statementHeader.getAccountId());

@@ -51,7 +51,7 @@ public class RegisterManagementService {
                     .rowNum(1)
                     .build());
             serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Success");
+            serviceRequestResponse.setStatusMessage("Funding transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse createLoan(CreateLoan createLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
@@ -87,7 +87,7 @@ public class RegisterManagementService {
             }
             log.info("debit done sleeping");
             serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Success");
+            serviceRequestResponse.setStatusMessage("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
@@ -122,7 +122,7 @@ public class RegisterManagementService {
                 loanStateRepository.save(loanState);
             }
             serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Success");
+            serviceRequestResponse.setStatusMessage("Credit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
@@ -151,7 +151,7 @@ public class RegisterManagementService {
                             .description(e.getDescription())
                             .build()));
             serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Success");
+            serviceRequestResponse.setStatusMessage("Statement header");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
             serviceRequestResponse.setStatus(
