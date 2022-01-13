@@ -1,10 +1,13 @@
 package com.github.karlnicholas.merchloan.statement.message;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
+import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -21,11 +24,16 @@ import java.util.UUID;
 @Slf4j
 public class RabbitMqReceiver implements RabbitListenerConfigurer {
     private final StatementService statementService;
+    private final QueryService queryService;
     private final RabbitMqSender rabbitMqSender;
+    private final ObjectMapper objectMapper;
 
-    public RabbitMqReceiver(StatementService statementService, RabbitMqSender rabbitMqSender) {
+    public RabbitMqReceiver(StatementService statementService, QueryService queryService, RabbitMqSender rabbitMqSender) {
         this.statementService = statementService;
+        this.queryService = queryService;
         this.rabbitMqSender = rabbitMqSender;
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     @Override
@@ -69,8 +77,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.statement.query.statement.queue}", returnExceptions = "true")
     public String receivedQueryStatementMessage(UUID id) {
         try {
-            log.info("ServiceRequestQueryId Received {}", id);
-            return "hello";
+            log.info("QueryStatement Received {}", id);
+            return queryService.findById(id).map(Statement::getStatement).orElse("No statement found for id " + id);
         } catch ( Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

@@ -89,8 +89,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public String receivedQueryLoanIdMessage(UUID id) {
         try {
             log.info("QueryLoanId Received {}", id);
-            List<? extends RegisterEntry> es = queryService.queryRegisterByLoanId(id);
-            return objectMapper.writeValueAsString(es);
+            return objectMapper.writeValueAsString(queryService.queryRegisterByLoanId(id));
         } catch (Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

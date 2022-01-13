@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
-import com.github.karlnicholas.merchloan.statement.model.StatementPK;
 import com.github.karlnicholas.merchloan.statement.repository.StatementRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,18 +26,17 @@ public class StatementService {
     }
 
     public Optional<Statement> findStatement(StatementHeader statementHeader) {
-        return statementRepository.findById(StatementPK.builder()
-                .loanId(statementHeader.getLoanId())
-                .statementDate(statementHeader.getStatementDate())
-                .build());
+        return statementRepository.findByLoanIdAndStatementDate(
+                statementHeader.getLoanId(),
+                statementHeader.getStatementDate()
+        );
     }
 
     public Statement saveStatement(StatementHeader statementHeader, BigDecimal startingBalance, BigDecimal endingBalance) throws JsonProcessingException {
         return statementRepository.save(Statement.builder()
-                .id(StatementPK.builder()
-                        .loanId(statementHeader.getLoanId())
-                        .statementDate(statementHeader.getStatementDate())
-                        .build())
+                .id(statementHeader.getId())
+                .loanId(statementHeader.getLoanId())
+                .statementDate(statementHeader.getStatementDate())
                 .statement(objectMapper.writeValueAsString(statementHeader))
                 .startingBalance(startingBalance)
                 .endingBalance(endingBalance)
@@ -47,6 +45,7 @@ public class StatementService {
     }
 
     public Optional<Statement> findLastStatement(StatementHeader statementHeader) {
-        return statementRepository.findFirstByIdLoanIdOrderByIdStatementDateDesc(statementHeader.getLoanId());
+        return statementRepository.findFirstByLoanIdOrderByStatementDateDesc(statementHeader.getLoanId());
     }
+
 }

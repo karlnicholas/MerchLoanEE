@@ -2,10 +2,7 @@ package com.github.karlnicholas.merchloan.statement.model;
 
 import lombok.*;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -16,9 +13,12 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(indexes = {@Index(unique = true, columnList = "loanId, statementDate")})
 public class Statement {
-    @EmbeddedId
-    private StatementPK id;
+    @Id
+    private UUID id;
+    private UUID loanId;
+    private LocalDate statementDate;
     private BigDecimal startingBalance;
     private BigDecimal endingBalance;
     @Lob
