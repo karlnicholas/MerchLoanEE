@@ -44,37 +44,34 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedStatementMessage(StatementHeader statementHeader) {
         try {
             log.info("Statement Received {}", statementHeader);
+            ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader);
             if (statementExistsOpt.isEmpty()) {
                 statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
-                Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader);
-                BigDecimal startingBalance = lastStatement.map(Statement::getEndingBalance).orElse(BigDecimal.ZERO.setScale(2));
-                BigDecimal endingBalance = startingBalance;
-                for (RegisterEntry re: statementHeader.getRegisterEntries()) {
-                    if ( re.getCredit() != null ) {
-                        endingBalance = endingBalance.subtract(re.getCredit());
-                        re.setBalance(endingBalance);
+                if ( statementHeader.getCustomer() != null ) {
+                    Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader);
+                    BigDecimal startingBalance = lastStatement.map(Statement::getEndingBalance).orElse(BigDecimal.ZERO.setScale(2));
+                    BigDecimal endingBalance = startingBalance;
+                    for (RegisterEntry re: statementHeader.getRegisterEntries()) {
+                        if ( re.getCredit() != null ) {
+                            endingBalance = endingBalance.subtract(re.getCredit());
+                            re.setBalance(endingBalance);
+                        }
+                        if ( re.getDebit() != null ) {
+                            endingBalance = endingBalance.add(re.getDebit());
+                            re.setBalance(endingBalance);
+                        }
                     }
-                    if ( re.getDebit() != null ) {
-                        endingBalance = endingBalance.add(re.getDebit());
-                        re.setBalance(endingBalance);
-                    }
+                    statementService.saveStatement(statementHeader, startingBalance, endingBalance);
+                    requestResponse.setSuccess("Statement created");
+
+                } else {
+                    requestResponse.setFailure("Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
                 }
-                statementService.saveStatement(statementHeader, startingBalance, endingBalance);
-                rabbitMqSender.serviceRequestServiceRequest(
-                        ServiceRequestResponse.builder()
-                                .id(statementHeader.getId())
-                                .status(ServiceRequestResponse.STATUS.SUCCESS)
-                                .statusMessage("Statement created")
-                                .build());
             } else {
-                rabbitMqSender.serviceRequestServiceRequest(
-                        ServiceRequestResponse.builder()
-                                .id(statementHeader.getId())
-                                .status(ServiceRequestResponse.STATUS.FAILURE)
-                                .statusMessage("Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate())
-                                .build());
+                requestResponse.setFailure("Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
             }
+            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch ( Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

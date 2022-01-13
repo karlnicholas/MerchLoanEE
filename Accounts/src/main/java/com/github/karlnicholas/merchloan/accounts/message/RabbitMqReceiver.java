@@ -40,10 +40,14 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
 
     @RabbitListener(queues = "${rabbitmq.account.createaccount.queue}")
     public void receivedCreateAccountMessage(CreateAccount createAccount) {
-        log.info("CreateAccount Details Received is.. {}", createAccount);
-        ServiceRequestResponse serviceRequest = accountManagementService.createAccount(createAccount);
-        rabbitMqSender.serviceRequestServiceRequest(serviceRequest);
-
+        try {
+            log.info("CreateAccount Details Received is.. {}", createAccount);
+            ServiceRequestResponse serviceRequest = accountManagementService.createAccount(createAccount);
+            rabbitMqSender.serviceRequestServiceRequest(serviceRequest);
+        } catch ( Exception ex) {
+            log.error("void receivedCreateAccountMessage(CreateAccount createAccount) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
     }
 
     @RabbitListener(queues = "${rabbitmq.account.funding.queue}")
@@ -51,7 +55,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         try {
             log.info("FundLoan Received {} ", fundLoan);
             ServiceRequestResponse serviceRequestResponse = accountManagementService.fundAccount(fundLoan);
-            if ( serviceRequestResponse.getStatus() == ServiceRequestResponse.STATUS.SUCCESS ) {
+            if ( serviceRequestResponse.isSuccess() ) {
                 rabbitMqSender.registerFundLoan(
                         DebitLoan.builder()
                                 .id(fundLoan.getId())
@@ -74,8 +78,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedValidateCreditMessage(CreditLoan creditLoan) {
         try {
             log.info("CreditLoan Received {} ", creditLoan);
-            ServiceRequestResponse serviceRequest = accountManagementService.validateLoan(creditLoan.getLoanId());
-            if ( serviceRequest.getStatus() == ServiceRequestResponse.STATUS.SUCCESS ) {
+            ServiceRequestResponse serviceRequestResponse = accountManagementService.validateLoan(creditLoan.getLoanId());
+            if ( serviceRequestResponse.isSuccess() ) {
                 rabbitMqSender.registerCreditLoan(
                         CreditLoan.builder()
                                 .id(creditLoan.getId())
@@ -86,7 +90,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                                 .build()
                 );
             } else {
-                rabbitMqSender.serviceRequestServiceRequest(serviceRequest);
+                rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
             }
         } catch ( Exception ex) {
             log.error("void receivedValidateCreditMessage(CreditLoan creditLoan) {}", ex.getMessage());
@@ -98,8 +102,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedValidateDebitMessage(DebitLoan debitLoan) {
         try {
             log.info("DebitLoan Received {} ", debitLoan);
-            ServiceRequestResponse serviceRequest = accountManagementService.validateLoan(debitLoan.getLoanId());
-            if ( serviceRequest.getStatus() == ServiceRequestResponse.STATUS.SUCCESS ) {
+            ServiceRequestResponse serviceRequestResponse = accountManagementService.validateLoan(debitLoan.getLoanId());
+            if ( serviceRequestResponse.isSuccess() ) {
                 rabbitMqSender.registerDebitLoan(
                         DebitLoan.builder()
                                 .id(debitLoan.getId())
@@ -110,7 +114,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                                 .build()
                 );
             } else {
-                rabbitMqSender.serviceRequestServiceRequest(serviceRequest);
+                rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
             }
         } catch ( Exception ex) {
             log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
@@ -122,8 +126,9 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public StatementHeader receivedStatementHeaderMessage(StatementHeader statementHeader) {
         try {
             log.info("StatementHeader Received {}", statementHeader);
-            ServiceRequestResponse serviceRequest = accountManagementService.statementHeader(statementHeader);
-            statementHeader = (StatementHeader) rabbitMqSender.registerStatementHeader(statementHeader);
+            ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
+            if ( serviceRequestResponse.isSuccess() )
+                statementHeader = (StatementHeader) rabbitMqSender.registerStatementHeader(statementHeader);
             return statementHeader;
         } catch ( Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());

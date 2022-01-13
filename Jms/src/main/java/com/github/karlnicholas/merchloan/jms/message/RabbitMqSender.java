@@ -4,7 +4,6 @@ import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -36,7 +35,7 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitRoutingkey(), debitLoan);
     }
 
-    public Object accountQueryAccount(UUID id) {
+    public Object queryAccount(UUID id) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
     }
 

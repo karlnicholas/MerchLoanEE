@@ -16,7 +16,7 @@ public class ApiHandler {
         this.rabbitMqSender = rabbitMqSender;
     }
 
-    public Mono<ServerResponse> getId(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getRequest(ServerRequest serverRequest) {
         return ServerResponse.ok().body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryServiceRequest)
                 , String.class);
@@ -24,7 +24,7 @@ public class ApiHandler {
 
     public Mono<ServerResponse> getAccount(ServerRequest serverRequest) {
         return ServerResponse.ok().body(
-                Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::accountQueryAccount)
+                Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryAccount)
                 , String.class);
     }
 

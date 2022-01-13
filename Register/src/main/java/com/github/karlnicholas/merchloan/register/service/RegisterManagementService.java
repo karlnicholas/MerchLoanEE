@@ -30,7 +30,7 @@ public class RegisterManagementService {
     }
 
     public ServiceRequestResponse fundLoan(DebitLoan fundLoan) {
-        ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(fundLoan.getId())
                 .build();
         //TODO: Better logic here
@@ -50,22 +50,20 @@ public class RegisterManagementService {
                     .description(fundLoan.getDescription())
                     .rowNum(1)
                     .build());
-            serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Funding transaction entered");
+            requestResponse.setSuccess("Funding transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse createLoan(CreateLoan createLoan) duplicate key: {}", dke.getMessage());
-            serviceRequestResponse.setStatus(
-                    fundLoan.getRetryCount() == 0
-                            ? ServiceRequestResponse.STATUS.FAILURE
-                            : ServiceRequestResponse.STATUS.SUCCESS
-            );
-            serviceRequestResponse.setStatusMessage(dke.getMessage());
+            if ( fundLoan.getRetryCount() == 0 ) {
+                requestResponse.setFailure(dke.getMessage());
+            } else {
+                requestResponse.setSuccess("Funding transaction entered");
+            }
         }
-        return serviceRequestResponse;
+        return requestResponse;
     }
 
     public ServiceRequestResponse debitLoan(DebitLoan debitLoan) {
-        ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(debitLoan.getId())
                 .build();
         try {
@@ -85,23 +83,20 @@ public class RegisterManagementService {
                 registerEntryRepository.save(debitEntry);
                 loanStateRepository.save(loanState);
             }
-            log.info("debit done sleeping");
-            serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Debit transaction entered");
+            requestResponse.setSuccess("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            serviceRequestResponse.setStatus(
-                    debitLoan.getRetryCount() == 0
-                            ? ServiceRequestResponse.STATUS.FAILURE
-                            : ServiceRequestResponse.STATUS.SUCCESS
-            );
-            serviceRequestResponse.setStatusMessage(dke.getMessage());
+            if ( debitLoan.getRetryCount() == 0 ) {
+                requestResponse.setFailure(dke.getMessage());
+            } else {
+                requestResponse.setSuccess("Debit transaction entered");
+            }
         }
-        return serviceRequestResponse;
+        return requestResponse;
     }
 
     public ServiceRequestResponse creditLoan(CreditLoan creditLoan) {
-        ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(creditLoan.getId())
                 .build();
         try {
@@ -121,22 +116,20 @@ public class RegisterManagementService {
                 registerEntryRepository.save(creditEntry);
                 loanStateRepository.save(loanState);
             }
-            serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Credit transaction entered");
+            requestResponse.setSuccess("Credit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            serviceRequestResponse.setStatus(
-                    creditLoan.getRetryCount() == 0
-                            ? ServiceRequestResponse.STATUS.FAILURE
-                            : ServiceRequestResponse.STATUS.SUCCESS
-            );
-            serviceRequestResponse.setStatusMessage(dke.getMessage());
+            if ( creditLoan.getRetryCount() == 0 ) {
+                requestResponse.setFailure(dke.getMessage());
+            } else {
+                requestResponse.setSuccess("Credit transaction entered");
+            }
         }
-        return serviceRequestResponse;
+        return requestResponse;
     }
 
     public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
-        ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(statementHeader.getId())
                 .build();
         try {
@@ -150,18 +143,16 @@ public class RegisterManagementService {
                             .debit(e.getDebit())
                             .description(e.getDescription())
                             .build()));
-            serviceRequestResponse.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequestResponse.setStatusMessage("Statement header");
+            requestResponse.setSuccess("Statement header");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            serviceRequestResponse.setStatus(
-                    statementHeader.getRetryCount() == 0
-                            ? ServiceRequestResponse.STATUS.FAILURE
-                            : ServiceRequestResponse.STATUS.SUCCESS
-            );
-            serviceRequestResponse.setStatusMessage(dke.getMessage());
+            if ( statementHeader.getRetryCount() == 0 ) {
+                requestResponse.setFailure(dke.getMessage());
+            } else {
+                requestResponse.setSuccess("Statement header");
+            }
         }
-        return serviceRequestResponse;
+        return requestResponse;
     }
 
 //    private void ThreadSleep(long time) {

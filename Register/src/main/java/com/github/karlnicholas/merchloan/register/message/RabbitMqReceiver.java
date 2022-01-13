@@ -2,10 +2,8 @@ package com.github.karlnicholas.merchloan.register.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
-import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.register.service.RegisterManagementService;
 import com.github.karlnicholas.merchloan.register.service.QueryService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +13,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -42,8 +39,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedFundLoanMessage(DebitLoan debitLoan) {
         try {
             log.info("FundLoan Received {}", debitLoan);
-            ServiceRequestResponse serviceRequestResponse = registerManagementService.fundLoan(debitLoan);
-            rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+            rabbitMqSender.serviceRequestServiceRequest(registerManagementService.fundLoan(debitLoan));
         } catch (Exception ex) {
             log.error("void receivedCreditLoanMessage(CreditLoan creditLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -54,8 +50,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedCreditLoanMessage(CreditLoan creditLoan) {
         try {
             log.info("CreditLoan Received {}", creditLoan);
-            ServiceRequestResponse serviceRequestResponse = registerManagementService.creditLoan(creditLoan);
-            rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+            rabbitMqSender.serviceRequestServiceRequest(registerManagementService.creditLoan(creditLoan));
         } catch (Exception ex) {
             log.error("void receivedCreditLoanMessage(CreditLoan creditLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -66,8 +61,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedDebitLoanMessage(DebitLoan debitLoan) {
         try {
             log.info("DebitLoan Received {}", debitLoan);
-            ServiceRequestResponse serviceRequestResponse = registerManagementService.debitLoan(debitLoan);
-            rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+            rabbitMqSender.serviceRequestServiceRequest(registerManagementService.debitLoan(debitLoan));
         } catch (Exception ex) {
             log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -78,7 +72,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public StatementHeader receivedStatementHeaderMessage(StatementHeader statementHeader) {
         try {
             log.info("StatementHeader Received {}", statementHeader);
-            ServiceRequestResponse serviceRequestResponse = registerManagementService.statementHeader(statementHeader);
+            registerManagementService.statementHeader(statementHeader);
             return statementHeader;
         } catch (Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());

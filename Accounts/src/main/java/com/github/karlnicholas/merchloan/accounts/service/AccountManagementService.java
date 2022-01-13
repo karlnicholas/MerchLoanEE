@@ -26,7 +26,7 @@ public class AccountManagementService {
     }
 
     public ServiceRequestResponse createAccount(CreateAccount createAccount) {
-        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder().id(createAccount.getId()).build();
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {
             accountRepository.save(Account.builder()
                     .id(createAccount.getId())
@@ -34,23 +34,21 @@ public class AccountManagementService {
                     .createDate(createAccount.getCreateDate())
                     .build()
             );
-            serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequest.setStatusMessage("Account created");
+            requestResponse.setSuccess("Account created");
 
         } catch (DuplicateKeyException dke) {
             log.warn("Create Account duplicate key exception: {}", dke.getMessage());
             if (createAccount.getRetryCount() == 0) {
-                serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
+                requestResponse.setFailure(dke.getMessage());
             } else {
-                serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
+                requestResponse.setSuccess("Account created");
             }
-            serviceRequest.setStatusMessage(dke.getMessage());
         }
-        return serviceRequest;
+        return requestResponse;
     }
 
     public ServiceRequestResponse fundAccount(FundLoan fundLoan) {
-        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(fundLoan.getId())
                 .build();
         Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
@@ -62,51 +60,44 @@ public class AccountManagementService {
                                 .account(accountQ.get())
                                 .startDate(fundLoan.getStartDate())
                                 .build());
-                serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-                serviceRequest.setStatusMessage("Loan created");
+                requestResponse.setSuccess();
             } catch (DuplicateKeyException dke) {
                 log.warn("Create Account duplicate key exception: {}", dke.getMessage());
                 if (fundLoan.getRetryCount() == 0) {
-                    serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
-                    serviceRequest.setStatusMessage(dke.getMessage());
+                    requestResponse.setFailure(dke.getMessage());
                 }
             }
         } else {
-            serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
-            serviceRequest.setStatusMessage("Account not found for " + fundLoan.getAccountId());
+            requestResponse.setFailure("Account not found for " + fundLoan.getAccountId());
         }
-        return serviceRequest;
+        return requestResponse;
     }
 
     public ServiceRequestResponse validateLoan(UUID loanId) {
-        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(loanId)
                 .build();
         Optional<Loan> loanQ = loanRepository.findById(loanId);
         if (loanQ.isPresent()) {
-            serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequest.setStatusMessage("Loan Validated");
+            requestResponse.setSuccess();
         } else {
-            serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
-            serviceRequest.setStatusMessage("Loan not found for " + loanId);
+            requestResponse.setFailure("Loan not found for " + loanId);
         }
-        return serviceRequest;
+        return requestResponse;
     }
 
     public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
-        ServiceRequestResponse serviceRequest = ServiceRequestResponse.builder()
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(statementHeader.getId())
                 .build();
         Optional<Account> accountQ = accountRepository.findById(statementHeader.getAccountId());
         if (accountQ.isPresent()) {
             statementHeader.setCustomer(accountQ.get().getCustomer());
-            serviceRequest.setStatus(ServiceRequestResponse.STATUS.SUCCESS);
-            serviceRequest.setStatusMessage("Statement header");
+            requestResponse.setSuccess();
         } else {
-            serviceRequest.setStatus(ServiceRequestResponse.STATUS.FAILURE);
-            serviceRequest.setStatusMessage("Account not found for " + statementHeader.getAccountId());
+            requestResponse.setFailure("Account not found for " + statementHeader.getAccountId());
         }
-        return serviceRequest;
+        return requestResponse;
 
     }
 }
