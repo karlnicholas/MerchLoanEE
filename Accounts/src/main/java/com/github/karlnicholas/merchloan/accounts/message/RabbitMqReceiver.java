@@ -15,6 +15,9 @@ import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -130,6 +133,17 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             if ( serviceRequestResponse.isSuccess() )
                 statementHeader = (StatementHeader) rabbitMqSender.registerStatementHeader(statementHeader);
             return statementHeader;
+        } catch ( Exception ex) {
+            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.account.loanstocycle.queue}")
+    public List<UUID> receivedLoansToCyceMessage(LocalDate businessDate) {
+        try {
+            log.info("LoansToCyce Received {}", businessDate);
+            return accountManagementService.loansToCycle(businessDate);
         } catch ( Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

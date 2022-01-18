@@ -16,7 +16,7 @@ public class Loan {
     @Id
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Account account;
     private LocalDate startDate;
 

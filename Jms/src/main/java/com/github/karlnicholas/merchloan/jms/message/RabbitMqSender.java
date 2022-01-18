@@ -84,7 +84,7 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementRoutingkey(), id);
     }
 
-    public Object acccountCheckRequests(LocalDate businessDate) {
+    public Object servicerequestCheckRequest(LocalDate businessDate) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestCheckRequestRoutingkey(), businessDate);
     }
 

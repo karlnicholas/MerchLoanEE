@@ -11,8 +11,10 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -102,4 +104,17 @@ public class AccountManagementService {
 
     }
 
+    //TODO: close loans
+    public List<UUID> loansToCycle(LocalDate businessDate) {
+        return loanRepository.findAll().stream()
+                .filter(l ->
+                        !businessDate.isEqual(l.getStartDate())
+                                && (
+                                (businessDate.lengthOfMonth() == businessDate.getDayOfMonth() && l.getStartDate().lengthOfMonth() > businessDate.lengthOfMonth())
+                                        || l.getStartDate().getDayOfMonth() == businessDate.getDayOfMonth()
+                        )
+                )
+                .map(Loan::getId)
+                .collect(Collectors.toList());
+    }
 }

@@ -142,6 +142,6 @@ public class ServiceRequestService {
     }
 
     public Boolean checkRequest(LocalDate businessDate) {
-        return serviceRequestRepository.existsBylocalDateTimeLessThanAndStatusEquals(businessDate.plusDays(1), ServiceRequestResponse.STATUS.PENDING);
+        return serviceRequestRepository.existsBylocalDateTimeLessThanAndStatusEquals(businessDate.plusDays(1).atStartOfDay(), ServiceRequestResponse.STATUS.PENDING);
     }
 }

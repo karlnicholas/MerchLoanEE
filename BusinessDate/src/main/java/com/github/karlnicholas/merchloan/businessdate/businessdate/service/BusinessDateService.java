@@ -45,8 +45,8 @@ public class BusinessDateService {
         while(waiting) {
             try {
                 Thread.sleep(5000);
-                Boolean completed = (Boolean) rabbitMqSender.acccountCheckRequests(priorBusinessDate.getBusinessDate());
-                if ( completed )
+                Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate.getBusinessDate());
+                if ( !requestPending )
                     waiting = false;
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -54,8 +54,8 @@ public class BusinessDateService {
 
             }
         }
-        List<UUID> loansToCycles = (List<UUID>) rabbitMqSender.acccountLoansToCycle(priorBusinessDate.getBusinessDate());
-        loansToCycles.forEach(rabbitMqSender::serviceRequestBillLoan);
+        List<UUID> loansToCycle = (List<UUID>) rabbitMqSender.acccountLoansToCycle(priorBusinessDate.getBusinessDate());
+        loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
 
     }
 }
