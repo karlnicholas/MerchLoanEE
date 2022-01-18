@@ -5,6 +5,10 @@ spring:
 rabbitmq:
   servicerequest:
     queue: servicerequest.queue
+    checkrequest:
+      queue: servicerequest.checkrequest.queue
+    billloan:
+      queue: servicerequest.billloan.queue
     query:
       id:
         queue: servicerequest.querybyid.queue

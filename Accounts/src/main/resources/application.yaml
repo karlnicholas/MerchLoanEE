@@ -14,6 +14,8 @@ rabbitmq:
         queue: account.validate.debit.queue
     statementheader:
       queue: account.statementheader.queue
+    loanstocycle:
+      queue: account.loanstocycle.queue
     query:
       account:
         id:

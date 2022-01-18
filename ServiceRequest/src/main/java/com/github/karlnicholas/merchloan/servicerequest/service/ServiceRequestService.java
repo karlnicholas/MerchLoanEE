@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
+import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,13 @@ public class ServiceRequestService {
     private final RabbitMqSender rabbitMqSender;
     private final ServiceRequestRepository serviceRequestRepository;
     private final ObjectMapper objectMapper;
+    private final RedisComponent redisComponent;
 
-    public ServiceRequestService(RabbitMqSender rabbitMqSender, ServiceRequestRepository serviceRequestRepository, ObjectMapper objectMapper) {
+    public ServiceRequestService(RabbitMqSender rabbitMqSender, ServiceRequestRepository serviceRequestRepository, ObjectMapper objectMapper, RedisComponent redisComponent) {
         this.rabbitMqSender = rabbitMqSender;
         this.serviceRequestRepository = serviceRequestRepository;
         this.objectMapper = objectMapper;
+        this.redisComponent = redisComponent;
     }
 
     public UUID accountRequest(AccountRequest accountRequest) throws JsonProcessingException {
@@ -35,7 +38,7 @@ public class ServiceRequestService {
             rabbitMqSender.accountCreateAccount(CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
-                    .createDate(LocalDate.now())
+                    .createDate(redisComponent.getBusinessDate())
                     .retryCount(0)
                     .build());
         } catch (Exception e) {
@@ -51,7 +54,7 @@ public class ServiceRequestService {
                         .id(id)
                         .accountId(fundingRequest.getAccountId())
                         .amount(fundingRequest.getAmount())
-                        .startDate(LocalDate.now())
+                        .startDate(redisComponent.getBusinessDate())
                         .description(fundingRequest.getDescription())
                         .retryCount(0)
                         .build()
@@ -65,7 +68,7 @@ public class ServiceRequestService {
                 CreditLoan.builder()
                         .id(id)
                         .loanId(creditRequest.getLoanId())
-                        .date(LocalDate.now())
+                        .date(redisComponent.getBusinessDate())
                         .amount(creditRequest.getAmount())
                         .description(creditRequest.getDescription())
                         .retryCount(0)
@@ -95,7 +98,7 @@ public class ServiceRequestService {
         rabbitMqSender.accountValidateDebit(
                 DebitLoan.builder()
                         .loanId(debitRequest.getLoanId())
-                        .date(LocalDate.now())
+                        .date(redisComponent.getBusinessDate())
                         .amount(debitRequest.getAmount())
                         .description(debitRequest.getDescription())
                         .build()
@@ -138,4 +141,7 @@ public class ServiceRequestService {
         }
     }
 
+    public Boolean checkRequest(LocalDate businessDate) {
+        return serviceRequestRepository.existsBylocalDateTimeLessThanAndStatusEquals(businessDate.plusDays(1), ServiceRequestResponse.STATUS.PENDING);
+    }
 }

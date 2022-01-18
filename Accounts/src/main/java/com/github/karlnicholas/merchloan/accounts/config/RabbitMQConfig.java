@@ -24,7 +24,8 @@ public class RabbitMQConfig {
     String accountQueryAccountIdQueue;
     @Value("${rabbitmq.account.query.loan.id.queue}")
     String accountQueryLoanIdQueue;
-
+    @Value("${rabbitmq.account.loanstocycle.queue}")
+    String accountLoansToCycleQueue;
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
     }
@@ -121,6 +122,19 @@ public class RabbitMQConfig {
                 .bind(accountQueryLoanIdQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getAccountQueryLoanIdRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountLoansToCycleQueue() {
+        return new Queue(accountLoansToCycleQueue, false);
+    }
+    @Bean
+    public Binding accountLoansToCycleBinding() {
+        return BindingBuilder
+                .bind(accountLoansToCycleQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAcccountLoansToCycleRoutingkey())
                 .noargs();
     }
 

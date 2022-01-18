@@ -12,6 +12,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,4 +60,24 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
+    @RabbitListener(queues = "${rabbitmq.servicerequest.checkrequest.queue}")
+    public Boolean receivedCheckRequestMessage(LocalDate businessDate) {
+        try {
+            log.info("CheckRequeste Received {}", businessDate);
+            return serviceRequestService.checkRequest(businessDate);
+        } catch ( Exception ex) {
+            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.servicerequest.billloan.queue}", returnExceptions = "true")
+    public void receivedServiceRequestBillloanMessage(UUID id) {
+        try {
+            log.info("ServiceRequestBillloan Received {}", id);
+        } catch ( Exception ex) {
+            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
 }

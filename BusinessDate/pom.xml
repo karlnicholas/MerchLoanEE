@@ -7,9 +7,9 @@
         <groupId>com.github.karlnicholas.merchloan</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>servicerequest</artifactId>
-    <name>ServiceRequest</name>
-    <description>ServiceRequest</description>
+    <artifactId>businessdate</artifactId>
+    <name>BusinessDate</name>
+    <description>BusinessDate</description>
     <properties>
         <java.version>11</java.version>
     </properties>
@@ -27,23 +27,19 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>jms</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>apimessage</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>redis</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -55,9 +51,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit-test</artifactId>
-            <scope>test</scope>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>jms</artifactId>
         </dependency>
     </dependencies>
 

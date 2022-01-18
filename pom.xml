@@ -23,6 +23,8 @@
         <module>ServiceRequest</module>
         <module>Query</module>
         <module>Statement</module>
+        <module>Redis</module>
+        <module>BusinessDate</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -39,6 +41,11 @@
             <dependency>
                 <groupId>com.github.karlnicholas.merchloan</groupId>
                 <artifactId>jms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

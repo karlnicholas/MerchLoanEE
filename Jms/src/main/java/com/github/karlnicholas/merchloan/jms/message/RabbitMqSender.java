@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -83,4 +84,15 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementRoutingkey(), id);
     }
 
+    public Object acccountCheckRequests(LocalDate businessDate) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestCheckRequestRoutingkey(), businessDate);
+    }
+
+    public Object acccountLoansToCycle(LocalDate businessDate) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAcccountLoansToCycleRoutingkey(), businessDate);
+    }
+
+    public void serviceRequestBillLoan(UUID uuid) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestBillLoanRoutingkey(), uuid);
+    }
 }

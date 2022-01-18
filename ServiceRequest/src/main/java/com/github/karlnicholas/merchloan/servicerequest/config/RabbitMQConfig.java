@@ -13,6 +13,10 @@ public class RabbitMQConfig {
     private String servicerequestQueue;
     @Value("${rabbitmq.servicerequest.query.id.queue}")
     private String servicerequestQueryIdQueue;
+    @Value("${rabbitmq.servicerequest.checkrequest.queue}")
+    private String servicerequestCheckRequestQueue;
+    @Value("${rabbitmq.servicerequest.billloan.queue}")
+    private String servicerequestBillloanQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -44,6 +48,30 @@ public class RabbitMQConfig {
                 .bind(servicerequestQueryIdQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getServicerequestQueryIdRoutingkey())
+                .noargs();
+    }
+    @Bean
+    public Queue servicerequestCheckRequestsQueue() {
+        return new Queue(servicerequestCheckRequestQueue, false);
+    }
+    @Bean
+    public Binding servicerequestCheckRequestsBinding() {
+        return BindingBuilder
+                .bind(servicerequestCheckRequestsQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getServicerequestCheckRequestRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue servicerequestBillloanQueue() {
+        return new Queue(servicerequestBillloanQueue, false);
+    }
+    @Bean
+    Binding servicerequestBillloanBinding() {
+        return BindingBuilder
+                .bind(servicerequestBillloanQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getServicerequestBillLoanRoutingkey())
                 .noargs();
     }
 }
