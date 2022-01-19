@@ -105,7 +105,7 @@ public class AccountManagementService {
     }
 
     //TODO: close loans
-    public List<UUID> loansToCycle(LocalDate businessDate) {
+    public List<BillingCycle> loansToCycle(LocalDate businessDate) {
         return loanRepository.findAll().stream()
                 .filter(l ->
                         !businessDate.isEqual(l.getStartDate())
@@ -114,7 +114,13 @@ public class AccountManagementService {
                                         || l.getStartDate().getDayOfMonth() == businessDate.getDayOfMonth()
                         )
                 )
-                .map(Loan::getId)
+                .map(l->BillingCycle.builder()
+                        .accountId(l.getAccount().getId())
+                        .loanId(l.getId())
+                        .statementDate(businessDate)
+                        .startDate(businessDate.minusMonths(1))
+                        .endDate(businessDate)
+                        .build())
                 .collect(Collectors.toList());
     }
 }

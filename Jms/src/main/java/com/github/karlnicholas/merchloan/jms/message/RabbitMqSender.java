@@ -92,7 +92,7 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAcccountLoansToCycleRoutingkey(), businessDate);
     }
 
-    public void serviceRequestBillLoan(UUID uuid) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestBillLoanRoutingkey(), uuid);
+    public void serviceRequestBillLoan(BillingCycle billingCycle) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestBillLoanRoutingkey(), billingCycle);
     }
 }

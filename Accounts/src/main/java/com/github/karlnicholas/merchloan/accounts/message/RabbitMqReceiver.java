@@ -16,7 +16,6 @@ import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -140,7 +139,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     }
 
     @RabbitListener(queues = "${rabbitmq.account.loanstocycle.queue}")
-    public List<UUID> receivedLoansToCyceMessage(LocalDate businessDate) {
+    public List<BillingCycle> receivedLoansToCyceMessage(LocalDate businessDate) {
         try {
             log.info("LoansToCyce Received {}", businessDate);
             return accountManagementService.loansToCycle(businessDate);

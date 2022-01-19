@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -141,7 +140,4 @@ public class ServiceRequestService {
         }
     }
 
-    public Boolean checkRequest(LocalDate businessDate) {
-        return serviceRequestRepository.existsBylocalDateTimeLessThanAndStatusEquals(businessDate.plusDays(1).atStartOfDay(), ServiceRequestResponse.STATUS.PENDING);
-    }
 }
