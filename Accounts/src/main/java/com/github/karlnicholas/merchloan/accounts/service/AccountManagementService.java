@@ -114,11 +114,15 @@ public class AccountManagementService {
                                         || l.getStartDate().getDayOfMonth() == businessDate.getDayOfMonth()
                         )
                 )
-                .map(l->BillingCycle.builder()
+                .map(l -> BillingCycle.builder()
                         .accountId(l.getAccount().getId())
                         .loanId(l.getId())
                         .statementDate(businessDate)
-                        .startDate(businessDate.minusMonths(1))
+                        .startDate(
+                                businessDate.minusMonths(1).compareTo(l.getStartDate()) == 0
+                                        ? businessDate.minusMonths(1)
+                                        : businessDate.minusMonths(1).plusDays(1)
+                        )
                         .endDate(businessDate)
                         .build())
                 .collect(Collectors.toList());

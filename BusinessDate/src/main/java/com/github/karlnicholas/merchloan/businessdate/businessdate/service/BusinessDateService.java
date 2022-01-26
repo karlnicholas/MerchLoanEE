@@ -24,10 +24,10 @@ public class BusinessDateService {
     }
 
     public void updateBusinessDate(LocalDate businessDate) {
-        BusinessDate currentBusinessDate = BusinessDate.builder().businessDate(businessDateRepository.findById(1L).get().getBusinessDate()).build();
+        BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(businessDateRepository.findById(1L).get().getBusinessDate()).build();
         businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
         redisComponent.updateBusinessDate(businessDate);
-        startBillingCycle(currentBusinessDate);
+        startBillingCycle(priorBusinessDate);
     }
 
     public void initializeBusinessDate() {
