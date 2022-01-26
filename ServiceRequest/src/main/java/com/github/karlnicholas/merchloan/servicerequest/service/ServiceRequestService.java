@@ -96,6 +96,7 @@ public class ServiceRequestService {
         UUID id = persistRequest(debitRequest);
         rabbitMqSender.accountValidateDebit(
                 DebitLoan.builder()
+                        .id(id)
                         .loanId(debitRequest.getLoanId())
                         .date(redisComponent.getBusinessDate())
                         .amount(debitRequest.getAmount())
@@ -103,6 +104,27 @@ public class ServiceRequestService {
                         .build()
         );
         return id;
+    }
+
+    public UUID billingCycleChargeRequest(BillingCycleChargeRequest billingCycleChargeRequest) throws JsonProcessingException {
+        UUID id = persistRequest(billingCycleChargeRequest);
+        rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
+                .id(id)
+                .loanId(billingCycleChargeRequest.getDebitRequest().getLoanId())
+                .date(billingCycleChargeRequest.getDate())
+                .amount(billingCycleChargeRequest.getDebitRequest().getAmount())
+                .description(billingCycleChargeRequest.getDebitRequest().getDescription())
+                .build());
+        return id;
+    }
+
+    public void chargeCompleted(BillingCycleCharge billingCycleCharge) {
+        completeServiceRequest(ServiceRequestResponse.builder()
+                .id(billingCycleCharge.getId())
+                .status(ServiceRequestResponse.STATUS.SUCCESS)
+                .statusMessage(ServiceRequestResponse.STATUS.SUCCESS.name())
+                .build());
+        redisComponent.chargeCompleted(billingCycleCharge);
     }
 
     private UUID persistRequest(ServiceRequestMessage requestMessage) throws JsonProcessingException {

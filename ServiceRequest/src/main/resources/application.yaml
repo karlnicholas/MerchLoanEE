@@ -9,6 +9,10 @@ rabbitmq:
       queue: servicerequest.checkrequest.queue
     billloan:
       queue: servicerequest.billloan.queue
+    billingcyclecharge:
+      queue: servicerequest.billingcyclecharge.queue
+    chargecompleted:
+      queue: servicerequest.chargecompleted.queue
     query:
       id:
         queue: servicerequest.querybyid.queue

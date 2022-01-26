@@ -11,6 +11,8 @@ rabbitmq:
       queue: register.debitloan.queue
     statementheader:
       queue: register.statementheader.queue
+    billingcyclecharge:
+      queue: register.billingcyclecharge.queue
     query:
       loan:
         id:

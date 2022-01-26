@@ -1,9 +1,6 @@
 package com.github.karlnicholas.merchloan.register.service;
 
-import com.github.karlnicholas.merchloan.jmsmessage.CreditLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.DebitLoan;
-import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
-import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.register.model.LoanState;
 import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.register.repository.LoanStateRepository;
@@ -53,7 +50,7 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Funding transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse createLoan(CreateLoan createLoan) duplicate key: {}", dke.getMessage());
-            if ( fundLoan.getRetryCount() == 0 ) {
+            if (fundLoan.getRetryCount() == 0) {
                 requestResponse.setFailure(dke.getMessage());
             } else {
                 requestResponse.setSuccess("Funding transaction entered");
@@ -75,9 +72,9 @@ public class RegisterManagementService {
                     .description(debitLoan.getDescription())
                     .build();
             Optional<LoanState> loanStateOpt = loanStateRepository.findById(debitLoan.getLoanId());
-            if ( loanStateOpt.isPresent() ) {
+            if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
-                loanState.setCurrentRowNum(loanState.getCurrentRowNum()+1);
+                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
                 loanState.setBalance(loanState.getBalance().add(debitEntry.getDebit()));
                 debitEntry.setRowNum(loanState.getCurrentRowNum());
                 registerEntryRepository.save(debitEntry);
@@ -86,7 +83,7 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            if ( debitLoan.getRetryCount() == 0 ) {
+            if (debitLoan.getRetryCount() == 0) {
                 requestResponse.setFailure(dke.getMessage());
             } else {
                 requestResponse.setSuccess("Debit transaction entered");
@@ -108,9 +105,9 @@ public class RegisterManagementService {
                     .description(creditLoan.getDescription())
                     .build();
             Optional<LoanState> loanStateOpt = loanStateRepository.findById(creditLoan.getLoanId());
-            if ( loanStateOpt.isPresent() ) {
+            if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
-                loanState.setCurrentRowNum(loanState.getCurrentRowNum()+1);
+                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
                 loanState.setBalance(loanState.getBalance().subtract(creditEntry.getCredit()));
                 creditEntry.setRowNum(loanState.getCurrentRowNum());
                 registerEntryRepository.save(creditEntry);
@@ -119,7 +116,7 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Credit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            if ( creditLoan.getRetryCount() == 0 ) {
+            if (creditLoan.getRetryCount() == 0) {
                 requestResponse.setFailure(dke.getMessage());
             } else {
                 requestResponse.setSuccess("Credit transaction entered");
@@ -128,14 +125,11 @@ public class RegisterManagementService {
         return requestResponse;
     }
 
-    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(statementHeader.getId())
-                .build();
+    public void statementHeader(StatementHeader statementHeader) {
         try {
             List<RegisterEntry> entries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
             statementHeader.setRegisterEntries(new ArrayList<>());
-            entries.forEach(e->statementHeader.getRegisterEntries().add(
+            entries.forEach(e -> statementHeader.getRegisterEntries().add(
                     com.github.karlnicholas.merchloan.jmsmessage.RegisterEntry.builder()
                             .rowNum(e.getRowNum())
                             .date(e.getDate())
@@ -143,17 +137,36 @@ public class RegisterManagementService {
                             .debit(e.getDebit())
                             .description(e.getDescription())
                             .build()));
-            requestResponse.setSuccess("Statement header");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            if ( statementHeader.getRetryCount() == 0 ) {
-                requestResponse.setFailure(dke.getMessage());
-            } else {
-                requestResponse.setSuccess("Statement header");
-            }
         }
-        return requestResponse;
     }
+
+    public BillingCycleCharge billingCycleCharge(BillingCycleCharge billingCycleCharge) {
+        try {
+            RegisterEntry debitEntry = RegisterEntry.builder()
+                    .id(billingCycleCharge.getId())
+                    .loanId(billingCycleCharge.getLoanId())
+                    .date(billingCycleCharge.getDate())
+                    .debit(billingCycleCharge.getAmount())
+                    .description(billingCycleCharge.getDescription())
+                    .build();
+            Optional<LoanState> loanStateOpt = loanStateRepository.findById(billingCycleCharge.getLoanId());
+            if (loanStateOpt.isPresent()) {
+                LoanState loanState = loanStateOpt.get();
+                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
+                loanState.setBalance(loanState.getBalance().add(debitEntry.getDebit()));
+                debitEntry.setRowNum(loanState.getCurrentRowNum());
+                billingCycleCharge.setRowNum(loanState.getCurrentRowNum());
+                registerEntryRepository.save(debitEntry);
+                loanStateRepository.save(loanState);
+            }
+        } catch (DuplicateKeyException dke) {
+            log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
+        }
+        return billingCycleCharge;
+    }
+
 
 //    private void ThreadSleep(long time) {
 //        try {

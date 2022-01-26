@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.jms.message;
 
+import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
 import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -85,7 +86,7 @@ public class RabbitMqSender {
     }
 
     public Object servicerequestCheckRequest(LocalDate businessDate) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestCheckRequestRoutingkey(), businessDate);
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestRoutingkey(), businessDate);
     }
 
     public Object acccountLoansToCycle(LocalDate businessDate) {
@@ -93,6 +94,18 @@ public class RabbitMqSender {
     }
 
     public void serviceRequestBillLoan(BillingCycle billingCycle) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestBillLoanRoutingkey(), billingCycle);
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanRoutingkey(), billingCycle);
+    }
+
+    public void serviceRequestBillingCycleCharge(BillingCycleChargeRequest billingCycleChargeRequest) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillingCycleChargeRoutingkey(), billingCycleChargeRequest);
+    }
+
+    public void registerBillingCycleCharge(BillingCycleCharge billingCycleCharge) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterBillingCycleChargeRoutingkey(), billingCycleCharge);
+    }
+
+    public void serviceRequestChargeCompleted(BillingCycleCharge billingCycleCharge) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey(), billingCycleCharge);
     }
 }

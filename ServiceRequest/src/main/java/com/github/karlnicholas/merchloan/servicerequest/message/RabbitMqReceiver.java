@@ -1,10 +1,9 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
 import com.github.karlnicholas.merchloan.apimessage.message.StatementRequest;
-import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
-import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
-import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
@@ -58,6 +57,28 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     .startDate(billingCycle.getStartDate())
                     .endDate(billingCycle.getEndDate())
                     .build());
+        } catch (Exception ex) {
+            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.servicerequest.billingcyclecharge.queue}", returnExceptions = "true")
+    public void receivedServiceBillingCycleChargeMessage(BillingCycleChargeRequest billingCycleChargeRequest) {
+        try {
+            log.info("BillingCycleCharge Received {}", billingCycleChargeRequest);
+            serviceRequestService.billingCycleChargeRequest(billingCycleChargeRequest);
+        } catch (Exception ex) {
+            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.servicerequest.chargecompleted.queue}", returnExceptions = "true")
+    public void receivedServiceChargeCompletedMessage(BillingCycleCharge billingCycleCharge) {
+        try {
+            log.info("ChargeCompleted Received {}", billingCycleCharge);
+            serviceRequestService.chargeCompleted(billingCycleCharge);
         } catch (Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

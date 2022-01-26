@@ -2,6 +2,7 @@ package com.github.karlnicholas.merchloan.servicerequest.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
+import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RequestMapping(value = "/api/v1/service/")
 public class ServiceRequestController {
     private final ServiceRequestService serviceRequestService;
+
     @Autowired
     public ServiceRequestController(ServiceRequestService serviceRequestService) {
         this.serviceRequestService = serviceRequestService;

@@ -37,5 +37,9 @@
             <artifactId>spring-rabbit-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>apimessage</artifactId>
+        </dependency>
     </dependencies>
 </project>

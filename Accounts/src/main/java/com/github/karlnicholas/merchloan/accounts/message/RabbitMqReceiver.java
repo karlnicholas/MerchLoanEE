@@ -54,6 +54,12 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
 
     @RabbitListener(queues = "${rabbitmq.account.funding.queue}")
     public void receivedFundingMessage(FundLoan fundLoan) {
+        // M= P [r (1+r)^n/ ((1+r)^n)-1)]
+        // r = .10 / 12 = 0.00833
+        // 10000 * 0.00833(1.00833)^12 / ((1.00833)^12)-1]
+        // 10000 * 0.0092059/0.104713067
+        // 10000 * 0.08791548
+        // = 879.16
         try {
             log.info("FundLoan Received {} ", fundLoan);
             ServiceRequestResponse serviceRequestResponse = accountManagementService.fundAccount(fundLoan);

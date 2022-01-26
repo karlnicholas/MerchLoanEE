@@ -79,6 +79,18 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
+
+    @RabbitListener(queues = "${rabbitmq.register.billingcyclecharge.queue}")
+    public void receivedBillingCycleChargeMessage(BillingCycleCharge billingCycleCharge) {
+        try {
+            log.info("BillingCycleCharge Received {}", billingCycleCharge);
+            rabbitMqSender.serviceRequestChargeCompleted(registerManagementService.billingCycleCharge(billingCycleCharge));
+        } catch (Exception ex) {
+            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
     @RabbitListener(queues = "${rabbitmq.register.query.loan.id.queue}")
     public String receivedQueryLoanIdMessage(UUID id) {
         try {

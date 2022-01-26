@@ -10,13 +10,17 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
     private final RabbitMqProperties rabbitMqProperties;
     @Value("${rabbitmq.servicerequest.queue}")
-    private String servicerequestQueue;
+    private String serviceRequestQueue;
     @Value("${rabbitmq.servicerequest.query.id.queue}")
-    private String servicerequestQueryIdQueue;
+    private String serviceRequestQueryIdQueue;
     @Value("${rabbitmq.servicerequest.checkrequest.queue}")
-    private String servicerequestCheckRequestQueue;
+    private String serviceRequestCheckRequestQueue;
     @Value("${rabbitmq.servicerequest.billloan.queue}")
-    private String servicerequestBillloanQueue;
+    private String serviceRequestBillloanQueue;
+    @Value("${rabbitmq.servicerequest.billingcyclecharge.queue}")
+    private String serviceRequestBillingCycleChargeQueue;
+    @Value("${rabbitmq.servicerequest.chargecompleted.queue}")
+    private String serviceRequestChargeCompletedQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -28,7 +32,7 @@ public class RabbitMQConfig {
     }
     @Bean
     Queue servicerequestQueue() {
-        return new Queue(servicerequestQueue, false);
+        return new Queue(serviceRequestQueue, false);
     }
     @Bean
     Binding servicerequestBinding() {
@@ -40,7 +44,7 @@ public class RabbitMQConfig {
     }
     @Bean
     Queue servicerequestQueryIdQueue() {
-        return new Queue(servicerequestQueryIdQueue, false);
+        return new Queue(serviceRequestQueryIdQueue, false);
     }
     @Bean
     Binding servicerequestQueryIdBinding() {
@@ -52,26 +56,50 @@ public class RabbitMQConfig {
     }
     @Bean
     public Queue servicerequestCheckRequestsQueue() {
-        return new Queue(servicerequestCheckRequestQueue, false);
+        return new Queue(serviceRequestCheckRequestQueue, false);
     }
     @Bean
     public Binding servicerequestCheckRequestsBinding() {
         return BindingBuilder
                 .bind(servicerequestCheckRequestsQueue())
                 .to(exchange())
-                .with(rabbitMqProperties.getServicerequestCheckRequestRoutingkey())
+                .with(rabbitMqProperties.getServiceRequestCheckRequestRoutingkey())
                 .noargs();
     }
     @Bean
     Queue servicerequestBillloanQueue() {
-        return new Queue(servicerequestBillloanQueue, false);
+        return new Queue(serviceRequestBillloanQueue, false);
     }
     @Bean
     Binding servicerequestBillloanBinding() {
         return BindingBuilder
                 .bind(servicerequestBillloanQueue())
                 .to(exchange())
-                .with(rabbitMqProperties.getServicerequestBillLoanRoutingkey())
+                .with(rabbitMqProperties.getServiceRequestBillLoanRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue servicerequestBillingCycleChargeQueue() {
+        return new Queue(serviceRequestBillingCycleChargeQueue, false);
+    }
+    @Bean
+    Binding servicerequestBillingCycleChargeBinding() {
+        return BindingBuilder
+                .bind(servicerequestBillingCycleChargeQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getServiceRequestBillingCycleChargeRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue servicerequestChargeCompletedQueue() {
+        return new Queue(serviceRequestChargeCompletedQueue, false);
+    }
+    @Bean
+    Binding serviceRequestChargeCompletedBinding() {
+        return BindingBuilder
+                .bind(servicerequestChargeCompletedQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey())
                 .noargs();
     }
 }
