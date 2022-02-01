@@ -18,7 +18,6 @@ import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
-import org.springframework.data.redis.core.Cursor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -59,20 +58,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
                 if (statementHeader.getCustomer() != null) {
                     Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader);
-                    BigDecimal startingBalance = lastStatement.map(Statement::getEndingBalance).orElse(BigDecimal.ZERO.setScale(2));
-                    BigDecimal endingBalance = startingBalance;
-                    boolean paymentCreditFound = false;
-                    for (RegisterEntry re : statementHeader.getRegisterEntries()) {
-                        if (re.getCredit() != null) {
-                            endingBalance = endingBalance.subtract(re.getCredit());
-                            re.setBalance(endingBalance);
-                            paymentCreditFound = true;
-                        }
-                        if (re.getDebit() != null) {
-                            endingBalance = endingBalance.add(re.getDebit());
-                            re.setBalance(endingBalance);
-                        }
-                    }
+                    boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
                     int responseCount = 0;
                     // so, let's do interest and fee calculations here.
                     if (!paymentCreditFound) {
@@ -83,7 +69,18 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                         );
                         responseCount++;
                     }
-                    BigDecimal interestAmt = statementHeader.getRegisterEntries().get(0).getBalance().multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_UP);
+                    // determine interest balance
+                    BigDecimal interestBalance;
+                    if ( lastStatement.isPresent()) {
+                        interestBalance = lastStatement.get().getEndingBalance();
+                    } else if ( statementHeader.getRegisterEntries().size() > 0 ) {
+                        //TODO: assuming this is the funding entry. Horrible logic.
+                        interestBalance = statementHeader.getRegisterEntries().get(0).getDebit();
+                    } else {
+                        //TODO: really should never get here.
+                        interestBalance = BigDecimal.ZERO.setScale(2);
+                    }
+                    BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
                     rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
                             .date(statementHeader.getStatementDate())
                             .debitRequest(new DebitRequest(statementHeader.getLoanId(), interestAmt, "Interest"))
@@ -108,9 +105,9 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                                 .description(billingCycleCharge.getDescription())
                                 .build());
                     }
-                    Collections.sort(statementHeader.getRegisterEntries(), Comparator.comparingInt(RegisterEntry::getRowNum));
-                    startingBalance = lastStatement.map(Statement::getEndingBalance).orElse(BigDecimal.ZERO.setScale(2));
-                    endingBalance = startingBalance;
+                    statementHeader.getRegisterEntries().sort(Comparator.comparingInt(RegisterEntry::getRowNum));
+                    BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal endingBalance = startingBalance;
                     for (RegisterEntry re : statementHeader.getRegisterEntries()) {
                         if (re.getCredit() != null) {
                             endingBalance = endingBalance.subtract(re.getCredit());
@@ -121,7 +118,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                             re.setBalance(endingBalance);
                         }
                     }
-                    startingBalance = statementHeader.getRegisterEntries().get(0).getBalance();
                     // so, done with interest and fee calculations here?
                     statementService.saveStatement(statementHeader, startingBalance, endingBalance);
                     requestResponse.setSuccess("Statement created");
@@ -144,6 +140,17 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         try {
             log.info("QueryStatement Received {}", id);
             return queryService.findById(id).map(Statement::getStatement).orElse("No statement found for id " + id);
+        } catch (Exception ex) {
+            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.statement.query.statements.queue}", returnExceptions = "true")
+    public String receivedQueryStatementsMessage(UUID id) {
+        try {
+            log.info("QueryStatements Received {}", id);
+            return objectMapper.writeValueAsString(queryService.findByLoanId(id));
         } catch (Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

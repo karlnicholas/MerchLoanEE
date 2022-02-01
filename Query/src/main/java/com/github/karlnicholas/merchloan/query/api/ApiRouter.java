@@ -20,12 +20,13 @@ public class ApiRouter implements WebFluxConfigurer {
     public RouterFunction<ServerResponse> monoRouterFunction(ApiHandler apiHandler) {
 
         return RouterFunctions
-                .nest(path("/api/query").and(accept(MediaType.TEXT_PLAIN)),
+                .nest(path("/api/query").and(accept(MediaType.APPLICATION_JSON)),
                         route(GET("/request/{id}"), apiHandler::getRequest)
                                 .andRoute(GET("/account/{id}"), apiHandler::getAccount)
                                 .andRoute(GET("/loan/{id}"), apiHandler::getLoan)
                                 .andRoute(GET("/register/{id}"), apiHandler::getRegister)
                                 .andRoute(GET("/statement/{id}"), apiHandler::getStatement)
+                                .andRoute(GET("/statements/{id}"), apiHandler::getStatements)
                 );
 
     }

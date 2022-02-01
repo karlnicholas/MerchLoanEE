@@ -39,4 +39,5 @@ public class RabbitMqProperties {
     private String serviceRequestBillingCycleChargeRoutingkey;
     private String registerBillingCycleChargeRoutingkey;
     private String serviceRequestChargeCompletedRoutingkey;
+    private String statementQueryStatementsRoutingkey;
 }

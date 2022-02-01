@@ -4,6 +4,7 @@ import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.repository.StatementRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +20,7 @@ public class QueryService {
         return statementRepository.findById(id);
     }
 
+    public List<Statement> findByLoanId(UUID id) {
+        return statementRepository.findByLoanId(id);
+    }
 }

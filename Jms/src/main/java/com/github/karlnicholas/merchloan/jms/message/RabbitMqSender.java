@@ -85,6 +85,10 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementRoutingkey(), id);
     }
 
+    public Object queryStatements(UUID id) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementsRoutingkey(), id);
+    }
+
     public Object servicerequestCheckRequest(LocalDate businessDate) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestRoutingkey(), businessDate);
     }
@@ -108,4 +112,5 @@ public class RabbitMqSender {
     public void serviceRequestChargeCompleted(BillingCycleCharge billingCycleCharge) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey(), billingCycleCharge);
     }
+
 }

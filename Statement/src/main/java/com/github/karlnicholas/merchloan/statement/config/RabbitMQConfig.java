@@ -13,6 +13,8 @@ public class RabbitMQConfig {
     private String statementStatementQueue;
     @Value("${rabbitmq.statement.query.statement.queue}")
     private String statementQueryStatementQueue;
+    @Value("${rabbitmq.statement.query.statements.queue}")
+    private String statementQueryStatementsQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -44,6 +46,18 @@ public class RabbitMQConfig {
                 .bind(statementQueryStatementQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getStatementQueryStatementRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue statementQueryStatementsQueue() {
+        return new Queue(statementQueryStatementsQueue, false);
+    }
+    @Bean
+    Binding statementQueryStatementsBinding() {
+        return BindingBuilder
+                .bind(statementQueryStatementsQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getStatementQueryStatementsRoutingkey())
                 .noargs();
     }
 }

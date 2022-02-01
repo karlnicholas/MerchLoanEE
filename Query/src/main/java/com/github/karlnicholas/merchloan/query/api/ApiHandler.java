@@ -45,4 +45,10 @@ public class ApiHandler {
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryStatement)
                 , String.class);
     }
+
+    public Mono<ServerResponse> getStatements(ServerRequest serverRequest) {
+        return ServerResponse.ok().body(
+                Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryStatements)
+                , String.class);
+    }
 }
