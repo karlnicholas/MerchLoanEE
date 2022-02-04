@@ -17,6 +17,7 @@
     <modules>
         <module>ApiMessage</module>
         <module>JmsMessage</module>
+        <module>Dto</module>
         <module>Jms</module>
         <module>Accounts</module>
         <module>Register</module>
@@ -36,6 +37,11 @@
             <dependency>
                 <groupId>com.github.karlnicholas.merchloan</groupId>
                 <artifactId>jmsmessage</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

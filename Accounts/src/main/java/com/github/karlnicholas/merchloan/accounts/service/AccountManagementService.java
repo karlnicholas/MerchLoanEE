@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +63,11 @@ public class AccountManagementService {
                                 .id(fundLoan.getId())
                                 .account(accountQ.get())
                                 .startDate(fundLoan.getStartDate())
+                                .funding(fundLoan.getAmount())
+                                .months(12)
+                                .interestRate(new BigDecimal("0.10"))
+                                .monthlyPayments(new BigDecimal("879.16"))
+                                .loanState(Loan.LOAN_STATE.OPEN)
                                 .build());
                 requestResponse.setSuccess();
             } catch (DuplicateKeyException dke) {

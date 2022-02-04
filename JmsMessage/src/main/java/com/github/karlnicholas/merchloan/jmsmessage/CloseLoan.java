@@ -5,7 +5,6 @@ import lombok.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -14,14 +13,11 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class StatementHeader implements Serializable {
+public class CloseLoan implements Serializable {
     private UUID id;
-    private UUID accountId;
     private UUID loanId;
-    private LocalDate statementDate;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private String customer;
-    private List<RegisterEntry> registerEntries;
+    private BigDecimal amount;
+    private LocalDate date;
+    private String description;
     private int retryCount;
 }

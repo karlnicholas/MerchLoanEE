@@ -15,6 +15,8 @@ public class RabbitMQConfig {
     private String statementQueryStatementQueue;
     @Value("${rabbitmq.statement.query.statements.queue}")
     private String statementQueryStatementsQueue;
+    @Value("${rabbitmq.statement.query.mostrecentstatement.queue}")
+    private String statementQueryMostRecentStatementQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -58,6 +60,18 @@ public class RabbitMQConfig {
                 .bind(statementQueryStatementsQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getStatementQueryStatementsRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue statementQueryMostRecentStatementQueue() {
+        return new Queue(statementQueryMostRecentStatementQueue, false);
+    }
+    @Bean
+    Binding statementQueryMOstRecentStatementsBinding() {
+        return BindingBuilder
+                .bind(statementQueryMostRecentStatementQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey())
                 .noargs();
     }
 }

@@ -57,6 +57,10 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitLoanRoutingkey(), debitLoan);
     }
 
+    public void registerCloseLoan(CloseLoan closeLoan) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCloseLoanRoutingkey(), closeLoan);
+    }
+
     public void statementStatement(StatementHeader statementHeader) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementRoutingkey(), statementHeader);
     }
@@ -89,6 +93,10 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementsRoutingkey(), id);
     }
 
+    public Object queryMostRecentStatement(UUID loanId) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey(), loanId);
+    }
+
     public Object servicerequestCheckRequest(LocalDate businessDate) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestRoutingkey(), businessDate);
     }
@@ -111,6 +119,10 @@ public class RabbitMqSender {
 
     public void serviceRequestChargeCompleted(BillingCycleCharge billingCycleCharge) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey(), billingCycleCharge);
+    }
+
+    public void accountValidateClose(CloseLoan closeLoan) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCloseRoutingkey(), closeLoan);
     }
 
 }

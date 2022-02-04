@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
+import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.accounts.service.AccountManagementService;
@@ -155,6 +156,22 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
+    @RabbitListener(queues = "${rabbitmq.account.validate.close.queue}")
+    public void receivedValidateCloseMessage(CloseLoan closeLoan) {
+        try {
+            log.info("DebitLoan Received {} ", closeLoan);
+            ServiceRequestResponse serviceRequestResponse = accountManagementService.validateLoan(closeLoan.getLoanId());
+            if ( serviceRequestResponse.isSuccess() ) {
+                rabbitMqSender.registerCloseLoan(closeLoan);
+            } else {
+                rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+            }
+        } catch ( Exception ex) {
+            log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
     @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
     public String receivedQueryAccountIdMessage(UUID id) {
         try {
@@ -175,11 +192,11 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public String receivedQueryLoanIdMessage(UUID id) {
         try {
             log.info("QueryLoanId Received {}", id);
-            Optional<Loan> r = queryService.queryLoanId(id);
+            Optional<LoanDto> r = queryService.queryLoanId(id);
             if ( r.isPresent() ) {
                 return objectMapper.writeValueAsString(r.get());
             } else {
-                return "ERROR: id not found: " + id;
+                return "ERROR: Loan not found for id: " + id;
             }
         } catch ( Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());

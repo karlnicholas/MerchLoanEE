@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -44,8 +45,8 @@ public class StatementService {
         );
     }
 
-    public Optional<Statement> findLastStatement(StatementHeader statementHeader) {
-        return statementRepository.findFirstByLoanIdOrderByStatementDateDesc(statementHeader.getLoanId());
+    public Optional<Statement> findLastStatement(UUID loanId) {
+        return statementRepository.findFirstByLoanIdOrderByStatementDateDesc(loanId);
     }
 
 }

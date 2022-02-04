@@ -10,6 +10,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -108,12 +109,19 @@ public class RegisterManagementService {
             if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
-                loanState.setBalance(loanState.getBalance().subtract(creditEntry.getCredit()));
-                creditEntry.setRowNum(loanState.getCurrentRowNum());
-                registerEntryRepository.save(creditEntry);
-                loanStateRepository.save(loanState);
+                BigDecimal newBalance = loanState.getBalance().subtract(creditEntry.getCredit());
+                if ( newBalance.compareTo(BigDecimal.ZERO) < 0 ) {
+                    requestResponse.setFailure("Credit results in negative balance: " + newBalance);
+                } else {
+                    loanState.setBalance(newBalance);
+                    creditEntry.setRowNum(loanState.getCurrentRowNum());
+                    registerEntryRepository.save(creditEntry);
+                    loanStateRepository.save(loanState);
+                    requestResponse.setSuccess("Credit transaction entered");
+                }
+            } else {
+                requestResponse.setFailure("LoanId not found: " + creditLoan.getLoanId());
             }
-            requestResponse.setSuccess("Credit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
             if (creditLoan.getRetryCount() == 0) {

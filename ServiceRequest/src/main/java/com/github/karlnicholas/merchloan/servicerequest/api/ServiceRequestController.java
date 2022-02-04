@@ -42,4 +42,8 @@ public class ServiceRequestController {
     public UUID statementRequest(@RequestBody StatementRequest statementRequest) throws JsonProcessingException {
         return serviceRequestService.statementStatementRequest(statementRequest);
     }
+    @PostMapping(value = "closeRequest", produces = MediaType.TEXT_PLAIN_VALUE)
+    public UUID fundingRequest(@RequestBody CloseRequest closeRequest) throws JsonProcessingException {
+        return serviceRequestService.closeRequest(closeRequest);
+    }
 }

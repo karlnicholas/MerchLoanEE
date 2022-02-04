@@ -12,6 +12,8 @@ rabbitmq:
         queue: account.validate.credit.queue
       debit:
         queue: account.validate.debit.queue
+      close:
+        queue: account.validate.close.queue
     statementheader:
       queue: account.statementheader.queue
     loanstocycle:

@@ -91,6 +91,19 @@ public class ServiceRequestService {
         );
         return id;
     }
+    public UUID closeRequest(CloseRequest closeRequest) throws JsonProcessingException {
+        UUID id = persistRequest(closeRequest);
+//        rabbitMqSender.accountCloseLoan(
+//                CloseLoan.builder()
+//                        .id(id)
+//                        .loanId(closeRequest.getLoanId())
+//                        .date(redisComponent.getBusinessDate())
+//                        .amount(closeRequest.getAmount())
+//                        .description(closeRequest.getDescription())
+//                        .build()
+//        );
+        return id;
+    }
 
     public UUID accountValidateDebitRequest(DebitRequest debitRequest) throws JsonProcessingException {
         UUID id = persistRequest(debitRequest);

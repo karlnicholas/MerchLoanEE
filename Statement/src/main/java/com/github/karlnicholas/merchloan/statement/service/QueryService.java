@@ -20,7 +20,11 @@ public class QueryService {
         return statementRepository.findById(id);
     }
 
-    public List<Statement> findByLoanId(UUID id) {
-        return statementRepository.findByLoanId(id);
+    public List<Statement> findByLoanId(UUID loanId){
+        return statementRepository.findByLoanId(loanId);
+    }
+
+    public Optional<Statement> findMostRecentStatement(UUID loanId) {
+        return statementRepository.findFirstByLoanIdOrderByStatementDateDesc(loanId);
     }
 }

@@ -2,7 +2,6 @@ package com.github.karlnicholas.merchloan.accounts.config;
 
 import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import org.springframework.amqp.core.*;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +25,9 @@ public class RabbitMQConfig {
     String accountQueryLoanIdQueue;
     @Value("${rabbitmq.account.loanstocycle.queue}")
     String accountLoansToCycleQueue;
+    @Value("${rabbitmq.account.validate.close.queue}")
+    String accountValidateCloseQueue;
+
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
     }
@@ -138,4 +140,16 @@ public class RabbitMQConfig {
                 .noargs();
     }
 
+    @Bean
+    public Queue accountValidateCloseQueue() {
+        return new Queue(accountValidateCloseQueue, false);
+    }
+    @Bean
+    public Binding validateClose() {
+        return BindingBuilder
+                .bind(accountValidateCloseQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountValidateCloseRoutingkey())
+                .noargs();
+    }
 }

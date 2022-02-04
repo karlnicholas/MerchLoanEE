@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
 import com.github.karlnicholas.merchloan.apimessage.message.DebitRequest;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
-import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
-import com.github.karlnicholas.merchloan.jmsmessage.RegisterEntry;
-import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
-import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
@@ -57,7 +54,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             if (statementExistsOpt.isEmpty()) {
                 statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
                 if (statementHeader.getCustomer() != null) {
-                    Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader);
+                    Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
                     boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
                     int responseCount = 0;
                     // so, let's do interest and fee calculations here.
@@ -78,7 +75,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                         interestBalance = statementHeader.getRegisterEntries().get(0).getDebit();
                     } else {
                         //TODO: really should never get here.
-                        interestBalance = BigDecimal.ZERO.setScale(2);
+                        interestBalance = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
                     }
                     BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
                     rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
@@ -106,7 +103,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                                 .build());
                     }
                     statementHeader.getRegisterEntries().sort(Comparator.comparingInt(RegisterEntry::getRowNum));
-                    BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
                     BigDecimal endingBalance = startingBalance;
                     for (RegisterEntry re : statementHeader.getRegisterEntries()) {
                         if (re.getCredit() != null) {
@@ -123,10 +120,10 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     requestResponse.setSuccess("Statement created");
 
                 } else {
-                    requestResponse.setFailure("Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
+                    requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
                 }
             } else {
-                requestResponse.setFailure("Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
+                requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
             }
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
@@ -136,10 +133,27 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     }
 
     @RabbitListener(queues = "${rabbitmq.statement.query.statement.queue}", returnExceptions = "true")
-    public String receivedQueryStatementMessage(UUID id) {
+    public String receivedQueryStatementMessage(UUID loanId) {
         try {
-            log.info("QueryStatement Received {}", id);
-            return queryService.findById(id).map(Statement::getStatement).orElse("No statement found for id " + id);
+            log.info("QueryStatement Received {}", loanId);
+            return queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
+        } catch (Exception ex) {
+            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.statement.query.mostrecentstatement.queue}", returnExceptions = "true")
+    public MostRecentStatement receivedQueryMostRecentStatementMessage(UUID loanId) {
+        try {
+            log.info("QueryStatement Received {}", loanId);
+            return queryService.findMostRecentStatement(loanId).map(statement-> MostRecentStatement.builder()
+                    .id(statement.getId())
+                    .loanId(loanId)
+                    .statementDate(statement.getStatementDate())
+                    .endingBalance(statement.getEndingBalance())
+                    .startingBalance(statement.getStartingBalance())
+                    .build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
         } catch (Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

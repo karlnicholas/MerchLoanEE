@@ -8,6 +8,8 @@ rabbitmq:
     query:
       statement:
         queue: statement.query.statement.queue
+      mostrecentstatement:
+        queue: statement.query.mostrecentstatement.queue
       statements:
         queue: statement.query.statements.queue
 logging:
