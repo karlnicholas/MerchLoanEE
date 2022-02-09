@@ -19,6 +19,8 @@ public class RabbitMQConfig {
     private String registerStatementHeaderQueue;
     @Value("${rabbitmq.register.billingcyclecharge.queue}")
     private String registerBillingCycleChargeQueue;
+    @Value("${rabbitmq.register.closeloan.queue}")
+    private String registerCloseLoanQueue;
     @Value("${rabbitmq.register.query.loan.id.queue}")
     private String registerQueryLoanIdQueue;
 
@@ -100,6 +102,18 @@ public class RabbitMQConfig {
                 .bind(queryLoanIdQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getRegisterQueryLoanIdRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue closeLoanQueue() {
+        return new Queue(registerCloseLoanQueue, false);
+    }
+    @Bean
+    Binding closeLoanBinding() {
+        return BindingBuilder
+                .bind(closeLoanQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getRegisterCloseLoanRoutingkey())
                 .noargs();
     }
 }

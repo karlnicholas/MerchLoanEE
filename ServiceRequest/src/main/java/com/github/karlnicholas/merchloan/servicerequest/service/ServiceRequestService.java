@@ -93,15 +93,15 @@ public class ServiceRequestService {
     }
     public UUID closeRequest(CloseRequest closeRequest) throws JsonProcessingException {
         UUID id = persistRequest(closeRequest);
-//        rabbitMqSender.accountCloseLoan(
-//                CloseLoan.builder()
-//                        .id(id)
-//                        .loanId(closeRequest.getLoanId())
-//                        .date(redisComponent.getBusinessDate())
-//                        .amount(closeRequest.getAmount())
-//                        .description(closeRequest.getDescription())
-//                        .build()
-//        );
+        rabbitMqSender.accountCloseLoan(
+                CloseLoan.builder()
+                        .id(id)
+                        .loanId(closeRequest.getLoanId())
+                        .date(redisComponent.getBusinessDate())
+                        .amount(closeRequest.getAmount())
+                        .description(closeRequest.getDescription())
+                        .build()
+        );
         return id;
     }
 

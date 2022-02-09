@@ -16,6 +16,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -156,14 +157,22 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
-    @RabbitListener(queues = "${rabbitmq.account.validate.close.queue}")
-    public void receivedValidateCloseMessage(CloseLoan closeLoan) {
+    @RabbitListener(queues = "${rabbitmq.account.closeloan.queue}")
+    public void receivedCloseLoanMessage(CloseLoan closeLoan) {
+        ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(closeLoan.getId()).build();
         try {
             log.info("DebitLoan Received {} ", closeLoan);
-            ServiceRequestResponse serviceRequestResponse = accountManagementService.validateLoan(closeLoan.getLoanId());
-            if ( serviceRequestResponse.isSuccess() ) {
-                rabbitMqSender.registerCloseLoan(closeLoan);
+            Optional<LoanDto> loanOpt = queryService.queryLoanId(closeLoan.getLoanId());
+            if (loanOpt.isPresent()) {
+                if ( closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0 ) {
+                    accountManagementService.closeLoan(closeLoan.getLoanId());
+                    rabbitMqSender.registerCloseLoan(closeLoan);
+                } else {
+                    serviceRequestResponse.setFailure("PayoffAmount incorrect. Required: " + loanOpt.get().getPayoffAmount());
+                    rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+                }
             } else {
+                serviceRequestResponse.setFailure("loan not found for id: " + closeLoan.getLoanId());
                 rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
             }
         } catch ( Exception ex) {

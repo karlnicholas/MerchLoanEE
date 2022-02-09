@@ -25,7 +25,7 @@ public class RabbitMqProperties {
     private String accountQueryAccountIdRoutingKey;
     private String accountQueryLoanIdRoutingKey;
     private String accountStatementHeaderRoutingKey;
-    private String accountValidateCloseRoutingkey;
+    private String accountCloseLoanRoutingkey;
     private String acccountLoansToCycleRoutingkey;
 
     private String registerFundLoanRoutingkey;

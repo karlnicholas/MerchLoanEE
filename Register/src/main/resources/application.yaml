@@ -13,6 +13,8 @@ rabbitmq:
       queue: register.statementheader.queue
     billingcyclecharge:
       queue: register.billingcyclecharge.queue
+    closeloan:
+      queue: register.closeloan.queue
     query:
       loan:
         id:

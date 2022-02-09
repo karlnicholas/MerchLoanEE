@@ -20,6 +20,7 @@ public class LoanDto implements Serializable {
     private Integer months;
     private BigDecimal interestRate;
     private BigDecimal monthlyPayments;
+    private BigDecimal currentPayment;
     private String loanState;
     private LocalDate lastStatementDate;
     private BigDecimal lastStatementBalance;

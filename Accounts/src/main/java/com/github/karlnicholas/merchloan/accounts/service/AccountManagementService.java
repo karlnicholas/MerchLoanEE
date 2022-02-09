@@ -133,4 +133,11 @@ public class AccountManagementService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    public void closeLoan(UUID loanId) {
+        loanRepository.findById(loanId).ifPresent(loan->{
+            loan.setLoanState(Loan.LOAN_STATE.CLOSED);
+            loanRepository.save(loan);
+        });
+    }
 }

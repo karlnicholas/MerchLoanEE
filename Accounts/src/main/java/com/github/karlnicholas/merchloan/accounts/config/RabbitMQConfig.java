@@ -25,8 +25,8 @@ public class RabbitMQConfig {
     String accountQueryLoanIdQueue;
     @Value("${rabbitmq.account.loanstocycle.queue}")
     String accountLoansToCycleQueue;
-    @Value("${rabbitmq.account.validate.close.queue}")
-    String accountValidateCloseQueue;
+    @Value("${rabbitmq.account.closeloan.queue}")
+    String accountCloseLoanQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -141,15 +141,15 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue accountValidateCloseQueue() {
-        return new Queue(accountValidateCloseQueue, false);
+    public Queue accountCloseLoanQueue() {
+        return new Queue(accountCloseLoanQueue, false);
     }
     @Bean
     public Binding validateClose() {
         return BindingBuilder
-                .bind(accountValidateCloseQueue())
+                .bind(accountCloseLoanQueue())
                 .to(exchange())
-                .with(rabbitMqProperties.getAccountValidateCloseRoutingkey())
+                .with(rabbitMqProperties.getAccountCloseLoanRoutingkey())
                 .noargs();
     }
 }
