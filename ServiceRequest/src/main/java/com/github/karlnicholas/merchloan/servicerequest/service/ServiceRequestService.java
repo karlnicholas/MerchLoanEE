@@ -81,7 +81,6 @@ public class ServiceRequestService {
         rabbitMqSender.statementStatement(
                 StatementHeader.builder()
                         .id(id)
-                        .accountId(statementRequest.getAccountId())
                         .loanId(statementRequest.getLoanId())
                         .statementDate(statementRequest.getStatementDate())
                         .startDate(statementRequest.getStartDate())
@@ -121,13 +120,24 @@ public class ServiceRequestService {
 
     public UUID billingCycleChargeRequest(BillingCycleChargeRequest billingCycleChargeRequest) throws JsonProcessingException {
         UUID id = persistRequest(billingCycleChargeRequest);
-        rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
-                .id(id)
-                .loanId(billingCycleChargeRequest.getDebitRequest().getLoanId())
-                .date(billingCycleChargeRequest.getDate())
-                .amount(billingCycleChargeRequest.getDebitRequest().getAmount())
-                .description(billingCycleChargeRequest.getDebitRequest().getDescription())
-                .build());
+        if ( billingCycleChargeRequest.getDebitRequest() != null ) {
+            rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
+                    .id(id)
+                    .loanId(billingCycleChargeRequest.getDebitRequest().getLoanId())
+                    .date(billingCycleChargeRequest.getDate())
+                    .debit(billingCycleChargeRequest.getDebitRequest().getAmount())
+                    .description(billingCycleChargeRequest.getDebitRequest().getDescription())
+                    .build());
+
+        } else {
+            rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
+                    .id(id)
+                    .loanId(billingCycleChargeRequest.getCreditRequest().getLoanId())
+                    .date(billingCycleChargeRequest.getDate())
+                    .credit(billingCycleChargeRequest.getCreditRequest().getAmount())
+                    .description(billingCycleChargeRequest.getCreditRequest().getDescription())
+                    .build());
+        }
         return id;
     }
 

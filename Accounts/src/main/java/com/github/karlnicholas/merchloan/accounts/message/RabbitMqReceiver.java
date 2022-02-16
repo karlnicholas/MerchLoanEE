@@ -3,12 +3,15 @@ package com.github.karlnicholas.merchloan.accounts.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
-import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
+import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
+import com.github.karlnicholas.merchloan.apimessage.message.CreditRequest;
+import com.github.karlnicholas.merchloan.apimessage.message.DebitRequest;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.accounts.service.AccountManagementService;
+import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -16,7 +19,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -28,11 +30,14 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     private final AccountManagementService accountManagementService;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
+    private final RedisComponent redisComponent;
     private final RabbitMqSender rabbitMqSender;
 
-    public RabbitMqReceiver(AccountManagementService accountManagementService, QueryService queryService, RabbitMqSender rabbitMqSender) {
+
+    public RabbitMqReceiver(AccountManagementService accountManagementService, QueryService queryService, RedisComponent redisComponent, RabbitMqSender rabbitMqSender) {
         this.accountManagementService = accountManagementService;
         this.queryService = queryService;
+        this.redisComponent = redisComponent;
         this.rabbitMqSender = rabbitMqSender;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -165,7 +170,31 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             Optional<LoanDto> loanOpt = queryService.queryLoanId(closeLoan.getLoanId());
             if (loanOpt.isPresent()) {
                 if ( closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0 ) {
-                    accountManagementService.closeLoan(closeLoan.getLoanId());
+//                    accountManagementService.closeLoan(closeLoan.getLoanId());
+                    rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
+                            .date(closeLoan.getDate())
+                            .debitRequest(new DebitRequest(closeLoan.getLoanId(), loanOpt.get().getCurrentInterest(), "Interest"))
+                            .build()
+                    );
+                    // determine interest balance
+                    rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
+                            .date(closeLoan.getDate())
+                                    .creditRequest(new CreditRequest(closeLoan.getLoanId(), closeLoan.getAmount(), "Payoff Payment"))
+                            .build()
+                    );
+                    // wait for responses
+                    int responseCount = 2;
+                    int sixtySeconds = 60;
+                    while ( sixtySeconds > 0 ) {
+                        Thread.sleep(1000);
+                        if ( redisComponent.countChargeCompleted(closeLoan.getLoanId()) == responseCount ) {
+                            break;
+                        }
+                        sixtySeconds--;
+                    }
+// UNDO
+                    closeLoan.setLoanDto(loanOpt.get());
+                    closeLoan.setLastStatementDate(loanOpt.get().getLastStatementDate());
                     rabbitMqSender.registerCloseLoan(closeLoan);
                 } else {
                     serviceRequestResponse.setFailure("PayoffAmount incorrect. Required: " + loanOpt.get().getPayoffAmount());

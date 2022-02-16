@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.jmsmessage;
 
+import com.github.karlnicholas.merchloan.dto.LoanDto;
 import lombok.*;
 
 import java.io.Serializable;
@@ -17,7 +18,9 @@ public class CloseLoan implements Serializable {
     private UUID id;
     private UUID loanId;
     private BigDecimal amount;
+    private LocalDate lastStatementDate;
     private LocalDate date;
     private String description;
     private int retryCount;
+    private LoanDto loanDto;
 }

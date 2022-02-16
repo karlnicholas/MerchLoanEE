@@ -24,6 +24,14 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>dto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>dto</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

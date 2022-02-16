@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,10 +27,10 @@ public class StatementService {
 
     }
 
-    public Optional<Statement> findStatement(StatementHeader statementHeader) {
+    public Optional<Statement> findStatement(UUID loanId, LocalDate statementDate) {
         return statementRepository.findByLoanIdAndStatementDate(
-                statementHeader.getLoanId(),
-                statementHeader.getStatementDate()
+                loanId,
+                statementDate
         );
     }
 

@@ -93,18 +93,6 @@ public class RabbitMQConfig {
                 .noargs();
     }
     @Bean
-    Queue queryLoanIdQueue() {
-        return new Queue(registerQueryLoanIdQueue, false);
-    }
-    @Bean
-    Binding queryLoanIdBinding() {
-        return BindingBuilder
-                .bind(queryLoanIdQueue())
-                .to(exchange())
-                .with(rabbitMqProperties.getRegisterQueryLoanIdRoutingkey())
-                .noargs();
-    }
-    @Bean
     Queue closeLoanQueue() {
         return new Queue(registerCloseLoanQueue, false);
     }
@@ -114,6 +102,18 @@ public class RabbitMQConfig {
                 .bind(closeLoanQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getRegisterCloseLoanRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue queryLoanIdQueue() {
+        return new Queue(registerQueryLoanIdQueue, false);
+    }
+    @Bean
+    Binding queryLoanIdBinding() {
+        return BindingBuilder
+                .bind(queryLoanIdQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getRegisterQueryLoanIdRoutingkey())
                 .noargs();
     }
 }

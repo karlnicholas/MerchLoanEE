@@ -32,9 +32,9 @@ public class RabbitMqProperties {
     private String registerCreditLoanRoutingkey;
     private String registerDebitLoanRoutingkey;
     private String registerStatementHeaderRoutingkey;
-    private String registerCloseLoanRoutingkey;
     private String registerQueryLoanIdRoutingkey;
     private String registerBillingCycleChargeRoutingkey;
+    private String registerCloseLoanRoutingkey;
 
     private String servicerequestRoutingkey;
     private String servicerequestQueryIdRoutingkey;
@@ -44,6 +44,7 @@ public class RabbitMqProperties {
     private String serviceRequestChargeCompletedRoutingkey;
 
     private String statementStatementRoutingkey;
+    private String statementCloseStatementRoutingkey;
     private String statementQueryStatementRoutingkey;
     private String statementQueryStatementsRoutingkey;
     private String statementQueryMostRecentStatementRoutingkey;

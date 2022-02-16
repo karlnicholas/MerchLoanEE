@@ -110,7 +110,7 @@ public class RegisterManagementService {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
                 BigDecimal newBalance = loanState.getBalance().subtract(creditEntry.getCredit());
-                if ( newBalance.compareTo(BigDecimal.ZERO) < 0 ) {
+                if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
                     requestResponse.setFailure("Credit results in negative balance: " + newBalance);
                 } else {
                     loanState.setBalance(newBalance);
@@ -152,21 +152,26 @@ public class RegisterManagementService {
 
     public BillingCycleCharge billingCycleCharge(BillingCycleCharge billingCycleCharge) {
         try {
-            RegisterEntry debitEntry = RegisterEntry.builder()
+            RegisterEntry registerEntry = RegisterEntry.builder()
                     .id(billingCycleCharge.getId())
                     .loanId(billingCycleCharge.getLoanId())
                     .date(billingCycleCharge.getDate())
-                    .debit(billingCycleCharge.getAmount())
+                    .debit(billingCycleCharge.getDebit())
+                    .credit(billingCycleCharge.getCredit())
                     .description(billingCycleCharge.getDescription())
                     .build();
             Optional<LoanState> loanStateOpt = loanStateRepository.findById(billingCycleCharge.getLoanId());
             if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
-                loanState.setBalance(loanState.getBalance().add(debitEntry.getDebit()));
-                debitEntry.setRowNum(loanState.getCurrentRowNum());
+                if ( registerEntry.getDebit() != null ) {
+                    loanState.setBalance(loanState.getBalance().add(registerEntry.getDebit()));
+                } else {
+                    loanState.setBalance(loanState.getBalance().subtract(registerEntry.getCredit()));
+                }
+                registerEntry.setRowNum(loanState.getCurrentRowNum());
                 billingCycleCharge.setRowNum(loanState.getCurrentRowNum());
-                registerEntryRepository.save(debitEntry);
+                registerEntryRepository.save(registerEntry);
                 loanStateRepository.save(loanState);
             }
         } catch (DuplicateKeyException dke) {
@@ -174,40 +179,6 @@ public class RegisterManagementService {
         }
         return billingCycleCharge;
     }
-
-    public ServiceRequestResponse closeLoan(CloseLoan closeLoan) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(closeLoan.getId())
-                .build();
-        try {
-            RegisterEntry creditEntry = RegisterEntry.builder()
-                    .id(closeLoan.getId())
-                    .loanId(closeLoan.getLoanId())
-                    .date(closeLoan.getDate())
-                    .credit(closeLoan.getAmount())
-                    .description(closeLoan.getDescription())
-                    .build();
-            Optional<LoanState> loanStateOpt = loanStateRepository.findById(closeLoan.getLoanId());
-            if (loanStateOpt.isPresent()) {
-                LoanState loanState = loanStateOpt.get();
-                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
-                loanState.setBalance(loanState.getBalance().subtract(creditEntry.getCredit()));
-                creditEntry.setRowNum(loanState.getCurrentRowNum());
-                registerEntryRepository.save(creditEntry);
-                loanStateRepository.save(loanState);
-            }
-            requestResponse.setSuccess("Close transaction entered");
-        } catch (DuplicateKeyException dke) {
-            log.warn("ServiceRequestResponse closeLoan(CloseLoan closeLoan) duplicate key: {}", dke.getMessage());
-            if (closeLoan.getRetryCount() == 0) {
-                requestResponse.setFailure(dke.getMessage());
-            } else {
-                requestResponse.setSuccess("Close transaction entered");
-            }
-        }
-        return requestResponse;
-    }
-
 
 //    private void ThreadSleep(long time) {
 //        try {

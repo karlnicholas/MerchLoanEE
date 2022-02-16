@@ -14,4 +14,5 @@ import java.util.UUID;
 public class BillingCycleChargeRequest implements ServiceRequestMessage {
     private LocalDate date;
     private DebitRequest debitRequest;
+    private CreditRequest creditRequest;
 }

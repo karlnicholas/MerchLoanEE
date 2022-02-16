@@ -106,6 +106,7 @@ public class QueryService {
             }
             // fill out additional response
             loanDto.setCurrentPayment(currentBalance.add(currentInterest).setScale(2, RoundingMode.HALF_EVEN).subtract(computeAmount));
+            loanDto.setCurrentInterest(currentInterest);
             loanDto.setPayoffAmount(payoffAmount);
             loanDto.setCurrentBalance(currentBalance);
             if ( mostRecentStatement.getStatementDate() != null ) {

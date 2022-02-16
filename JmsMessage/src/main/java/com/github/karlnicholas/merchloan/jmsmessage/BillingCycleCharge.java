@@ -16,7 +16,8 @@ import java.util.UUID;
 public class BillingCycleCharge implements Serializable {
     private UUID id;
     private UUID loanId;
-    private BigDecimal amount;
+    private BigDecimal debit;
+    private BigDecimal credit;
     private LocalDate date;
     private String description;
     private Integer rowNum;

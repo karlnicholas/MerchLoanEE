@@ -12,7 +12,6 @@ import java.util.UUID;
 @ToString
 @Builder
 public class StatementRequest implements ServiceRequestMessage {
-    private UUID accountId;
     private UUID loanId;
     private LocalDate statementDate;
     private LocalDate startDate;

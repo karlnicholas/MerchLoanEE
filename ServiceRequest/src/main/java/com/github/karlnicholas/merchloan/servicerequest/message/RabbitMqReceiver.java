@@ -51,7 +51,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         try {
             log.info("Billloan Received {}", billingCycle);
             serviceRequestService.statementStatementRequest(StatementRequest.builder()
-                    .accountId(billingCycle.getAccountId())
                     .loanId(billingCycle.getLoanId())
                     .statementDate(billingCycle.getStatementDate())
                     .startDate(billingCycle.getStartDate())

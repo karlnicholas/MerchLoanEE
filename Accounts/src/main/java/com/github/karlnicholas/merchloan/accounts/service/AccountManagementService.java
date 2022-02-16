@@ -99,15 +99,20 @@ public class AccountManagementService {
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(statementHeader.getId())
                 .build();
-        Optional<Account> accountQ = accountRepository.findById(statementHeader.getAccountId());
-        if (accountQ.isPresent()) {
-            statementHeader.setCustomer(accountQ.get().getCustomer());
-            requestResponse.setSuccess();
+        Optional<Loan> loanOpt = loanRepository.findById(statementHeader.getLoanId());
+        if ( loanOpt.isPresent()) {
+            Optional<Account> accountQ = accountRepository.findById(loanOpt.get().getAccount().getId());
+            if (accountQ.isPresent()) {
+                statementHeader.setCustomer(accountQ.get().getCustomer());
+                statementHeader.setAccountId(loanOpt.get().getAccount().getId());
+                requestResponse.setSuccess();
+            } else {
+                requestResponse.setFailure("Account not found for loanId: " + statementHeader.getLoanId());
+            }
         } else {
-            requestResponse.setFailure("Account not found for " + statementHeader.getAccountId());
+            requestResponse.setFailure("Loan not found for loanId: " + statementHeader.getLoanId());
         }
         return requestResponse;
-
     }
 
     //TODO: close loans
@@ -140,4 +145,5 @@ public class AccountManagementService {
             loanRepository.save(loan);
         });
     }
+
 }

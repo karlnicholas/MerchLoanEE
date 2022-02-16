@@ -50,7 +50,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         try {
             log.info("Statement Received {}", statementHeader);
             ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
-            Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader);
+            Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
             if (statementExistsOpt.isEmpty()) {
                 statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
                 if (statementHeader.getCustomer() != null) {
@@ -98,7 +98,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                         statementHeader.getRegisterEntries().add(RegisterEntry.builder()
                                 .rowNum(billingCycleCharge.getRowNum())
                                 .date(billingCycleCharge.getDate())
-                                .debit(billingCycleCharge.getAmount())
+                                .debit(billingCycleCharge.getDebit())
+                                .credit(billingCycleCharge.getCredit())
                                 .description(billingCycleCharge.getDescription())
                                 .build());
                     }
@@ -122,6 +123,40 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 } else {
                     requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
                 }
+            } else {
+                requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
+            }
+            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+        } catch (Exception ex) {
+            log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
+    @RabbitListener(queues = "${rabbitmq.statement.closestatement.queue}", returnExceptions = "true")
+    public void receivedCloseStatementMessage(StatementHeader statementHeader) {
+        try {
+            log.info("CloseStatement Received {}", statementHeader);
+            ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
+            Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
+            if (statementExistsOpt.isEmpty()) {
+                // determine interest balance
+                Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
+                BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
+                BigDecimal endingBalance = startingBalance;
+                for (RegisterEntry re : statementHeader.getRegisterEntries()) {
+                    if (re.getCredit() != null) {
+                        endingBalance = endingBalance.subtract(re.getCredit());
+                        re.setBalance(endingBalance);
+                    }
+                    if (re.getDebit() != null) {
+                        endingBalance = endingBalance.add(re.getDebit());
+                        re.setBalance(endingBalance);
+                    }
+                }
+                // so, done with interest and fee calculations here?
+                statementService.saveStatement(statementHeader, startingBalance, endingBalance);
+                requestResponse.setSuccess("Statement created");
             } else {
                 requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
             }

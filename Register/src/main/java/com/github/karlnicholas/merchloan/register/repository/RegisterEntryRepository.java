@@ -13,4 +13,6 @@ public interface RegisterEntryRepository extends JpaRepository<RegisterEntry, UU
     List<RegisterEntry> findByLoanIdOrderByRowNum(UUID loanId);
 
     List<RegisterEntry> findByLoanIdAndDateBetweenOrderByRowNum(UUID loanId, LocalDate startDate, LocalDate endDate);
+
+    List<RegisterEntry> findByLoanIdAndDateAfterOrderByRowNum(UUID loanId, LocalDate statementDate);
 }
