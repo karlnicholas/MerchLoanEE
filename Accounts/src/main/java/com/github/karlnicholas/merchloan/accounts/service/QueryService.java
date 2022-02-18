@@ -47,7 +47,7 @@ public class QueryService {
         // return payoff amount
         // loan has AccountId, startDate, funding, months, interestRate, monthlyPayment, loanState
         Optional<Loan> loanOpt = loanRepository.findById(loanId);
-        if ( loanOpt.isPresent() ) {
+        if ( loanOpt.isPresent() && loanOpt.get().getLoanState().compareTo(Loan.LOAN_STATE.CLOSED) != 0 ) {
             Loan loan = loanOpt.get();
             // get most recent statement
             MostRecentStatement mostRecentStatement = (MostRecentStatement) rabbitMqSender.queryMostRecentStatement(loanId);
@@ -106,7 +106,7 @@ public class QueryService {
             }
             // fill out additional response
             loanDto.setCurrentPayment(currentBalance.add(currentInterest).setScale(2, RoundingMode.HALF_EVEN).subtract(computeAmount));
-            loanDto.setCurrentInterest(currentInterest);
+            loanDto.setCurrentInterest(currentInterest.setScale(2, RoundingMode.HALF_EVEN));
             loanDto.setPayoffAmount(payoffAmount);
             loanDto.setCurrentBalance(currentBalance);
             if ( mostRecentStatement.getStatementDate() != null ) {

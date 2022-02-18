@@ -137,7 +137,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedCloseStatementMessage(StatementHeader statementHeader) {
         try {
             log.info("CloseStatement Received {}", statementHeader);
-            ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
             if (statementExistsOpt.isEmpty()) {
                 // determine interest balance
@@ -156,11 +155,10 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 }
                 // so, done with interest and fee calculations here?
                 statementService.saveStatement(statementHeader, startingBalance, endingBalance);
-                requestResponse.setSuccess("Statement created");
-            } else {
-                requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
             }
-            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+            // just to save bandwidth
+            statementHeader.setRegisterEntries(null);
+            rabbitMqSender.accountAccountLoanClosed(statementHeader);
         } catch (Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

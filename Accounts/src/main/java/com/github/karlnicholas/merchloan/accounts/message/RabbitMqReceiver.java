@@ -210,6 +210,22 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
+    @RabbitListener(queues = "${rabbitmq.account.loanclosed.queue}")
+    public void receivedLoanClosedMessage(StatementHeader statementHeader) {
+        try {
+            log.info("LoanClosed Received {} ", statementHeader);
+            accountManagementService.closeLoan(statementHeader.getLoanId());
+            rabbitMqSender.serviceRequestServiceRequest(
+                    ServiceRequestResponse.builder().id(statementHeader.getId())
+                            .status(ServiceRequestResponse.STATUS.SUCCESS)
+                            .statusMessage(ServiceRequestResponse.STATUS.SUCCESS.name())
+                            .build());
+        } catch ( Exception ex) {
+            log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
     @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
     public String receivedQueryAccountIdMessage(UUID id) {
         try {

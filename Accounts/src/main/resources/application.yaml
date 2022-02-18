@@ -18,6 +18,8 @@ rabbitmq:
       queue: account.loanstocycle.queue
     closeloan:
       queue: account.closeloan.queue
+    loanclosed:
+      queue: account.loanclosed.queue
     query:
       account:
         id:

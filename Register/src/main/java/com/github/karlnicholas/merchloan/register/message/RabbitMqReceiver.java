@@ -99,7 +99,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     .id(closeLoan.getId())
                     .loanId(closeLoan.getLoanId())
                     .statementDate(closeLoan.getDate())
-                    .startDate(closeLoan.getLastStatementDate())
+                    .startDate(closeLoan.getLastStatementDate().plusDays(1))
                     .endDate(closeLoan.getDate())
                     .build();
             registerManagementService.statementHeader(statementHeader);

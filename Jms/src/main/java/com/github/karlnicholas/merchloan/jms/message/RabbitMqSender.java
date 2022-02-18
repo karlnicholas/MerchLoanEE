@@ -128,4 +128,8 @@ public class RabbitMqSender {
     public void statementCloseStatement(StatementHeader statementHeader) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementCloseStatementRoutingkey(), statementHeader);
     }
+
+    public void accountAccountLoanClosed(StatementHeader statementHeader) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountLoanClosedRoutingkey(), statementHeader);
+    }
 }

@@ -27,6 +27,7 @@ public class RabbitMqProperties {
     private String accountStatementHeaderRoutingKey;
     private String accountCloseLoanRoutingkey;
     private String acccountLoansToCycleRoutingkey;
+    private String accountLoanClosedRoutingkey;
 
     private String registerFundLoanRoutingkey;
     private String registerCreditLoanRoutingkey;
@@ -48,4 +49,5 @@ public class RabbitMqProperties {
     private String statementQueryStatementRoutingkey;
     private String statementQueryStatementsRoutingkey;
     private String statementQueryMostRecentStatementRoutingkey;
+
 }
