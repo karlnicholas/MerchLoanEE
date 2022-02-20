@@ -92,7 +92,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     }
 
     @RabbitListener(queues = "${rabbitmq.register.closeloan.queue}")
-    public void receivedCloseLoaneMessage(CloseLoan closeLoan) {
+    public void receivedCloseLoanMessage(CloseLoan closeLoan) {
         try {
             log.info("CloseLoan Received {}", closeLoan);
             StatementHeader statementHeader = StatementHeader.builder()

@@ -158,7 +158,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             }
             // just to save bandwidth
             statementHeader.setRegisterEntries(null);
-            rabbitMqSender.accountAccountLoanClosed(statementHeader);
+            rabbitMqSender.accountLoanClosed(statementHeader);
         } catch (Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

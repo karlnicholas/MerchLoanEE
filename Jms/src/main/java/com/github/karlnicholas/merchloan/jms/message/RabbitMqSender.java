@@ -129,7 +129,7 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementCloseStatementRoutingkey(), statementHeader);
     }
 
-    public void accountAccountLoanClosed(StatementHeader statementHeader) {
+    public void accountLoanClosed(StatementHeader statementHeader) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountLoanClosedRoutingkey(), statementHeader);
     }
 }

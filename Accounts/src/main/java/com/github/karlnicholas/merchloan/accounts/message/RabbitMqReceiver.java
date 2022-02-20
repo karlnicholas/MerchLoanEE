@@ -166,7 +166,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedCloseLoanMessage(CloseLoan closeLoan) {
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(closeLoan.getId()).build();
         try {
-            log.info("DebitLoan Received {} ", closeLoan);
+            log.info("CloseLoan Received {} ", closeLoan);
             Optional<LoanDto> loanOpt = queryService.queryLoanId(closeLoan.getLoanId());
             if (loanOpt.isPresent()) {
                 if ( closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0 ) {
