@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.controller;
 
+import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.service.BusinessDateService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,9 @@ public class BusinessDateController {
 
     @PostMapping(value = "businessdate", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void postBusinessDate(@RequestBody LocalDate businessDate) {
-        businessDateService.updateBusinessDate(businessDate);
+        BusinessDate priorBusinessDate = businessDateService.updateBusinessDate(businessDate);
+        businessDateService.startBillingCycle(priorBusinessDate);
+        System.out.println("CCCC");
+
     }
 }

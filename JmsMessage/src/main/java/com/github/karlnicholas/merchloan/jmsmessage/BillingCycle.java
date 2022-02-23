@@ -16,6 +16,8 @@ public class BillingCycle implements Serializable {
     private UUID id;
     private UUID accountId;
     private UUID loanId;
+    private UUID interestChargeId;
+    private UUID feeChargeId;
     private LocalDate statementDate;
     private LocalDate startDate;
     private LocalDate endDate;

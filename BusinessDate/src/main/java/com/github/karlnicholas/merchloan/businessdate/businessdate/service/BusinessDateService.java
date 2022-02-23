@@ -23,11 +23,11 @@ public class BusinessDateService {
         this.rabbitMqSender = rabbitMqSender;
     }
 
-    public void updateBusinessDate(LocalDate businessDate) {
+    public BusinessDate updateBusinessDate(LocalDate businessDate) {
         BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(businessDateRepository.findById(1L).get().getBusinessDate()).build();
         businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
         redisComponent.updateBusinessDate(businessDate);
-        startBillingCycle(priorBusinessDate);
+        return priorBusinessDate;
     }
 
     public void initializeBusinessDate() {
@@ -38,6 +38,7 @@ public class BusinessDateService {
 
     @Async
     public void startBillingCycle(BusinessDate priorBusinessDate) {
+        System.out.println("D1");
         boolean waiting = true;
         while(waiting) {
             try {
@@ -51,6 +52,7 @@ public class BusinessDateService {
 
             }
         }
+        System.out.println("D2");
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountLoansToCycle(priorBusinessDate.getBusinessDate());
         loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
 
