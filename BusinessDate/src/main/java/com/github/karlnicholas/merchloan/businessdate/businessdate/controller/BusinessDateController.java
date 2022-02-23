@@ -23,7 +23,5 @@ public class BusinessDateController {
     public void postBusinessDate(@RequestBody LocalDate businessDate) {
         BusinessDate priorBusinessDate = businessDateService.updateBusinessDate(businessDate);
         businessDateService.startBillingCycle(priorBusinessDate);
-        System.out.println("CCCC");
-
     }
 }

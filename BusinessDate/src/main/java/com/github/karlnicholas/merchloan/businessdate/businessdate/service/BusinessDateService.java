@@ -38,7 +38,6 @@ public class BusinessDateService {
 
     @Async
     public void startBillingCycle(BusinessDate priorBusinessDate) {
-        System.out.println("D1");
         boolean waiting = true;
         while(waiting) {
             try {
@@ -52,7 +51,6 @@ public class BusinessDateService {
 
             }
         }
-        System.out.println("D2");
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountLoansToCycle(priorBusinessDate.getBusinessDate());
         loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
 
