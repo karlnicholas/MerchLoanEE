@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BusinessDateService {
@@ -27,6 +28,8 @@ public class BusinessDateService {
         BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(businessDateRepository.findById(1L).get().getBusinessDate()).build();
         businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
         redisComponent.updateBusinessDate(businessDate);
+        List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountLoansToCycle(priorBusinessDate.getBusinessDate());
+        redisComponent.setLoansToCycle(priorBusinessDate.getBusinessDate(), loansToCycle.stream().map(BillingCycle::getId).collect(Collectors.toList()));
         return priorBusinessDate;
     }
 

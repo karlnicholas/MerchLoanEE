@@ -3,6 +3,8 @@ package com.github.karlnicholas.merchloan.statement.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.karlnicholas.merchloan.dto.RegisterEntryDto;
+import com.github.karlnicholas.merchloan.dto.StatementDto;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.repository.StatementRepository;
@@ -13,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -35,11 +38,33 @@ public class StatementService {
     }
 
     public Statement saveStatement(StatementHeader statementHeader, BigDecimal startingBalance, BigDecimal endingBalance) throws JsonProcessingException {
+        StatementDto statementDto = StatementDto.builder()
+                .id(statementHeader.getId())
+                .loanId(statementHeader.getLoanId())
+                .accountId(statementHeader.getAccountId())
+                .customer(statementHeader.getCustomer())
+                .statementDate(statementHeader.getStatementDate())
+                .endDate(statementHeader.getEndDate())
+                .startDate(statementHeader.getStartDate())
+                .registerEntries(
+                        statementHeader.getRegisterEntries()
+                                .stream()
+                                .map(
+                                        re->RegisterEntryDto.builder()
+                                                .rowNum(re.getRowNum())
+                                                .date(re.getDate())
+                                                .description(re.getDescription())
+                                                .credit(re.getCredit())
+                                                .debit(re.getDebit())
+                                                .balance(re.getBalance())
+                                                .build()
+                                ).collect(Collectors.toList())
+                ).build();
         return statementRepository.save(Statement.builder()
                 .id(statementHeader.getId())
                 .loanId(statementHeader.getLoanId())
                 .statementDate(statementHeader.getStatementDate())
-                .statement(objectMapper.writeValueAsString(statementHeader))
+                .statement(objectMapper.writeValueAsString(statementDto))
                 .startingBalance(startingBalance)
                 .endingBalance(endingBalance)
                 .build()

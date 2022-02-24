@@ -13,6 +13,7 @@ import java.util.UUID;
 @ToString
 public class BillingCycleChargeRequest implements ServiceRequestMessage {
     private LocalDate date;
+    private UUID id;
     private DebitRequest debitRequest;
     private CreditRequest creditRequest;
 }

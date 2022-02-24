@@ -82,6 +82,8 @@ public class ServiceRequestService {
                 StatementHeader.builder()
                         .id(id)
                         .loanId(statementRequest.getLoanId())
+                        .interestChargeId(UUID.randomUUID())
+                        .feeChargeId(UUID.randomUUID())
                         .statementDate(statementRequest.getStatementDate())
                         .startDate(statementRequest.getStartDate())
                         .endDate(statementRequest.getEndDate())
@@ -119,7 +121,8 @@ public class ServiceRequestService {
     }
 
     public UUID billingCycleChargeRequest(BillingCycleChargeRequest billingCycleChargeRequest) throws JsonProcessingException {
-        UUID id = persistRequest(billingCycleChargeRequest);
+        UUID id = billingCycleChargeRequest.getId();
+        persistRequestWithId(billingCycleChargeRequest, id);
         if ( billingCycleChargeRequest.getDebitRequest() != null ) {
             rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
                     .id(id)
@@ -152,6 +155,11 @@ public class ServiceRequestService {
 
     private UUID persistRequest(ServiceRequestMessage requestMessage) throws JsonProcessingException {
         UUID id = UUID.randomUUID();
+        persistRequestWithId(requestMessage, id);
+        return id;
+    }
+
+    private void persistRequestWithId(ServiceRequestMessage requestMessage, UUID id) throws JsonProcessingException {
         boolean retry;
         do {
             retry = false;
@@ -170,7 +178,7 @@ public class ServiceRequestService {
                 retry = true;
             }
         } while (retry);
-        return id;
+
     }
 
     public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) {

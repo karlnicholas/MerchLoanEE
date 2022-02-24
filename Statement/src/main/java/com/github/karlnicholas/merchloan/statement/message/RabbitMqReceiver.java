@@ -60,6 +60,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     // so, let's do interest and fee calculations here.
                     if (!paymentCreditFound) {
                         rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
+                                .id(statementHeader.getFeeChargeId())
                                 .date(statementHeader.getStatementDate())
                                 .debitRequest(new DebitRequest(statementHeader.getLoanId(), new BigDecimal("30.00"), "Non payment fee"))
                                 .build()
@@ -68,9 +69,9 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     }
                     // determine interest balance
                     BigDecimal interestBalance;
-                    if ( lastStatement.isPresent()) {
+                    if (lastStatement.isPresent()) {
                         interestBalance = lastStatement.get().getEndingBalance();
-                    } else if ( statementHeader.getRegisterEntries().size() > 0 ) {
+                    } else if (statementHeader.getRegisterEntries().size() > 0) {
                         //TODO: assuming this is the funding entry. Horrible logic.
                         interestBalance = statementHeader.getRegisterEntries().get(0).getDebit();
                     } else {
@@ -79,6 +80,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     }
                     BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
                     rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
+                            .id(statementHeader.getInterestChargeId())
                             .date(statementHeader.getStatementDate())
                             .debitRequest(new DebitRequest(statementHeader.getLoanId(), interestAmt, "Interest"))
                             .build()
@@ -86,14 +88,14 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     responseCount++;
                     // wait for responses
                     int sixtySeconds = 60;
-                    while ( sixtySeconds > 0 ) {
+                    while (sixtySeconds > 0) {
                         Thread.sleep(1000);
-                        if ( redisComponent.countChargeCompleted(statementHeader.getLoanId()) == responseCount ) {
+                        if (redisComponent.countChargeCompleted(statementHeader.getLoanId()) == responseCount) {
                             break;
                         }
                         sixtySeconds--;
                     }
-                    while ( responseCount-- > 0 ) {
+                    while (responseCount-- > 0) {
                         BillingCycleCharge billingCycleCharge = redisComponent.popChargeCompleted(statementHeader.getLoanId());
                         statementHeader.getRegisterEntries().add(RegisterEntry.builder()
                                 .rowNum(billingCycleCharge.getRowNum())
@@ -180,7 +182,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public MostRecentStatement receivedQueryMostRecentStatementMessage(UUID loanId) {
         try {
             log.info("QueryStatement Received {}", loanId);
-            return queryService.findMostRecentStatement(loanId).map(statement-> MostRecentStatement.builder()
+            return queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
                     .id(statement.getId())
                     .loanId(loanId)
                     .statementDate(statement.getStatementDate())
