@@ -101,7 +101,7 @@ public class QueryService {
                 // what is number of months?
                 Period p = loan.getStartDate().until(statementHeader.getEndDate());
                 BigDecimal computeAmount = loan.getFunding();
-                for (int i = 0; i < p.getMonths(); ++i) {
+                for (int i = 0; i < (p.getYears()*12+p.getMonths()); ++i) {
                     BigDecimal computeInterest = computeAmount.multiply(loan.getInterestRate()).divide(BigDecimal.valueOf(loan.getMonths()), RoundingMode.HALF_EVEN);
                     computeAmount = computeAmount.add(computeInterest).subtract(loan.getMonthlyPayments()).setScale(2, RoundingMode.HALF_EVEN);
                 }

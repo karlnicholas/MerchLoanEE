@@ -98,6 +98,8 @@ public class ServiceRequestService {
                 CloseLoan.builder()
                         .id(id)
                         .loanId(closeRequest.getLoanId())
+                        .interestChargeId(UUID.randomUUID())
+                        .paymentId(UUID.randomUUID())
                         .date(redisComponent.getBusinessDate())
                         .amount(closeRequest.getAmount())
                         .description(closeRequest.getDescription())

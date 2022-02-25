@@ -17,6 +17,8 @@ import java.util.UUID;
 public class CloseLoan implements Serializable {
     private UUID id;
     private UUID loanId;
+    private UUID interestChargeId;
+    private UUID paymentId;
     private BigDecimal amount;
     private LocalDate lastStatementDate;
     private LocalDate date;
