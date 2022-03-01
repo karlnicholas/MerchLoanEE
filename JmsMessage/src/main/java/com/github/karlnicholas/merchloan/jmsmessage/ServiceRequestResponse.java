@@ -1,11 +1,13 @@
 package com.github.karlnicholas.merchloan.jmsmessage;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.UUID;
 
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

@@ -29,7 +29,7 @@ public class BusinessDateService {
         businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
         redisComponent.updateBusinessDate(businessDate);
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountLoansToCycle(priorBusinessDate.getBusinessDate());
-        redisComponent.setLoansToCycle(priorBusinessDate.getBusinessDate(), loansToCycle.stream().map(BillingCycle::getId).collect(Collectors.toList()));
+        redisComponent.setLoansToCycle(priorBusinessDate.getBusinessDate(), loansToCycle.stream().map(BillingCycle::getLoanId).collect(Collectors.toList()));
         return priorBusinessDate;
     }
 

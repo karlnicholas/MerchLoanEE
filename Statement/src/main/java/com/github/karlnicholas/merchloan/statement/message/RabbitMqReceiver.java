@@ -49,7 +49,11 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedStatementMessage(StatementHeader statementHeader) {
         try {
             log.info("Statement Received {}", statementHeader);
-            ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
+            StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
+                    .id(statementHeader.getId())
+                    .statementDate(statementHeader.getStatementDate())
+                    .loanId(statementHeader.getLoanId())
+                    .build();
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
             if (statementExistsOpt.isEmpty()) {
                 statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
@@ -128,7 +132,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             } else {
                 requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
             }
-            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+            rabbitMqSender.serviceRequestStatementComplete(requestResponse);
         } catch (Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

@@ -84,6 +84,17 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
+    @RabbitListener(queues = "${rabbitmq.servicerequest.statementcomplete.queue}", returnExceptions = "true")
+    public void receivedServiceStatementCompleteMessage(StatementCompleteResponse statementCompleteResponse) {
+        try {
+            log.info("StatementComplete Received {}", statementCompleteResponse);
+            serviceRequestService.statementComplete(statementCompleteResponse);
+        } catch (Exception ex) {
+            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        }
+    }
+
     @RabbitListener(queues = "${rabbitmq.servicerequest.query.id.queue}", returnExceptions = "true")
     public String receivedServiceRequestQueryIdMessage(UUID id) {
         try {

@@ -21,6 +21,8 @@ public class RabbitMQConfig {
     private String serviceRequestBillingCycleChargeQueue;
     @Value("${rabbitmq.servicerequest.chargecompleted.queue}")
     private String serviceRequestChargeCompletedQueue;
+    @Value("${rabbitmq.servicerequest.statementcomplete.queue}")
+    private String serviceRequestStatementCompleteQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -100,6 +102,18 @@ public class RabbitMQConfig {
                 .bind(servicerequestChargeCompletedQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue servicerequestStatementCompleteQueue() {
+        return new Queue(serviceRequestStatementCompleteQueue, false);
+    }
+    @Bean
+    Binding serviceRequestStatementCompleteBinding() {
+        return BindingBuilder
+                .bind(servicerequestStatementCompleteQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getServiceRequestStatementCompleteRoutingkey())
                 .noargs();
     }
 }

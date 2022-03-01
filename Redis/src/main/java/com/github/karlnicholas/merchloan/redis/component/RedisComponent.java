@@ -2,7 +2,10 @@ package com.github.karlnicholas.merchloan.redis.component;
 
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -14,9 +17,9 @@ import java.util.stream.Collectors;
 public class RedisComponent {
     private final RedisTemplate<Long, LocalDate> redisTemplateBusinessDate;
     private final RedisTemplate<UUID, BillingCycleCharge> redisTemplateBillingCycle;
-    private final RedisTemplate<LocalDate, List<UUID>> redisTemplateLoansToCycle;
+    private final RedisTemplate<LocalDate, UUID> redisTemplateLoansToCycle;
 
-    public RedisComponent(RedisTemplate<Long, LocalDate> redisTemplateBusinessDate, RedisTemplate<UUID, BillingCycleCharge> redisTemplateBillingCycleCharge, RedisTemplate<LocalDate, List<UUID>> redisTemplateLoansToCycle) {
+    public RedisComponent(RedisTemplate<Long, LocalDate> redisTemplateBusinessDate, RedisTemplate<UUID, BillingCycleCharge> redisTemplateBillingCycleCharge, RedisTemplate<LocalDate, UUID> redisTemplateLoansToCycle) {
         this.redisTemplateBusinessDate = redisTemplateBusinessDate;
         this.redisTemplateBillingCycle = redisTemplateBillingCycleCharge;
         this.redisTemplateLoansToCycle = redisTemplateLoansToCycle;
@@ -39,10 +42,27 @@ public class RedisComponent {
     }
 
     public BillingCycleCharge popChargeCompleted(UUID loanId) {
-        return redisTemplateBillingCycle.opsForSet().pop(loanId);
+        SetOperations<UUID, BillingCycleCharge> opsForSet = redisTemplateBillingCycle.opsForSet();
+        BillingCycleCharge billingCycleCharge = opsForSet.pop(loanId);
+        if ( opsForSet.size(loanId) == 0 ) {
+            redisTemplateBillingCycle.delete(loanId);
+        }
+        return billingCycleCharge;
     }
 
     public void setLoansToCycle(LocalDate businessDate, List<UUID> loansToCycle) {
-        redisTemplateLoansToCycle.opsForSet().add(businessDate, loansToCycle);
+        if ( !loansToCycle.isEmpty()) {
+            redisTemplateLoansToCycle.opsForSet().add(businessDate, loansToCycle.toArray(new UUID[loansToCycle.size()]));
+        }
     }
+
+    public void removeLoanToCycle(LocalDate date, UUID id) {
+        SetOperations<LocalDate, UUID> ops = redisTemplateLoansToCycle.opsForSet();
+        Long count = ops.remove(date, id);
+        Long size = ops.size(date);
+        if (  size == 0 ) {
+            redisTemplateLoansToCycle.delete(date);
+        }
+    }
+
 }

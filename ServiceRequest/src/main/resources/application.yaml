@@ -13,6 +13,8 @@ rabbitmq:
       queue: servicerequest.billingcyclecharge.queue
     chargecompleted:
       queue: servicerequest.chargecompleted.queue
+    statementcomplete:
+      queue: servicerequest.statementcomplete.queue
     query:
       id:
         queue: servicerequest.querybyid.queue
