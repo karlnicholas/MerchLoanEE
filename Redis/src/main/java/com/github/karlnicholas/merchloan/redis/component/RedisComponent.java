@@ -1,17 +1,13 @@
 package com.github.karlnicholas.merchloan.redis.component;
 
-import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 public class RedisComponent {
@@ -58,9 +54,8 @@ public class RedisComponent {
 
     public void removeLoanToCycle(LocalDate date, UUID id) {
         SetOperations<LocalDate, UUID> ops = redisTemplateLoansToCycle.opsForSet();
-        Long count = ops.remove(date, id);
-        Long size = ops.size(date);
-        if (  size == 0 ) {
+        ops.remove(date, id);
+        if (  ops.size(date) == 0 ) {
             redisTemplateLoansToCycle.delete(date);
         }
     }
