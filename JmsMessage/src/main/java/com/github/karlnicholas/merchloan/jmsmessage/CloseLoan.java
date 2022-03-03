@@ -16,6 +16,7 @@ import java.util.UUID;
 @ToString
 public class CloseLoan implements Serializable {
     private UUID id;
+    private UUID accountId;
     private UUID loanId;
     private UUID interestChargeId;
     private UUID paymentId;
@@ -23,6 +24,6 @@ public class CloseLoan implements Serializable {
     private LocalDate lastStatementDate;
     private LocalDate date;
     private String description;
-    private int retryCount;
+    private Boolean retry;
     private LoanDto loanDto;
 }

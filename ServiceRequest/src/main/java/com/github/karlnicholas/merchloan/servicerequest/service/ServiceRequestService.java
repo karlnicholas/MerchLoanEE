@@ -31,14 +31,15 @@ public class ServiceRequestService {
         this.redisComponent = redisComponent;
     }
 
-    public UUID accountRequest(AccountRequest accountRequest) throws JsonProcessingException {
+    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
         UUID id = persistRequest(accountRequest);
         try {
             rabbitMqSender.accountCreateAccount(CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
                     .createDate(redisComponent.getBusinessDate())
-                    .retryCount(0)
+                    .retry(retry)
                     .build());
         } catch (Exception e) {
             log.error("Send account create message failed: {}", e.getMessage());
@@ -46,7 +47,8 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID fundingRequest(FundingRequest fundingRequest) throws JsonProcessingException {
+    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
         UUID id = persistRequest(fundingRequest);
         rabbitMqSender.accountFundLoan(
                 FundLoan.builder()
@@ -55,13 +57,14 @@ public class ServiceRequestService {
                         .amount(fundingRequest.getAmount())
                         .startDate(redisComponent.getBusinessDate())
                         .description(fundingRequest.getDescription())
-                        .retryCount(0)
+                        .retry(retry)
                         .build()
         );
         return id;
     }
 
-    public UUID accountValidateCreditRequest(CreditRequest creditRequest) throws JsonProcessingException {
+    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
         UUID id = persistRequest(creditRequest);
         rabbitMqSender.accountValidateCredit(
                 CreditLoan.builder()
@@ -70,13 +73,14 @@ public class ServiceRequestService {
                         .date(redisComponent.getBusinessDate())
                         .amount(creditRequest.getAmount())
                         .description(creditRequest.getDescription())
-                        .retryCount(0)
+                        .retry(retry)
                         .build()
         );
         return id;
     }
 
-    public UUID statementStatementRequest(StatementRequest statementRequest) throws JsonProcessingException {
+    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
         UUID id = persistRequest(statementRequest);
         rabbitMqSender.statementStatement(
                 StatementHeader.builder()
@@ -87,12 +91,13 @@ public class ServiceRequestService {
                         .statementDate(statementRequest.getStatementDate())
                         .startDate(statementRequest.getStartDate())
                         .endDate(statementRequest.getEndDate())
-                        .retryCount(0)
+                        .retry(retry)
                         .build()
         );
         return id;
     }
-    public UUID closeRequest(CloseRequest closeRequest) throws JsonProcessingException {
+    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
         UUID id = persistRequest(closeRequest);
         rabbitMqSender.accountCloseLoan(
                 CloseLoan.builder()
@@ -103,12 +108,14 @@ public class ServiceRequestService {
                         .date(redisComponent.getBusinessDate())
                         .amount(closeRequest.getAmount())
                         .description(closeRequest.getDescription())
+                        .retry(retry)
                         .build()
         );
         return id;
     }
 
-    public UUID accountValidateDebitRequest(DebitRequest debitRequest) throws JsonProcessingException {
+    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
         UUID id = persistRequest(debitRequest);
         rabbitMqSender.accountValidateDebit(
                 DebitLoan.builder()
@@ -117,12 +124,14 @@ public class ServiceRequestService {
                         .date(redisComponent.getBusinessDate())
                         .amount(debitRequest.getAmount())
                         .description(debitRequest.getDescription())
+                        .retry(retry)
                         .build()
         );
         return id;
     }
 
-    public UUID billingCycleChargeRequest(BillingCycleChargeRequest billingCycleChargeRequest) throws JsonProcessingException {
+    public UUID billingCycleChargeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+        BillingCycleChargeRequest billingCycleChargeRequest = (BillingCycleChargeRequest) serviceRequestMessage;
         UUID id = billingCycleChargeRequest.getId();
         persistRequestWithId(billingCycleChargeRequest, id);
         if ( billingCycleChargeRequest.getDebitRequest() != null ) {
@@ -132,6 +141,7 @@ public class ServiceRequestService {
                     .date(billingCycleChargeRequest.getDate())
                     .debit(billingCycleChargeRequest.getDebitRequest().getAmount())
                     .description(billingCycleChargeRequest.getDebitRequest().getDescription())
+                    .retry(retry)
                     .build());
 
         } else {
@@ -141,6 +151,7 @@ public class ServiceRequestService {
                     .date(billingCycleChargeRequest.getDate())
                     .credit(billingCycleChargeRequest.getCreditRequest().getAmount())
                     .description(billingCycleChargeRequest.getCreditRequest().getDescription())
+                    .retry(retry)
                     .build());
         }
         return id;
@@ -149,8 +160,8 @@ public class ServiceRequestService {
     public void chargeCompleted(BillingCycleCharge billingCycleCharge) {
         completeServiceRequest(ServiceRequestResponse.builder()
                 .id(billingCycleCharge.getId())
-                .status(ServiceRequestResponse.STATUS.SUCCESS)
-                .statusMessage(ServiceRequestResponse.STATUS.SUCCESS.name())
+                .status(ServiceRequestMessage.STATUS.SUCCESS)
+                .statusMessage(ServiceRequestMessage.STATUS.SUCCESS.name())
                 .build());
         redisComponent.chargeCompleted(billingCycleCharge);
     }
@@ -172,7 +183,8 @@ public class ServiceRequestService {
                                 .request(objectMapper.writeValueAsString(requestMessage))
                                 .localDateTime(LocalDateTime.now())
                                 .requestType(requestMessage.getClass().getName())
-                                .status(ServiceRequestResponse.STATUS.PENDING)
+                                .status(ServiceRequestMessage.STATUS.PENDING)
+                                .retryCount(0)
                                 .build()
                 );
             } catch (DuplicateKeyException dke) {

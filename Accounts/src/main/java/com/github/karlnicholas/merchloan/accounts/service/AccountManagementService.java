@@ -29,8 +29,7 @@ public class AccountManagementService {
         this.loanRepository = loanRepository;
     }
 
-    public ServiceRequestResponse createAccount(CreateAccount createAccount) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(createAccount.getId()).build();
+    public void createAccount(CreateAccount createAccount, ServiceRequestResponse requestResponse) {
         try {
             accountRepository.save(Account.builder()
                     .id(createAccount.getId())
@@ -39,22 +38,17 @@ public class AccountManagementService {
                     .build()
             );
             requestResponse.setSuccess("Account created");
-
         } catch (DuplicateKeyException dke) {
             log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-            if (createAccount.getRetryCount() == 0) {
-                requestResponse.setFailure(dke.getMessage());
-            } else {
+            if (createAccount.getRetry()) {
                 requestResponse.setSuccess("Account created");
+            } else {
+                requestResponse.setFailure(dke.getMessage());
             }
         }
-        return requestResponse;
     }
 
-    public ServiceRequestResponse fundAccount(FundLoan fundLoan) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(fundLoan.getId())
-                .build();
+    public void fundAccount(FundLoan fundLoan, ServiceRequestResponse requestResponse) {
         Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
         if (accountQ.isPresent()) {
             try {
@@ -72,27 +66,22 @@ public class AccountManagementService {
                 requestResponse.setSuccess();
             } catch (DuplicateKeyException dke) {
                 log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-                if (fundLoan.getRetryCount() == 0) {
+                if (!fundLoan.getRetry()) {
                     requestResponse.setFailure(dke.getMessage());
                 }
             }
         } else {
             requestResponse.setFailure("Account not found for " + fundLoan.getAccountId());
         }
-        return requestResponse;
     }
 
-    public ServiceRequestResponse validateLoan(UUID loanId) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(loanId)
-                .build();
+    public void validateLoan(UUID loanId, ServiceRequestResponse requestResponse) {
         Optional<Loan> loanQ = loanRepository.findById(loanId);
         if (loanQ.isPresent()) {
             requestResponse.setSuccess();
         } else {
             requestResponse.setFailure("Loan not found for " + loanId);
         }
-        return requestResponse;
     }
 
     public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
@@ -100,7 +89,7 @@ public class AccountManagementService {
                 .id(statementHeader.getId())
                 .build();
         Optional<Loan> loanOpt = loanRepository.findById(statementHeader.getLoanId());
-        if ( loanOpt.isPresent()) {
+        if (loanOpt.isPresent()) {
             Optional<Account> accountQ = accountRepository.findById(loanOpt.get().getAccount().getId());
             if (accountQ.isPresent()) {
                 statementHeader.setCustomer(accountQ.get().getCustomer());
@@ -140,7 +129,7 @@ public class AccountManagementService {
     }
 
     public void closeLoan(UUID loanId) {
-        loanRepository.findById(loanId).ifPresent(loan->{
+        loanRepository.findById(loanId).ifPresent(loan -> {
             loan.setLoanState(Loan.LOAN_STATE.CLOSED);
             loanRepository.save(loan);
         });

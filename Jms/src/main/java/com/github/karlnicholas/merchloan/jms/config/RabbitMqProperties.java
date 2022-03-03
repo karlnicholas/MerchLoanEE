@@ -22,12 +22,12 @@ public class RabbitMqProperties {
     private String accountFundingRoutingKey;
     private String accountValidateCreditRoutingkey;
     private String accountValidateDebitRoutingkey;
+    private String accountCloseLoanRoutingkey;
+    private String accountLoanClosedRoutingkey;
+    private String accountQueryStatementHeaderRoutingKey;
+    private String accountQueryLoansToCycleRoutingkey;
     private String accountQueryAccountIdRoutingKey;
     private String accountQueryLoanIdRoutingKey;
-    private String accountStatementHeaderRoutingKey;
-    private String accountCloseLoanRoutingkey;
-    private String acccountLoansToCycleRoutingkey;
-    private String accountLoanClosedRoutingkey;
 
     private String registerFundLoanRoutingkey;
     private String registerCreditLoanRoutingkey;

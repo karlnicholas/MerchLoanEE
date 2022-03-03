@@ -25,5 +25,5 @@ public class StatementHeader implements Serializable {
     private LocalDate endDate;
     private String customer;
     private List<RegisterEntry> registerEntries;
-    private int retryCount;
+    private Boolean retry;
 }

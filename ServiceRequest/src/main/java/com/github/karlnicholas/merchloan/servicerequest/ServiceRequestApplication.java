@@ -3,14 +3,14 @@ package com.github.karlnicholas.merchloan.servicerequest;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.UUID;
 
 @SpringBootApplication(scanBasePackages = {"com.github.karlnicholas.merchloan"})
+@EnableScheduling
+@EnableAsync
 public class ServiceRequestApplication {
 
     public static void main(String[] args) {

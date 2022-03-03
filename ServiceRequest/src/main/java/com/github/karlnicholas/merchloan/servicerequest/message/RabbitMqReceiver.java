@@ -55,7 +55,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     .statementDate(billingCycle.getStatementDate())
                     .startDate(billingCycle.getStartDate())
                     .endDate(billingCycle.getEndDate())
-                    .build());
+                    .build(),
+                    Boolean.FALSE);
         } catch (Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -66,7 +67,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedServiceBillingCycleChargeMessage(BillingCycleChargeRequest billingCycleChargeRequest) {
         try {
             log.info("BillingCycleCharge Received {}", billingCycleChargeRequest);
-            serviceRequestService.billingCycleChargeRequest(billingCycleChargeRequest);
+            serviceRequestService.billingCycleChargeRequest(billingCycleChargeRequest, Boolean.FALSE);
         } catch (Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

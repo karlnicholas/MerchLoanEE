@@ -56,7 +56,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     .build();
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
             if (statementExistsOpt.isEmpty()) {
-                statementHeader = (StatementHeader) rabbitMqSender.accountStatementHeader(statementHeader);
+                statementHeader = (StatementHeader) rabbitMqSender.accountQueryStatementHeader(statementHeader);
                 if (statementHeader.getCustomer() != null) {
                     Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
                     boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);

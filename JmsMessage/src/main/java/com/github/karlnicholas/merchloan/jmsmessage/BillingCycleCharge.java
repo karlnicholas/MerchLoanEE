@@ -21,5 +21,5 @@ public class BillingCycleCharge implements Serializable {
     private LocalDate date;
     private String description;
     private Integer rowNum;
-    private int retryCount;
+    private Boolean retry;
 }

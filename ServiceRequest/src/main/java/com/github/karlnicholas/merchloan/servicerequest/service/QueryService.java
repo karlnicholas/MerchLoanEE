@@ -1,6 +1,6 @@
 package com.github.karlnicholas.merchloan.servicerequest.service;
 
-import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
+import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,6 @@ public class QueryService {
     }
 
     public Boolean checkRequest(LocalDate businessDate) {
-        return serviceRequestRepository.existsBylocalDateTimeLessThanAndStatusEquals(businessDate.plusDays(1).atStartOfDay(), ServiceRequestResponse.STATUS.PENDING);
+        return serviceRequestRepository.existsBylocalDateTimeLessThanAndStatusEquals(businessDate.plusDays(1).atStartOfDay(), ServiceRequestMessage.STATUS.PENDING);
     }
 }

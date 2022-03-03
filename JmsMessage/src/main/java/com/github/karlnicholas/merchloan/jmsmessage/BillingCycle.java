@@ -19,5 +19,5 @@ public class BillingCycle implements Serializable {
     private LocalDate statementDate;
     private LocalDate startDate;
     private LocalDate endDate;
-    private int retryCount;
+    private Boolean retry;
 }

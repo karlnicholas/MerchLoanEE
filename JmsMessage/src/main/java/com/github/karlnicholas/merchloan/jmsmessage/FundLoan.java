@@ -19,5 +19,5 @@ public class FundLoan implements Serializable {
     private BigDecimal amount;
     private LocalDate startDate;
     private String description;
-    private int retryCount;
+    private Boolean retry;
 }

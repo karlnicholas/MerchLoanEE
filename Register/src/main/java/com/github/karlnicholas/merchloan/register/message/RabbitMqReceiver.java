@@ -97,6 +97,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("CloseLoan Received {}", closeLoan);
             StatementHeader statementHeader = StatementHeader.builder()
                     .id(closeLoan.getId())
+                    .accountId(closeLoan.getLoanDto().getAccountId())
                     .loanId(closeLoan.getLoanId())
                     .statementDate(closeLoan.getDate())
                     .startDate(closeLoan.getLastStatementDate().plusDays(1))

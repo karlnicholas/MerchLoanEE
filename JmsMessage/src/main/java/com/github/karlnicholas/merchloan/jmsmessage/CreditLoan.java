@@ -19,5 +19,5 @@ public class CreditLoan implements Serializable {
     private BigDecimal amount;
     private LocalDate date;
     private String description;
-    private int retryCount;
+    private Boolean retry;
 }

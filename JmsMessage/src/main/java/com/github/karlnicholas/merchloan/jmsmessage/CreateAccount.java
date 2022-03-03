@@ -17,5 +17,5 @@ public class CreateAccount implements Serializable {
     private UUID id;
     private String customer;
     private LocalDate createDate;
-    private int retryCount;
+    private Boolean retry;
 }

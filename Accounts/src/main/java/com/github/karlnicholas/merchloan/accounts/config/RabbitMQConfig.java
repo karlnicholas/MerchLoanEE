@@ -17,18 +17,18 @@ public class RabbitMQConfig {
     String accountValidateCreditQueue;
     @Value("${rabbitmq.account.validate.debit.queue}")
     String accountValidateDebitQueue;
-    @Value("${rabbitmq.account.statementheader.queue}")
-    String accountStatementHeaderQueue;
-    @Value("${rabbitmq.account.query.account.id.queue}")
-    String accountQueryAccountIdQueue;
-    @Value("${rabbitmq.account.query.loan.id.queue}")
-    String accountQueryLoanIdQueue;
-    @Value("${rabbitmq.account.loanstocycle.queue}")
-    String accountLoansToCycleQueue;
     @Value("${rabbitmq.account.closeloan.queue}")
     String accountCloseLoanQueue;
     @Value("${rabbitmq.account.loanclosed.queue}")
     String accountLoanClosedQueue;
+    @Value("${rabbitmq.account.query.statementheader.queue}")
+    String accountQueryStatementHeaderQueue;
+    @Value("${rabbitmq.account.query.loanstocycle.queue}")
+    String accountQueryLoansToCycleQueue;
+    @Value("${rabbitmq.account.query.account.id.queue}")
+    String accountQueryAccountIdQueue;
+    @Value("${rabbitmq.account.query.loan.id.queue}")
+    String accountQueryLoanIdQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -91,15 +91,54 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue statementHeaderQueue() {
-        return new Queue(accountStatementHeaderQueue, false);
+    public Queue accountCloseLoanQueue() {
+        return new Queue(accountCloseLoanQueue, false);
     }
     @Bean
-    public Binding statementHeaderBinding() {
+    public Binding closeLoanBinding() {
         return BindingBuilder
-                .bind(statementHeaderQueue())
+                .bind(accountCloseLoanQueue())
                 .to(exchange())
-                .with(rabbitMqProperties.getAccountStatementHeaderRoutingKey())
+                .with(rabbitMqProperties.getAccountCloseLoanRoutingkey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountLoanClosedQueue() {
+        return new Queue(accountLoanClosedQueue, false);
+    }
+    @Bean
+    public Binding loanClosedBinding() {
+        return BindingBuilder
+                .bind(accountLoanClosedQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountLoanClosedRoutingkey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountQueryStatementHeaderQueue() {
+        return new Queue(accountQueryStatementHeaderQueue, false);
+    }
+    @Bean
+    public Binding accountQueryStatementHeaderBinding() {
+        return BindingBuilder
+                .bind(accountQueryStatementHeaderQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountQueryStatementHeaderRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountQueryLoansToCycleQueue() {
+        return new Queue(accountQueryLoansToCycleQueue, false);
+    }
+    @Bean
+    public Binding accountQueryLoansToCycleBinding() {
+        return BindingBuilder
+                .bind(accountQueryLoansToCycleQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountQueryLoansToCycleRoutingkey())
                 .noargs();
     }
 
@@ -129,42 +168,4 @@ public class RabbitMQConfig {
                 .noargs();
     }
 
-    @Bean
-    public Queue accountLoansToCycleQueue() {
-        return new Queue(accountLoansToCycleQueue, false);
-    }
-    @Bean
-    public Binding accountLoansToCycleBinding() {
-        return BindingBuilder
-                .bind(accountLoansToCycleQueue())
-                .to(exchange())
-                .with(rabbitMqProperties.getAcccountLoansToCycleRoutingkey())
-                .noargs();
-    }
-
-    @Bean
-    public Queue accountCloseLoanQueue() {
-        return new Queue(accountCloseLoanQueue, false);
-    }
-    @Bean
-    public Binding closeLoanBinding() {
-        return BindingBuilder
-                .bind(accountCloseLoanQueue())
-                .to(exchange())
-                .with(rabbitMqProperties.getAccountCloseLoanRoutingkey())
-                .noargs();
-    }
-
-    @Bean
-    public Queue accountLoanClosedQueue() {
-        return new Queue(accountLoanClosedQueue, false);
-    }
-    @Bean
-    public Binding loanClosedBinding() {
-        return BindingBuilder
-                .bind(accountLoanClosedQueue())
-                .to(exchange())
-                .with(rabbitMqProperties.getAccountLoanClosedRoutingkey())
-                .noargs();
-    }
 }

@@ -41,8 +41,8 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
     }
 
-    public Object accountStatementHeader(StatementHeader statementHeader) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountStatementHeaderRoutingKey(), statementHeader);
+    public Object accountQueryStatementHeader(StatementHeader statementHeader) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryStatementHeaderRoutingKey(), statementHeader);
     }
 
     public void registerFundLoan(DebitLoan debitLoan) {
@@ -101,8 +101,8 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestRoutingkey(), businessDate);
     }
 
-    public Object acccountLoansToCycle(LocalDate businessDate) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAcccountLoansToCycleRoutingkey(), businessDate);
+    public Object acccountQueryLoansToCycle(LocalDate businessDate) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoansToCycleRoutingkey(), businessDate);
     }
 
     public void serviceRequestBillLoan(BillingCycle billingCycle) {

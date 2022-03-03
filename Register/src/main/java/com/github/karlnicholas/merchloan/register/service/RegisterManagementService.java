@@ -51,10 +51,10 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Funding transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse createLoan(CreateLoan createLoan) duplicate key: {}", dke.getMessage());
-            if (fundLoan.getRetryCount() == 0) {
-                requestResponse.setFailure(dke.getMessage());
-            } else {
+            if (fundLoan.getRetry()) {
                 requestResponse.setSuccess("Funding transaction entered");
+            } else {
+                requestResponse.setFailure(dke.getMessage());
             }
         }
         return requestResponse;
@@ -84,10 +84,10 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            if (debitLoan.getRetryCount() == 0) {
-                requestResponse.setFailure(dke.getMessage());
-            } else {
+            if (debitLoan.getRetry()) {
                 requestResponse.setSuccess("Debit transaction entered");
+            } else {
+                requestResponse.setFailure(dke.getMessage());
             }
         }
         return requestResponse;
@@ -124,10 +124,10 @@ public class RegisterManagementService {
             }
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            if (creditLoan.getRetryCount() == 0) {
-                requestResponse.setFailure(dke.getMessage());
-            } else {
+            if (creditLoan.getRetry()) {
                 requestResponse.setSuccess("Credit transaction entered");
+            } else {
+                requestResponse.setFailure(dke.getMessage());
             }
         }
         return requestResponse;

@@ -12,10 +12,6 @@ rabbitmq:
         queue: account.validate.credit.queue
       debit:
         queue: account.validate.debit.queue
-    statementheader:
-      queue: account.statementheader.queue
-    loanstocycle:
-      queue: account.loanstocycle.queue
     closeloan:
       queue: account.closeloan.queue
     loanclosed:
@@ -27,3 +23,7 @@ rabbitmq:
       loan:
         id:
           queue: account.query.loan.id.queue
+      statementheader:
+        queue: account.query.statementheader.queue
+      loanstocycle:
+        queue: account.query.loanstocycle.queue
