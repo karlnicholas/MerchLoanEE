@@ -158,11 +158,7 @@ public class ServiceRequestService {
     }
 
     public void chargeCompleted(BillingCycleCharge billingCycleCharge) {
-        completeServiceRequest(ServiceRequestResponse.builder()
-                .id(billingCycleCharge.getId())
-                .status(ServiceRequestMessage.STATUS.SUCCESS)
-                .statusMessage(ServiceRequestMessage.STATUS.SUCCESS.name())
-                .build());
+        completeServiceRequest(billingCycleCharge);
         redisComponent.chargeCompleted(billingCycleCharge);
     }
 

@@ -17,10 +17,12 @@ public class ServiceRequestResponse implements Serializable {
     private ServiceRequestMessage.STATUS status;
     private String statusMessage;
 
-    public void setId(UUID id) {
+    public final void setId(UUID id) {
         this.id = id;
     }
-
+    public final UUID getId() {
+        return id;
+    }
     // test is Success
     public boolean isSuccess() {
         return this.status.equals(ServiceRequestMessage.STATUS.SUCCESS);

@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.register.service;
 
+import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.register.model.LoanState;
 import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
@@ -27,10 +28,7 @@ public class RegisterManagementService {
         this.loanStateRepository = loanStateRepository;
     }
 
-    public ServiceRequestResponse fundLoan(DebitLoan fundLoan) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(fundLoan.getId())
-                .build();
+    public void fundLoan(DebitLoan fundLoan, ServiceRequestResponse requestResponse) {
         //TODO: Better logic here
         try {
             loanStateRepository.save(
@@ -57,13 +55,9 @@ public class RegisterManagementService {
                 requestResponse.setFailure(dke.getMessage());
             }
         }
-        return requestResponse;
     }
 
-    public ServiceRequestResponse debitLoan(DebitLoan debitLoan) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(debitLoan.getId())
-                .build();
+    public void debitLoan(DebitLoan debitLoan, ServiceRequestResponse requestResponse) {
         try {
             RegisterEntry debitEntry = RegisterEntry.builder()
                     .id(debitLoan.getId())
@@ -90,13 +84,9 @@ public class RegisterManagementService {
                 requestResponse.setFailure(dke.getMessage());
             }
         }
-        return requestResponse;
     }
 
-    public ServiceRequestResponse creditLoan(CreditLoan creditLoan) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(creditLoan.getId())
-                .build();
+    public void creditLoan(CreditLoan creditLoan, ServiceRequestResponse requestResponse) {
         try {
             RegisterEntry creditEntry = RegisterEntry.builder()
                     .id(creditLoan.getId())
@@ -130,7 +120,6 @@ public class RegisterManagementService {
                 requestResponse.setFailure(dke.getMessage());
             }
         }
-        return requestResponse;
     }
 
     public void statementHeader(StatementHeader statementHeader) {
@@ -150,7 +139,7 @@ public class RegisterManagementService {
         }
     }
 
-    public BillingCycleCharge billingCycleCharge(BillingCycleCharge billingCycleCharge) {
+    public void billingCycleCharge(BillingCycleCharge billingCycleCharge) {
         try {
             RegisterEntry registerEntry = RegisterEntry.builder()
                     .id(billingCycleCharge.getId())
@@ -174,10 +163,13 @@ public class RegisterManagementService {
                 registerEntryRepository.save(registerEntry);
                 loanStateRepository.save(loanState);
             }
+            billingCycleCharge.setSuccess(ServiceRequestMessage.STATUS.SUCCESS.name());
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
+            if ( !billingCycleCharge.getRetry()) {
+                billingCycleCharge.setFailure(dke.getMessage());
+            }
         }
-        return billingCycleCharge;
     }
 
 //    private void ThreadSleep(long time) {

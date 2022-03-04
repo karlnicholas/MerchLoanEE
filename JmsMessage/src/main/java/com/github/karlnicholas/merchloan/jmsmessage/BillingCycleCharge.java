@@ -1,20 +1,20 @@
 package com.github.karlnicholas.merchloan.jmsmessage;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @ToString
-public class BillingCycleCharge implements Serializable {
-    private UUID id;
+public class BillingCycleCharge extends ServiceRequestResponse {
     private UUID loanId;
     private BigDecimal debit;
     private BigDecimal credit;
