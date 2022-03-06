@@ -31,6 +31,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>apimessage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>dto</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -26,6 +26,7 @@ public class ServiceRequestRouter {
         routingMap.put(CloseRequest.class.getName(), serviceRequestService::closeRequest);
         routingMap.put(CreditRequest.class.getName(), serviceRequestService::accountValidateCreditRequest);
         routingMap.put(DebitRequest.class.getName(), serviceRequestService::accountValidateDebitRequest);
+        routingMap.put(StatementRequest.class.getName(), serviceRequestService::statementStatementRequest);
     }
 
     public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {

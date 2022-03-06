@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.query.api;
 
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -23,31 +24,31 @@ public class ApiHandler {
     }
 
     public Mono<ServerResponse> getAccount(ServerRequest serverRequest) {
-        return ServerResponse.ok().body(
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryAccount)
                 , String.class);
     }
 
     public Mono<ServerResponse> getLoan(ServerRequest serverRequest) {
-        return ServerResponse.ok().body(
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryLoan)
                 , String.class);
     }
 
     public Mono<ServerResponse> getRegister(ServerRequest serverRequest) {
-        return ServerResponse.ok().body(
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryRegister)
                 , String.class);
     }
 
     public Mono<ServerResponse> getStatement(ServerRequest serverRequest) {
-        return ServerResponse.ok().body(
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryStatement)
                 , String.class);
     }
 
     public Mono<ServerResponse> getStatements(ServerRequest serverRequest) {
-        return ServerResponse.ok().body(
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryStatements)
                 , String.class);
     }

@@ -21,28 +21,28 @@ public class ServiceRequestController {
     public ServiceRequestController(ServiceRequestRouter serviceRequestRouter) {
         this.serviceRequestRouter = serviceRequestRouter;
     }
-    @PostMapping(value = "accountRequest", produces = MediaType.TEXT_PLAIN_VALUE)
-    public UUID createAccountRequest(@RequestBody AccountRequest accountRequest) throws JsonProcessingException {
-        return serviceRequestRouter.routeRequest(accountRequest.getClass().getName(), accountRequest, Boolean.FALSE);
+    @PostMapping(value = "accountRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    public String createAccountRequest(@RequestBody AccountRequest accountRequest) throws JsonProcessingException {
+        return serviceRequestRouter.routeRequest(accountRequest.getClass().getName(), accountRequest, Boolean.FALSE).toString();
     }
-    @PostMapping(value = "fundingRequest", produces = MediaType.TEXT_PLAIN_VALUE)
-    public UUID fundingRequest(@RequestBody FundingRequest fundingRequest) throws JsonProcessingException {
-        return serviceRequestRouter.routeRequest(fundingRequest.getClass().getName(), fundingRequest, Boolean.FALSE);
+    @PostMapping(value = "fundingRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    public String fundingRequest(@RequestBody FundingRequest fundingRequest) throws JsonProcessingException {
+        return serviceRequestRouter.routeRequest(fundingRequest.getClass().getName(), fundingRequest, Boolean.FALSE).toString();
     }
-    @PostMapping(value = "creditRequest", produces = MediaType.TEXT_PLAIN_VALUE)
-    public UUID creditRequest(@RequestBody CreditRequest creditRequest) throws JsonProcessingException {
-        return serviceRequestRouter.routeRequest(creditRequest.getClass().getName(), creditRequest, Boolean.FALSE);
+    @PostMapping(value = "creditRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    public String creditRequest(@RequestBody CreditRequest creditRequest) throws JsonProcessingException {
+        return serviceRequestRouter.routeRequest(creditRequest.getClass().getName(), creditRequest, Boolean.FALSE).toString();
     }
-    @PostMapping(value = "debitRequest", produces = MediaType.TEXT_PLAIN_VALUE)
-    public UUID debitRequest(@RequestBody DebitRequest debitRequest) throws JsonProcessingException {
-        return serviceRequestRouter.routeRequest(debitRequest.getClass().getName(), debitRequest, Boolean.FALSE);
+    @PostMapping(value = "debitRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    public String debitRequest(@RequestBody DebitRequest debitRequest) throws JsonProcessingException {
+        return serviceRequestRouter.routeRequest(debitRequest.getClass().getName(), debitRequest, Boolean.FALSE).toString();
     }
-    @PostMapping(value = "statementRequest", produces = MediaType.APPLICATION_JSON_VALUE)
-    public UUID statementRequest(@RequestBody StatementRequest statementRequest) throws JsonProcessingException {
-        return serviceRequestRouter.routeRequest(statementRequest.getClass().getName(), statementRequest, Boolean.FALSE);
+    @PostMapping(value = "statementRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String statementRequest(@RequestBody StatementRequest statementRequest) throws JsonProcessingException {
+        return serviceRequestRouter.routeRequest(statementRequest.getClass().getName(), statementRequest, Boolean.FALSE).toString();
     }
-    @PostMapping(value = "closeRequest", produces = MediaType.TEXT_PLAIN_VALUE)
-    public UUID fundingRequest(@RequestBody CloseRequest closeRequest) throws JsonProcessingException {
-        return serviceRequestRouter.routeRequest(closeRequest.getClass().getName(), closeRequest, Boolean.FALSE);
+    @PostMapping(value = "closeRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    public String fundingRequest(@RequestBody CloseRequest closeRequest) throws JsonProcessingException {
+        return serviceRequestRouter.routeRequest(closeRequest.getClass().getName(), closeRequest, Boolean.FALSE).toString();
     }
 }

@@ -19,7 +19,7 @@ public class BusinessDateController {
         this.businessDateService = businessDateService;
     }
 
-    @PostMapping(value = "businessdate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "businessdate")
     public void postBusinessDate(@RequestBody LocalDate businessDate) {
         BusinessDate priorBusinessDate = businessDateService.updateBusinessDate(businessDate);
         businessDateService.startBillingCycle(priorBusinessDate);
