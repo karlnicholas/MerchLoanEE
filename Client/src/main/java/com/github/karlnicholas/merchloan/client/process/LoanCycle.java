@@ -1,56 +1,56 @@
 package com.github.karlnicholas.merchloan.client.process;
 
 import com.github.karlnicholas.merchloan.client.component.*;
-import com.github.karlnicholas.merchloan.dto.LoanDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 
+
+@Slf4j
 public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
     enum LOAN_STATES {NEW, OPEN, CLOSED}
 
-    private final LoanStatusComponent loanStatusComponent;
-    private final RequestStatusComponent requestStatusComponent;
+    private final CreditComponent creditComponent;
+    private final LoanStateComponent loanStateComponent;
     private final CloseComponent closeComponent;
-    private final RestTemplate restTemplate;
-    private LoanStateHandler loanStateHandler;
+    private LoanProcessHandler loanProcessHandler;
     private LocalDate eventDate;
     private LOAN_STATES loanState;
-    private Object[] args;
+    private LoanData loanData;
 
-    public LoanCycle(AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, RequestStatusComponent requestStatusComponent, LoanStatusComponent loanStatusComponent, RestTemplate restTemplate, String clientName) {
-        this.requestStatusComponent = requestStatusComponent;
+    public LoanCycle(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, String customer) {
+        this.creditComponent = creditComponent;
         this.closeComponent = closeComponent;
-        this.loanStatusComponent = loanStatusComponent;
-        this.restTemplate = restTemplate;
+        this.loanStateComponent = loanStateComponent;
         eventDate = LocalDate.now();
-        loanStateHandler = new LoanStateNewHandler(accountComponent, loanComponent, loanStatusComponent, this.requestStatusComponent);
+        loanProcessHandler = new NewLoanProcessHandler(accountComponent, loanComponent, loanStateComponent);
         loanState = LOAN_STATES.NEW;
-        args = new Object[]{clientName, new BigDecimal(10000.00), "FUNDING", "PAYMENT", "CLOSE"};
+        loanData = LoanData.builder()
+                .customer(customer)
+                .fundingAmount(BigDecimal.valueOf(10000.00))
+                .build();
     }
 
     @Override
     public void onApplicationEvent(BusinessDateEvent event) {
-        System.out.println("Received spring custom event - " + event.getMessage());
+
+        log.info("Received spring custom event - {}", event.getMessage());
         if (event.getMessage().isEqual(eventDate)) {
-            Optional<LoanDto> loanStatusOpt = loanStateHandler.progressState(args);
-            if (loanStatusOpt.isPresent()) {
-                switch (loanState) {
-                    case NEW:
-                        loanStateHandler = new LoanStateOpenHandler(loanStatusComponent, restTemplate);
-                        eventDate = loanStatusOpt.get().getStartDate().plusMonths(1);
-                        loanState = LOAN_STATES.OPEN;
-                        break;
-                    case OPEN:
-                        eventDate = loanStatusOpt.get().getLastStatementDate().plusMonths(1);
-                        if (eventDate.isEqual(loanStatusOpt.get().getStartDate().plusYears(1))) {
-                            loanStateHandler = new LoanStateCloseHandler(closeComponent, restTemplate);
-                            loanState = LOAN_STATES.CLOSED;
-                        }
-                        break;
+            boolean success = loanProcessHandler.progressState(loanData);
+            if (success) {
+                if (loanState == LOAN_STATES.NEW) {
+                    loanProcessHandler = new OpenLoanProcessHandler(creditComponent, loanStateComponent);
+                    eventDate = loanData.getLoanState().getStartDate().plusMonths(1);
+                    loanState = LOAN_STATES.OPEN;
+                } else if ( loanState == LOAN_STATES.OPEN) {
+                    eventDate = loanData.getLoanState().getLastStatementDate().plusMonths(1);
+                    if (eventDate.isEqual(loanData.getLoanState().getStartDate().plusYears(1))) {
+                        loanProcessHandler = new CloseLoanProcessHandler(closeComponent, loanStateComponent);
+                        loanState = LOAN_STATES.CLOSED;
+                    }
                 }
             }
         }
