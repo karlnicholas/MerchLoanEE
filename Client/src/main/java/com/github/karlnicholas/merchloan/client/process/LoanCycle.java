@@ -1,9 +1,6 @@
 package com.github.karlnicholas.merchloan.client.process;
 
-import com.github.karlnicholas.merchloan.client.component.AccountComponent;
-import com.github.karlnicholas.merchloan.client.component.CloseComponent;
-import com.github.karlnicholas.merchloan.client.component.LoanComponent;
-import com.github.karlnicholas.merchloan.client.component.LoanStatusComponent;
+import com.github.karlnicholas.merchloan.client.component.*;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import org.springframework.context.ApplicationListener;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +13,7 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
     enum LOAN_STATES {NEW, OPEN, CLOSED}
 
     private final LoanStatusComponent loanStatusComponent;
+    private final RequestStatusComponent requestStatusComponent;
     private final CloseComponent closeComponent;
     private final RestTemplate restTemplate;
     private LoanStateHandler loanStateHandler;
@@ -23,12 +21,13 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
     private LOAN_STATES loanState;
     private Object[] args;
 
-    public LoanCycle(AccountComponent accountComponent, LoanComponent loanComponent, LoanStatusComponent loanStatusComponent, CloseComponent closeComponent, RestTemplate restTemplate, String clientName) {
+    public LoanCycle(AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, RequestStatusComponent requestStatusComponent, LoanStatusComponent loanStatusComponent, RestTemplate restTemplate, String clientName) {
+        this.requestStatusComponent = requestStatusComponent;
         this.closeComponent = closeComponent;
         this.loanStatusComponent = loanStatusComponent;
         this.restTemplate = restTemplate;
         eventDate = LocalDate.now();
-        loanStateHandler = new LoanStateNewHandler(accountComponent, loanComponent, loanStatusComponent);
+        loanStateHandler = new LoanStateNewHandler(accountComponent, loanComponent, loanStatusComponent, this.requestStatusComponent);
         loanState = LOAN_STATES.NEW;
         args = new Object[]{clientName, new BigDecimal(10000.00), "FUNDING", "PAYMENT", "CLOSE"};
     }

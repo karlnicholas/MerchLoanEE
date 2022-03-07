@@ -1,9 +1,6 @@
 package com.github.karlnicholas.merchloan.client;
 
-import com.github.karlnicholas.merchloan.client.component.AccountComponent;
-import com.github.karlnicholas.merchloan.client.component.CloseComponent;
-import com.github.karlnicholas.merchloan.client.component.LoanComponent;
-import com.github.karlnicholas.merchloan.client.component.LoanStatusComponent;
+import com.github.karlnicholas.merchloan.client.component.*;
 import com.github.karlnicholas.merchloan.client.process.LoanCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -30,11 +27,13 @@ public class ClientApplication {
     @Autowired
     private LoanStatusComponent loanStatusComponent;
     @Autowired
+    private RequestStatusComponent requestStatusComponent;
+    @Autowired
     private RestTemplate restTemplate;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadData(ApplicationReadyEvent event) {
-        event.getApplicationContext().addApplicationListener(new LoanCycle(accountComponent, loanComponent, loanStatusComponent, closeComponent, restTemplate, "Client 1"));
+        event.getApplicationContext().addApplicationListener(new LoanCycle(accountComponent, loanComponent, closeComponent, requestStatusComponent, loanStatusComponent, restTemplate, "Client 1"));
 //        event.getApplicationContext().addApplicationListener(new LoanCycle(accountComponent, loanComponent, loanStatusComponent, restTemplate, "Client 2"));
 //        event.getApplicationContext().addApplicationListener(new LoanCycle(accountComponent, loanComponent, loanStatusComponent, restTemplate, "Client 3"));
         // do something
