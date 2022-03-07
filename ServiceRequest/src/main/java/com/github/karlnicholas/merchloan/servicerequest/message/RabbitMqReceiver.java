@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.servicerequest.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
 import com.github.karlnicholas.merchloan.apimessage.message.StatementRequest;
+import com.github.karlnicholas.merchloan.dto.RequestStatusDto;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
@@ -51,11 +52,11 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         try {
             log.info("Billloan Received {}", billingCycle);
             serviceRequestService.statementStatementRequest(StatementRequest.builder()
-                    .loanId(billingCycle.getLoanId())
-                    .statementDate(billingCycle.getStatementDate())
-                    .startDate(billingCycle.getStartDate())
-                    .endDate(billingCycle.getEndDate())
-                    .build(),
+                            .loanId(billingCycle.getLoanId())
+                            .statementDate(billingCycle.getStatementDate())
+                            .startDate(billingCycle.getStartDate())
+                            .endDate(billingCycle.getEndDate())
+                            .build(),
                     Boolean.FALSE);
         } catch (Exception ex) {
             log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
@@ -100,9 +101,16 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public String receivedServiceRequestQueryIdMessage(UUID id) {
         try {
             log.info("ServiceRequestQueryId Received {}", id);
-            Optional<ServiceRequest> r = queryService.getServiceRequest(id);
-            if (r.isPresent()) {
-                return objectMapper.writeValueAsString(r.get());
+            Optional<ServiceRequest> requestOpt = queryService.getServiceRequest(id);
+            if (requestOpt.isPresent()) {
+                ServiceRequest request = requestOpt.get();
+                return objectMapper.writeValueAsString(RequestStatusDto.builder()
+                        .id(request.getId())
+                        .localDateTime(request.getLocalDateTime())
+                        .status(request.getStatus().name())
+                        .statusMessage(request.getStatusMessage())
+                        .build()
+                );
             } else {
                 return "ERROR: id not found: " + id;
             }
