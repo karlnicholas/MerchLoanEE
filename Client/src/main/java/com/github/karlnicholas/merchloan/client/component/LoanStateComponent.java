@@ -19,7 +19,7 @@ public class LoanStateComponent {
         this.restTemplate = restTemplate;
     }
 
-    public ResponseEntity<LoanDto> loanStatus(UUID loanId) {
+    private ResponseEntity<LoanDto> loanStatus(UUID loanId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         return restTemplate.getForEntity("http://localhost:8090/api/query/loan/{loanId}", LoanDto.class, loanId);
@@ -27,19 +27,23 @@ public class LoanStateComponent {
 
     public Optional<LoanDto> checkLoanStatus(UUID loanId) {
         // Return Loan State
-        ResponseEntity<LoanDto> loanDto = null;
-        int loanDtoCount = 1;
+        boolean loop = true;
+        int requestCount = 0;
         do {
             try {
-                loanDto = loanStatus(loanId);
+                ResponseEntity<LoanDto> loanDto = loanStatus(loanId);
+                loop = loanDto.getStatusCode().isError();
+                if (!loop) {
+                    return Optional.of(loanDto.getBody());
+                }
             } catch (Exception ex) {
-                if (loanDtoCount == 3)
-                    log.warn("LOAN STATE EXCEPTION: ", ex);
+                if (requestCount == 3) {
+                    log.warn("LOAN STATE EXCEPTION: {}", ex.getMessage());
+                    loop = false;
+                }
             }
-        } while ((loanDto != null && loanDto.getStatusCode() != HttpStatus.OK) && ++loanDtoCount <= 3);
-        if (loanDtoCount > 3 || loanDto == null) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(loanDto.getBody());
+            requestCount++;
+        } while (loop);
+        return Optional.empty();
     }
 }

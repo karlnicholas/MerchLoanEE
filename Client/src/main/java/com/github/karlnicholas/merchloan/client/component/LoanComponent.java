@@ -22,7 +22,7 @@ public class LoanComponent {
         this.requestStatusComponent = requestStatusComponent;
     }
 
-    public ResponseEntity<UUID> fundingRequest(UUID accountId, BigDecimal amount, String description) {
+    private ResponseEntity<UUID> fundingRequest(UUID accountId, BigDecimal amount, String description) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.TEXT_PLAIN));
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -32,22 +32,23 @@ public class LoanComponent {
 
     public Optional<UUID> fundLoan(UUID accountId, BigDecimal amount, String description) {
         // Fund Loan
-        ResponseEntity<UUID> loanId = null;
-        int loanCount = 1;
+        int requestCount = 0;
+        boolean loop = true;
         do {
             try {
-                loanId = fundingRequest(accountId, amount, description);
+                ResponseEntity<UUID> loanId = fundingRequest(accountId, amount, description);
+                loop = loanId.getStatusCode().isError();
+                if (!loop) {
+                    return requestStatusComponent.checkRequestStatus(loanId.getBody());
+                }
             } catch (Exception ex) {
-                if (loanCount == 3)
-                    log.warn("FUND LOAN EXCEPTION: ", ex);
+                if (requestCount >= 3) {
+                    log.warn("FUND LOAN EXCEPTION: {}", ex.getMessage());
+                    loop = false;
+                }
             }
-        } while ((loanId != null && loanId.getStatusCode() != HttpStatus.OK) && ++loanCount <= 3);
-        if (loanCount > 3 || loanId == null) {
-            return Optional.empty();
-        }
-        if (requestStatusComponent.checkRequestStatus(loanId.getBody()).isEmpty() ) {
-            return Optional.empty();
-        }
-        return Optional.of(loanId.getBody());
+            requestCount++;
+        } while (loop);
+        return Optional.empty();
     }
 }

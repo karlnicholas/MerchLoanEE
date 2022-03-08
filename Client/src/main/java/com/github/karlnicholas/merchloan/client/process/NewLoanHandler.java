@@ -12,12 +12,12 @@ import java.util.UUID;
 
 @Component
 @Slf4j
-public class NewLoanProcessHandler implements LoanProcessHandler {
+public class NewLoanHandler implements LoanProcessHandler {
     private final AccountComponent accountComponent;
     private final LoanComponent loanComponent;
     private final LoanStateComponent loanStateComponent;
 
-    public NewLoanProcessHandler(AccountComponent accountComponent, LoanComponent loanComponent, LoanStateComponent loanStateComponent) {
+    public NewLoanHandler(AccountComponent accountComponent, LoanComponent loanComponent, LoanStateComponent loanStateComponent) {
         this.accountComponent = accountComponent;
         this.loanComponent = loanComponent;
         this.loanStateComponent = loanStateComponent;

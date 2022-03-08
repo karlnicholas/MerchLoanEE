@@ -21,7 +21,7 @@ public class AccountComponent {
         this.restTemplate = restTemplate;
     }
 
-    public ResponseEntity<UUID> accountRequest(String customer) {
+    private ResponseEntity<UUID> accountRequest(String customer) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.TEXT_PLAIN));
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -31,22 +31,23 @@ public class AccountComponent {
 
     public Optional<UUID> createAccount(String customer) {
         // Open Account
-        ResponseEntity<UUID> accountId = null;
-        int accountCount = 1;
+        int requestCount = 0;
+        boolean loop = true;
         do {
             try {
-                accountId = accountRequest(customer);
+                ResponseEntity<UUID> accountId = accountRequest(customer);
+                loop = accountId.getStatusCode().isError();
+                if ( !loop ) {
+                    return requestStatusComponent.checkRequestStatus(accountId.getBody());
+                }
             } catch (Exception ex) {
-                if (accountCount == 3)
-                    log.warn("CREATE ACCOUNT EXCEPTION: ", ex);
+                if (requestCount >= 3) {
+                    log.warn("CREATE ACCOUNT EXCEPTION: {}", ex.getMessage());
+                    loop = false;
+                }
             }
-        } while ((accountId != null && accountId.getStatusCode() != HttpStatus.OK) && ++accountCount <= 3);
-        if (accountCount > 3 || accountId == null) {
-            return Optional.empty();
-        }
-        if ( requestStatusComponent.checkRequestStatus(accountId.getBody()).isEmpty() ) {
-            return Optional.empty();
-        }
-        return Optional.of(accountId.getBody());
+            requestCount++;
+        } while (loop);
+        return Optional.empty();
     }
 }

@@ -29,7 +29,6 @@ public class RegisterManagementService {
     }
 
     public void fundLoan(DebitLoan fundLoan, ServiceRequestResponse requestResponse) {
-        //TODO: Better logic here
         try {
             loanStateRepository.save(
                     LoanState.builder()
@@ -49,7 +48,7 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Funding transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse createLoan(CreateLoan createLoan) duplicate key: {}", dke.getMessage());
-            if (fundLoan.getRetry()) {
+            if (fundLoan.getRetry().booleanValue()) {
                 requestResponse.setSuccess("Funding transaction entered");
             } else {
                 requestResponse.setFailure(dke.getMessage());
@@ -78,7 +77,7 @@ public class RegisterManagementService {
             requestResponse.setSuccess("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            if (debitLoan.getRetry()) {
+            if (debitLoan.getRetry().booleanValue()) {
                 requestResponse.setSuccess("Debit transaction entered");
             } else {
                 requestResponse.setFailure(dke.getMessage());
@@ -114,7 +113,7 @@ public class RegisterManagementService {
             }
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            if (creditLoan.getRetry()) {
+            if (creditLoan.getRetry().booleanValue()) {
                 requestResponse.setSuccess("Credit transaction entered");
             } else {
                 requestResponse.setFailure(dke.getMessage());
@@ -166,17 +165,9 @@ public class RegisterManagementService {
             billingCycleCharge.setSuccess(ServiceRequestMessage.STATUS.SUCCESS.name());
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            if ( !billingCycleCharge.getRetry()) {
+            if ( !billingCycleCharge.getRetry().booleanValue()) {
                 billingCycleCharge.setFailure(dke.getMessage());
             }
         }
     }
-
-//    private void ThreadSleep(long time) {
-//        try {
-//            Thread.sleep(time);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

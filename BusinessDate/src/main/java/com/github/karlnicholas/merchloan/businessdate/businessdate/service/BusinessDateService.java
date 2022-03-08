@@ -5,14 +5,17 @@ import com.github.karlnicholas.merchloan.businessdate.businessdate.model.Busines
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class BusinessDateService {
     private final RedisComponent redisComponent;
     private final BusinessDateRepository businessDateRepository;
@@ -25,10 +28,12 @@ public class BusinessDateService {
     }
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) {
-        BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(businessDateRepository.findById(1L).get().getBusinessDate()).build();
-        businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
-        redisComponent.updateBusinessDate(businessDate);
-        return priorBusinessDate;
+        return businessDateRepository.findById(1L).map(pr->{
+            BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(pr.getBusinessDate()).build();
+            businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
+            redisComponent.updateBusinessDate(businessDate);
+            return priorBusinessDate;
+        }).orElseThrow();
     }
 
     public void initializeBusinessDate() {
@@ -44,12 +49,11 @@ public class BusinessDateService {
             try {
                 Thread.sleep(1000);
                 Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate.getBusinessDate());
-                if ( !requestPending )
+                if ( !requestPending.booleanValue() )
                     waiting = false;
             } catch (InterruptedException e) {
-                e.printStackTrace();
-                waiting = false;
-
+                log.error("Wait for prior day completion exception: {}", e.getMessage());
+                Thread.currentThread().interrupt();
             }
         }
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate.getBusinessDate());

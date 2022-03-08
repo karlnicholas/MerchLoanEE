@@ -1,25 +1,25 @@
 package com.github.karlnicholas.merchloan.client.process;
 
-import com.github.karlnicholas.merchloan.client.component.CreditComponent;
+import com.github.karlnicholas.merchloan.client.component.CloseComponent;
 import com.github.karlnicholas.merchloan.client.component.LoanStateComponent;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class OpenLoanProcessHandler implements LoanProcessHandler {
-    private final CreditComponent creditComponent;
+public class CloseLoanHandler implements LoanProcessHandler {
+    private final CloseComponent closeComponent;
     private final LoanStateComponent loanStateComponent;
 
-    public OpenLoanProcessHandler(CreditComponent creditComponent, LoanStateComponent loanStateComponent) {
-        this.creditComponent = creditComponent;
+    public CloseLoanHandler(CloseComponent closeComponent, LoanStateComponent loanStateComponent) {
+        this.closeComponent = closeComponent;
         this.loanStateComponent = loanStateComponent;
     }
 
     @Override
     public boolean progressState(LoanData loanData) {
-        Optional<UUID> creditId = creditComponent.makePayment(loanData.getLoanId(), loanData.getLoanState().getCurrentPayment(), LoanData.PAYMENT_DESCRIPTION);
-        if ( creditId.isEmpty()) {
+        Optional<UUID> closeId = closeComponent.closeLoan(loanData.getLoanId(), loanData.getLoanState().getPayoffAmount(), LoanData.CLOSE_DESCRIPTION);
+        if ( closeId.isEmpty()) {
             return false;
         }
         Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());

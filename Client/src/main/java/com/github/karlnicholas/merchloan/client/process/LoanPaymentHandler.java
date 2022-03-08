@@ -1,25 +1,27 @@
 package com.github.karlnicholas.merchloan.client.process;
 
-import com.github.karlnicholas.merchloan.client.component.CloseComponent;
+import com.github.karlnicholas.merchloan.client.component.CreditComponent;
 import com.github.karlnicholas.merchloan.client.component.LoanStateComponent;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class CloseLoanProcessHandler implements LoanProcessHandler {
-    private final CloseComponent closeComponent;
+@Component
+public class LoanPaymentHandler implements LoanProcessHandler {
+    private final CreditComponent creditComponent;
     private final LoanStateComponent loanStateComponent;
 
-    public CloseLoanProcessHandler(CloseComponent closeComponent, LoanStateComponent loanStateComponent) {
-        this.closeComponent = closeComponent;
+    public LoanPaymentHandler(CreditComponent creditComponent, LoanStateComponent loanStateComponent) {
+        this.creditComponent = creditComponent;
         this.loanStateComponent = loanStateComponent;
     }
 
     @Override
     public boolean progressState(LoanData loanData) {
-        Optional<UUID> closeId = closeComponent.closeLoan(loanData.getLoanId(), loanData.getLoanState().getPayoffAmount(), LoanData.CLOSE_DESCRIPTION);
-        if ( closeId.isEmpty()) {
+        Optional<UUID> creditId = creditComponent.makePayment(loanData.getLoanId(), loanData.getLoanState().getCurrentPayment(), LoanData.PAYMENT_DESCRIPTION);
+        if ( creditId.isEmpty()) {
             return false;
         }
         Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());

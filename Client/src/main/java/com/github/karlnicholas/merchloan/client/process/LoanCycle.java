@@ -3,7 +3,6 @@ package com.github.karlnicholas.merchloan.client.process;
 import com.github.karlnicholas.merchloan.client.component.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,23 +10,25 @@ import java.time.LocalDate;
 
 @Slf4j
 public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
-    enum LOAN_STATES {NEW, OPEN, CLOSED}
+    enum CYCLE_STATES {NEW, PAYMENT, STATEMENT, CLOSE}
 
-    private final CreditComponent creditComponent;
-    private final LoanStateComponent loanStateComponent;
-    private final CloseComponent closeComponent;
-    private LoanProcessHandler loanProcessHandler;
+    private final LoanProcessHandler newLoanHandler;
+    private final LoanProcessHandler paymentLoanHandler;
+    private final LoanProcessHandler loanStatementHandler;
+    private final LoanProcessHandler closeLoanHandler;
+    private LoanProcessHandler currentLoanHandler;
     private LocalDate eventDate;
-    private LOAN_STATES loanState;
+    private CYCLE_STATES cycleState;
     private LoanData loanData;
 
     public LoanCycle(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, String customer) {
-        this.creditComponent = creditComponent;
-        this.closeComponent = closeComponent;
-        this.loanStateComponent = loanStateComponent;
         eventDate = LocalDate.now();
-        loanProcessHandler = new NewLoanProcessHandler(accountComponent, loanComponent, loanStateComponent);
-        loanState = LOAN_STATES.NEW;
+        newLoanHandler = new NewLoanHandler(accountComponent, loanComponent, loanStateComponent);
+        paymentLoanHandler = new LoanPaymentHandler(creditComponent, loanStateComponent);
+        loanStatementHandler = new LoanStatementHandler(loanStateComponent);
+        closeLoanHandler = new CloseLoanHandler(closeComponent, loanStateComponent);
+        currentLoanHandler = newLoanHandler;
+        cycleState = CYCLE_STATES.NEW;
         loanData = LoanData.builder()
                 .customer(customer)
                 .fundingAmount(BigDecimal.valueOf(10000.00))
@@ -36,23 +37,50 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
 
     @Override
     public void onApplicationEvent(BusinessDateEvent event) {
-
-        log.info("Received spring custom event - {}", event.getMessage());
         if (event.getMessage().isEqual(eventDate)) {
-            boolean success = loanProcessHandler.progressState(loanData);
+            log.debug("BUSINESS DATE EVENT MATCHED: {} {} {}", eventDate, cycleState, loanData);
+            boolean success = currentLoanHandler.progressState(loanData);
             if (success) {
-                if (loanState == LOAN_STATES.NEW) {
-                    loanProcessHandler = new OpenLoanProcessHandler(creditComponent, loanStateComponent);
-                    eventDate = loanData.getLoanState().getStartDate().plusMonths(1);
-                    loanState = LOAN_STATES.OPEN;
-                } else if ( loanState == LOAN_STATES.OPEN) {
-                    eventDate = loanData.getLoanState().getLastStatementDate().plusMonths(1);
-                    if (eventDate.isEqual(loanData.getLoanState().getStartDate().plusYears(1))) {
-                        loanProcessHandler = new CloseLoanProcessHandler(closeComponent, loanStateComponent);
-                        loanState = LOAN_STATES.CLOSED;
-                    }
+                if (cycleState == CYCLE_STATES.NEW) {
+                    changeToPayment();
+                } else if (cycleState == CYCLE_STATES.PAYMENT) {
+                    changeToStatement();
+                } else if (cycleState == CYCLE_STATES.STATEMENT) {
+                    changeToPaymentOrClosed();
+                } else if (cycleState == CYCLE_STATES.CLOSE) {
+                    log.debug("Loan Closed: {}", event.getMessage());
                 }
+            } else {
+                log.error("Loan Cycle failed: {}", event.getMessage());
             }
         }
+    }
+
+    private void changeToPaymentOrClosed() {
+        if ( loanData.getLastStatementDate().plusMonths(1).isEqual(loanData.getLoanState().getStartDate().plusYears(1))) {
+            currentLoanHandler = closeLoanHandler;
+            cycleState = CYCLE_STATES.CLOSE;
+        } else {
+            currentLoanHandler = paymentLoanHandler;
+            cycleState = CYCLE_STATES.PAYMENT;
+        }
+        eventDate = loanData.getLastStatementDate().plusDays(20);
+    }
+
+    private void changeToStatement() {
+        if (loanData.getLoanState().getLastStatementDate() == null) {
+            eventDate = loanData.getLoanState().getStartDate().plusMonths(1).plusDays(1);
+        } else {
+            eventDate = loanData.getLoanState().getLastStatementDate().plusMonths(1).plusDays(1);
+        }
+        loanData.setLastStatementDate(eventDate.minusDays(1));
+        cycleState = CYCLE_STATES.STATEMENT;
+        currentLoanHandler = loanStatementHandler;
+    }
+
+    private void changeToPayment() {
+        currentLoanHandler = paymentLoanHandler;
+        eventDate = loanData.getLoanState().getStartDate().plusDays(20);
+        cycleState = CYCLE_STATES.PAYMENT;
     }
 }

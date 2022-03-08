@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -21,4 +22,5 @@ public class LoanData {
     private BigDecimal fundingAmount;
     private LoanDto loanState;
     private UUID loanId;
+    private LocalDate lastStatementDate;
 }

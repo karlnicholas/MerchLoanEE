@@ -32,23 +32,24 @@ public class CloseComponent {
 
     public Optional<UUID> closeLoan(UUID loanId, BigDecimal amount, String description) {
         // Open Account
-        ResponseEntity<UUID> closeId = null;
-        int closeCount = 1;
+        int requestCount = 0;
+        boolean loop = true;
         do {
             try {
-                closeId = closeRequest(loanId, amount, description);
+                ResponseEntity<UUID> closeId = closeRequest(loanId, amount, description);
+                loop = closeId.getStatusCode().isError();
+                if ( !loop ) {
+                    return requestStatusComponent.checkRequestStatus(closeId.getBody());
+                }
             } catch (Exception ex) {
-                if (closeCount == 3)
-                    log.warn("CREATE ACCOUNT EXCEPTION: ", ex);
+                if (requestCount >= 3) {
+                    log.warn("CREATE ACCOUNT EXCEPTION: {}", ex.getMessage());
+                    loop = false;
+                }
             }
-        } while ((closeId != null && closeId.getStatusCode() != HttpStatus.OK) && ++closeCount <= 3);
-        if (closeCount > 3 || closeId == null) {
-            return Optional.empty();
-        }
-        if ( requestStatusComponent.checkRequestStatus(closeId.getBody()).isEmpty() ) {
-            return Optional.empty();
-        }
-        return Optional.of(closeId.getBody());
+            requestCount++;
+        } while (loop);
+        return Optional.empty();
     }
 
 }
