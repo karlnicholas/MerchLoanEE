@@ -6,6 +6,7 @@ import lombok.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -17,6 +18,7 @@ public class LoanDto implements Serializable {
     private UUID accountId;
     private String customer;
     private LocalDate startDate;
+    private List<LocalDate> statementDates;
     private BigDecimal funding;
     private Integer months;
     private BigDecimal interestRate;

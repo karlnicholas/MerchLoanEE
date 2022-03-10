@@ -15,11 +15,9 @@ import java.util.UUID;
 @Slf4j
 public class CreditComponent {
     private final RestTemplate restTemplate;
-    private final RequestStatusComponent requestStatusComponent;
 
-    public CreditComponent(RestTemplate restTemplate, RequestStatusComponent requestStatusComponent) {
+    public CreditComponent(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.requestStatusComponent = requestStatusComponent;
     }
 
     private ResponseEntity<UUID> creditRequest(UUID loanId, BigDecimal amount, String description) {
@@ -39,7 +37,7 @@ public class CreditComponent {
                 ResponseEntity<UUID> creditId = creditRequest(loanId, amount, description);
                 loop = creditId.getStatusCode().isError();
                 if (!loop) {
-                    return requestStatusComponent.checkRequestStatus(creditId.getBody());
+                    return Optional.of(creditId.getBody());
                 }
             } catch (Exception ex) {
                 if (requestCount >= 3) {

@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,7 +38,7 @@ public class AccountManagementService {
             requestResponse.setSuccess("Account created");
         } catch (DuplicateKeyException dke) {
             log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-            if (createAccount.getRetry()) {
+            if (createAccount.getRetry().booleanValue()) {
                 requestResponse.setSuccess("Account created");
             } else {
                 requestResponse.setFailure(dke.getMessage());
@@ -52,11 +50,18 @@ public class AccountManagementService {
         Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
         if (accountQ.isPresent()) {
             try {
+                LocalDate[] statementDates = new LocalDate[12];
+                statementDates[11] = fundLoan.getStartDate().plusYears(1);
+                for ( int i = 0; i < 11; ++i ) {
+                    statementDates[i] = fundLoan.getStartDate().plusDays((int)((i+1)*365.0/12.0));
+                }
+
                 loanRepository.save(
                         Loan.builder()
                                 .id(fundLoan.getId())
                                 .account(accountQ.get())
                                 .startDate(fundLoan.getStartDate())
+                                .statementDates(Arrays.asList(statementDates))
                                 .funding(fundLoan.getAmount())
                                 .months(12)
                                 .interestRate(new BigDecimal("0.10"))
@@ -66,7 +71,7 @@ public class AccountManagementService {
                 requestResponse.setSuccess();
             } catch (DuplicateKeyException dke) {
                 log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-                if (!fundLoan.getRetry()) {
+                if (!fundLoan.getRetry().booleanValue()) {
                     requestResponse.setFailure(dke.getMessage());
                 }
             }
@@ -104,27 +109,21 @@ public class AccountManagementService {
         return requestResponse;
     }
 
-    //TODO: close loans
     public List<BillingCycle> loansToCycle(LocalDate businessDate) {
-        return loanRepository.findAll().stream()
-                .filter(l ->
-                        !businessDate.isEqual(l.getStartDate())
-                                && (
-                                (businessDate.lengthOfMonth() == businessDate.getDayOfMonth() && l.getStartDate().lengthOfMonth() > businessDate.lengthOfMonth())
-                                        || l.getStartDate().getDayOfMonth() == businessDate.getDayOfMonth()
-                        )
-                )
-                .map(l -> BillingCycle.builder()
-                        .accountId(l.getAccount().getId())
-                        .loanId(l.getId())
-                        .statementDate(businessDate)
-                        .startDate(
-                                businessDate.minusMonths(1).compareTo(l.getStartDate()) == 0
-                                        ? businessDate.minusMonths(1)
-                                        : businessDate.minusMonths(1).plusDays(1)
-                        )
-                        .endDate(businessDate)
-                        .build())
+        return loanRepository.findByLoanState(Loan.LOAN_STATE.OPEN)
+                .stream()
+                .filter(l -> Collections.binarySearch(l.getStatementDates(), businessDate) >= 0)
+                .map(l -> {
+                    List<LocalDate> statementDates = l.getStatementDates();
+                    int i = Collections.binarySearch(statementDates, businessDate);
+                    return BillingCycle.builder()
+                            .accountId(l.getAccount().getId())
+                            .loanId(l.getId())
+                            .statementDate(businessDate)
+                            .startDate(i == 0 ? l.getStartDate() : statementDates.get(i - 1).plusDays(1))
+                            .endDate(businessDate)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 

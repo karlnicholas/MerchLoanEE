@@ -15,11 +15,9 @@ import java.util.UUID;
 @Slf4j
 public class CloseComponent {
     private final RestTemplate restTemplate;
-    private final RequestStatusComponent requestStatusComponent;
 
-    public CloseComponent(RestTemplate restTemplate, RequestStatusComponent requestStatusComponent) {
+    public CloseComponent(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.requestStatusComponent = requestStatusComponent;
     }
 
     private ResponseEntity<UUID> closeRequest(UUID loanId, BigDecimal amount, String description) {
@@ -39,7 +37,7 @@ public class CloseComponent {
                 ResponseEntity<UUID> closeId = closeRequest(loanId, amount, description);
                 loop = closeId.getStatusCode().isError();
                 if ( !loop ) {
-                    return requestStatusComponent.checkRequestStatus(closeId.getBody());
+                    return Optional.of(closeId.getBody());
                 }
             } catch (Exception ex) {
                 if (requestCount >= 3) {

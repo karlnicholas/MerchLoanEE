@@ -32,13 +32,15 @@ public class ClientApplication {
     @Autowired
     private LoanStateComponent loanStateComponent;
     @Autowired
+    private RequestStatusComponent requestStatusComponent;
+    @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
     private BusinessDateComponent businessDateComponent;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadData(ApplicationReadyEvent event) {
-        event.getApplicationContext().addApplicationListener(new LoanCycle(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, "Client 1"));
+        event.getApplicationContext().addApplicationListener(new LoanCycle(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, requestStatusComponent, "Client 1"));
         // do something
         new Thread(()->{
             try {
@@ -53,7 +55,7 @@ public class ClientApplication {
                     BusinessDateEvent businessDateEvent = new BusinessDateEvent(this, currentDate);
                     applicationEventPublisher.publishEvent(businessDateEvent);
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(1000);
+                    Thread.sleep(250);
                 }
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);

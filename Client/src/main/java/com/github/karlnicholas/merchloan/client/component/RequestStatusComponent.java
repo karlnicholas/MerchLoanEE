@@ -31,26 +31,28 @@ public class RequestStatusComponent {
         // Check request status
         int requestCount = 0;
         boolean loop = true;
-        int waitTime = 100;
+        int waitTime = 300;
         do {
-            sleep(waitTime);
             try {
                 ResponseEntity<RequestStatusDto> requestStatusDto = requestStatus(id);
                 loop = requestStatusDto.getStatusCode().isError();
-                if ( !loop ) {
+                if (!loop) {
                     RequestStatusDto statusDto = requestStatusDto.getBody();
-                    if ( statusDto != null && statusDto.getStatus().compareToIgnoreCase("SUCCESS") == 0) {
+                    if (statusDto != null && statusDto.getStatus().compareToIgnoreCase("SUCCESS") == 0) {
                         return Optional.of(id);
                     } else {
                         // try again
                         loop = true;
                     }
                 }
-            } catch ( Exception ex) {
-                if ( requestCount >= 3 ) {
+            } catch (Exception ex) {
+                if (requestCount >= 3) {
                     log.warn("Request Status exception: {}", ex.getMessage());
                     loop = false;
                 }
+            }
+            if (loop) {
+                sleep(waitTime);
             }
             requestCount++;
             waitTime *= 3;
@@ -61,7 +63,7 @@ public class RequestStatusComponent {
     private void sleep(int waitTime) {
         try {
             Thread.sleep(waitTime);
-        } catch ( InterruptedException ex) {
+        } catch (InterruptedException ex) {
             log.error("Sleep while check status interrupted: {}", ex.getMessage());
             Thread.currentThread().interrupt();
         }

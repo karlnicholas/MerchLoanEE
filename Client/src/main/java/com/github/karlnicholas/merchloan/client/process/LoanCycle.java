@@ -20,15 +20,17 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
     private LocalDate eventDate;
     private CYCLE_STATES cycleState;
     private LoanData loanData;
+    private int statementIndex;
 
-    public LoanCycle(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, String customer) {
+    public LoanCycle(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent, String customer) {
         eventDate = LocalDate.now();
-        newLoanHandler = new NewLoanHandler(accountComponent, loanComponent, loanStateComponent);
-        paymentLoanHandler = new LoanPaymentHandler(creditComponent, loanStateComponent);
-        loanStatementHandler = new LoanStatementHandler(loanStateComponent);
-        closeLoanHandler = new CloseLoanHandler(closeComponent, loanStateComponent);
+        newLoanHandler = new NewLoanHandler(accountComponent, loanComponent, loanStateComponent, requestStatusComponent);
+        paymentLoanHandler = new LoanPaymentHandler(creditComponent);
+        loanStatementHandler = new LoanStatementHandler(loanStateComponent, requestStatusComponent);
+        closeLoanHandler = new CloseLoanHandler(closeComponent, loanStateComponent, requestStatusComponent);
         currentLoanHandler = newLoanHandler;
         cycleState = CYCLE_STATES.NEW;
+        statementIndex = 0;
         loanData = LoanData.builder()
                 .customer(customer)
                 .fundingAmount(BigDecimal.valueOf(10000.00))
@@ -37,12 +39,14 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
 
     @Override
     public void onApplicationEvent(BusinessDateEvent event) {
+        log.trace("BUSINESS DATE EVENT: {}", event.getMessage());
         if (event.getMessage().isEqual(eventDate)) {
-            log.debug("BUSINESS DATE EVENT MATCHED: {} {} {}", eventDate, cycleState, loanData);
+            LocalDate saveDate = eventDate;
+            CYCLE_STATES saveState = cycleState;
             boolean success = currentLoanHandler.progressState(loanData);
             if (success) {
                 if (cycleState == CYCLE_STATES.NEW) {
-                    changeToPayment();
+                    changeToPaymentOrClosed();
                 } else if (cycleState == CYCLE_STATES.PAYMENT) {
                     changeToStatement();
                 } else if (cycleState == CYCLE_STATES.STATEMENT) {
@@ -53,34 +57,26 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
             } else {
                 log.error("Loan Cycle failed: {}", event.getMessage());
             }
+            log.debug("LOAN CYCLE: {}->{} {}->{}{}{}", saveDate, eventDate, saveState, cycleState,  System.lineSeparator(), loanData);
         }
     }
 
+    private void changeToStatement() {
+        eventDate = loanData.getLoanState().getStatementDates().get(statementIndex).plusDays(4);
+        loanData.setLastStatementDate(loanData.getLoanState().getStatementDates().get(statementIndex++));
+        cycleState = CYCLE_STATES.STATEMENT;
+        currentLoanHandler = loanStatementHandler;
+    }
+
     private void changeToPaymentOrClosed() {
-        if ( loanData.getLastStatementDate().plusMonths(1).isEqual(loanData.getLoanState().getStartDate().plusYears(1))) {
+        if ( loanData.getLoanState().getStatementDates().get(statementIndex).compareTo(loanData.getLoanState().getStartDate().plusYears(1)) >= 0) {
             currentLoanHandler = closeLoanHandler;
             cycleState = CYCLE_STATES.CLOSE;
         } else {
             currentLoanHandler = paymentLoanHandler;
             cycleState = CYCLE_STATES.PAYMENT;
         }
-        eventDate = loanData.getLastStatementDate().plusDays(20);
+        eventDate = loanData.getLoanState().getStatementDates().get(statementIndex).minusDays(10);
     }
 
-    private void changeToStatement() {
-        if (loanData.getLoanState().getLastStatementDate() == null) {
-            eventDate = loanData.getLoanState().getStartDate().plusMonths(1).plusDays(1);
-        } else {
-            eventDate = loanData.getLoanState().getLastStatementDate().plusMonths(1).plusDays(1);
-        }
-        loanData.setLastStatementDate(eventDate.minusDays(1));
-        cycleState = CYCLE_STATES.STATEMENT;
-        currentLoanHandler = loanStatementHandler;
-    }
-
-    private void changeToPayment() {
-        currentLoanHandler = paymentLoanHandler;
-        eventDate = loanData.getLoanState().getStartDate().plusDays(20);
-        cycleState = CYCLE_STATES.PAYMENT;
-    }
 }

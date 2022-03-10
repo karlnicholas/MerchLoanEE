@@ -14,10 +14,8 @@ import java.util.UUID;
 @Slf4j
 public class AccountComponent {
     private final RestTemplate restTemplate;
-    private final RequestStatusComponent requestStatusComponent;
 
-    public AccountComponent(RequestStatusComponent requestStatusComponent, RestTemplate restTemplate) {
-        this.requestStatusComponent = requestStatusComponent;
+    public AccountComponent(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
@@ -38,7 +36,7 @@ public class AccountComponent {
                 ResponseEntity<UUID> accountId = accountRequest(customer);
                 loop = accountId.getStatusCode().isError();
                 if ( !loop ) {
-                    return requestStatusComponent.checkRequestStatus(accountId.getBody());
+                    return Optional.of(accountId.getBody());
                 }
             } catch (Exception ex) {
                 if (requestCount >= 3) {

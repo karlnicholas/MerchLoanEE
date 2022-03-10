@@ -22,5 +22,6 @@ public class LoanData {
     private BigDecimal fundingAmount;
     private LoanDto loanState;
     private UUID loanId;
+    private UUID lastPaymentRequestId;
     private LocalDate lastStatementDate;
 }
