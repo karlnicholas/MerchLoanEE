@@ -22,8 +22,8 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
     private LoanData loanData;
     private int statementIndex;
 
-    public LoanCycle(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent, String customer) {
-        eventDate = LocalDate.now();
+    public LoanCycle(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent, LocalDate startDate, String customer) {
+        eventDate = startDate;
         newLoanHandler = new NewLoanHandler(accountComponent, loanComponent, loanStateComponent, requestStatusComponent);
         paymentLoanHandler = new LoanPaymentHandler(creditComponent);
         loanStatementHandler = new LoanStatementHandler(loanStateComponent, requestStatusComponent);
