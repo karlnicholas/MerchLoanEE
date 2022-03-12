@@ -57,7 +57,8 @@ public class LoanCycle implements ApplicationListener<BusinessDateEvent> {
             } else {
                 log.error("Loan Cycle failed: {}", event.getMessage());
             }
-            log.debug("LOAN CYCLE: {}->{} {}->{}{}{}", saveDate, eventDate, saveState, cycleState,  System.lineSeparator(), loanData);
+//            log.debug("LOAN CYCLE: {}->{} {}->{}{}{}", saveDate, eventDate, saveState, cycleState,  System.lineSeparator(), loanData);
+            log.debug("LOAN CYCLE: {}->{} {}->{} {}", saveDate, eventDate, saveState, cycleState, loanData.getLoanId().toString().substring(32));
         }
     }
 
