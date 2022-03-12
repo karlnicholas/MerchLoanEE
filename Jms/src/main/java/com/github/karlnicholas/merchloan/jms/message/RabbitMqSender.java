@@ -57,16 +57,8 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitLoanRoutingkey(), debitLoan);
     }
 
-    public void registerCloseLoan(CloseLoan closeLoan) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCloseLoanRoutingkey(), closeLoan);
-    }
-
     public void statementStatement(StatementHeader statementHeader) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementRoutingkey(), statementHeader);
-    }
-
-    public Object registerStatementHeader(StatementHeader statementHeader) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterStatementHeaderRoutingkey(), statementHeader);
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
@@ -79,10 +71,6 @@ public class RabbitMqSender {
 
     public Object queryLoan(UUID id) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdRoutingKey(), id);
-    }
-
-    public Object queryRegister(UUID id) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterQueryLoanIdRoutingkey(), id);
     }
 
     public Object queryStatement(UUID id) {

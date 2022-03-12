@@ -1,20 +1,23 @@
-package com.github.karlnicholas.merchloan.register.service;
+package com.github.karlnicholas.merchloan.accounts.service;
 
+import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
-import com.github.karlnicholas.merchloan.register.model.LoanState;
-import com.github.karlnicholas.merchloan.register.model.RegisterEntry;
-import com.github.karlnicholas.merchloan.register.repository.LoanStateRepository;
-import com.github.karlnicholas.merchloan.register.repository.RegisterEntryRepository;
+import com.github.karlnicholas.merchloan.accounts.model.LoanState;
+import com.github.karlnicholas.merchloan.accounts.repository.LoanStateRepository;
+import com.github.karlnicholas.merchloan.accounts.repository.RegisterEntryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.plaf.nimbus.State;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -121,21 +124,17 @@ public class RegisterManagementService {
         }
     }
 
-    public void statementHeader(StatementHeader statementHeader) {
-        try {
-            List<RegisterEntry> entries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
-            statementHeader.setRegisterEntries(new ArrayList<>());
-            entries.forEach(e -> statementHeader.getRegisterEntries().add(
-                    RegisterEntryMessage.builder()
-                            .rowNum(e.getRowNum())
-                            .date(e.getDate())
-                            .credit(e.getCredit())
-                            .debit(e.getDebit())
-                            .description(e.getDescription())
-                            .build()));
-        } catch (DuplicateKeyException dke) {
-            log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-        }
+    public void setStatementHeaderRegisterEntryies(StatementHeader statementHeader) {
+        List<RegisterEntry> entries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
+        statementHeader.setRegisterEntries(new ArrayList<>());
+        entries.forEach(e -> statementHeader.getRegisterEntries().add(
+                RegisterEntryMessage.builder()
+                        .rowNum(e.getRowNum())
+                        .date(e.getDate())
+                        .credit(e.getCredit())
+                        .debit(e.getDebit())
+                        .description(e.getDescription())
+                        .build()));
     }
 
     public void billingCycleCharge(BillingCycleCharge billingCycleCharge) {

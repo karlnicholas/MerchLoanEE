@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @ToString
-public class RegisterEntry implements Serializable {
+public class RegisterEntryMessage implements Serializable {
     private Integer rowNum;
     private LocalDate date;
     private String description;

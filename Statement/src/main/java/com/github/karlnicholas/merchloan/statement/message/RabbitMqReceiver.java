@@ -102,7 +102,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     }
                     while (responseCount-- > 0) {
                         BillingCycleCharge billingCycleCharge = redisComponent.popChargeCompleted(statementHeader.getLoanId());
-                        statementHeader.getRegisterEntries().add(RegisterEntry.builder()
+                        statementHeader.getRegisterEntries().add(RegisterEntryMessage.builder()
                                 .rowNum(billingCycleCharge.getRowNum())
                                 .date(billingCycleCharge.getDate())
                                 .debit(billingCycleCharge.getDebit())
@@ -110,10 +110,10 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                                 .description(billingCycleCharge.getDescription())
                                 .build());
                     }
-                    statementHeader.getRegisterEntries().sort(Comparator.comparingInt(RegisterEntry::getRowNum));
+                    statementHeader.getRegisterEntries().sort(Comparator.comparingInt(RegisterEntryMessage::getRowNum));
                     BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
                     BigDecimal endingBalance = startingBalance;
-                    for (RegisterEntry re : statementHeader.getRegisterEntries()) {
+                    for (RegisterEntryMessage re : statementHeader.getRegisterEntries()) {
                         if (re.getCredit() != null) {
                             endingBalance = endingBalance.subtract(re.getCredit());
                             re.setBalance(endingBalance);
@@ -152,7 +152,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
                 BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
                 BigDecimal endingBalance = startingBalance;
-                for (RegisterEntry re : statementHeader.getRegisterEntries()) {
+                for (RegisterEntryMessage re : statementHeader.getRegisterEntries()) {
                     if (re.getCredit() != null) {
                         endingBalance = endingBalance.subtract(re.getCredit());
                         re.setBalance(endingBalance);

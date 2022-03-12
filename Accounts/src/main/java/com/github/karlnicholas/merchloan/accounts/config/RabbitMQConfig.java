@@ -29,6 +29,14 @@ public class RabbitMQConfig {
     String accountQueryAccountIdQueue;
     @Value("${rabbitmq.account.query.loan.id.queue}")
     String accountQueryLoanIdQueue;
+    @Value("${rabbitmq.register.fundloan.queue}")
+    private String registerFundLoanQueue;
+    @Value("${rabbitmq.register.creditloan.queue}")
+    private String registerCreditLoanQueue;
+    @Value("${rabbitmq.register.debitloan.queue}")
+    private String registerDebitLoanQueue;
+    @Value("${rabbitmq.register.billingcyclecharge.queue}")
+    private String registerBillingCycleChargeQueue;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties) {
         this.rabbitMqProperties = rabbitMqProperties;
@@ -167,5 +175,52 @@ public class RabbitMQConfig {
                 .with(rabbitMqProperties.getAccountQueryLoanIdRoutingKey())
                 .noargs();
     }
-
+    @Bean
+    Queue fundLoanQueue() {
+        return new Queue(registerFundLoanQueue, false);
+    }
+    @Bean
+    Binding fundLoanBinding() {
+        return BindingBuilder
+                .bind(fundLoanQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getRegisterFundLoanRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue creditLoanQueue() {
+        return new Queue(registerCreditLoanQueue, false);
+    }
+    @Bean
+    Binding creditLoanBinding() {
+        return BindingBuilder
+                .bind(creditLoanQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getRegisterCreditLoanRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue debitLoanQueue() {
+        return new Queue(registerDebitLoanQueue, false);
+    }
+    @Bean
+    Binding debitLoanBinding() {
+        return BindingBuilder
+                .bind(debitLoanQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getRegisterDebitLoanRoutingkey())
+                .noargs();
+    }
+    @Bean
+    Queue billingCycleChargeQueue() {
+        return new Queue(registerBillingCycleChargeQueue, false);
+    }
+    @Bean
+    Binding billingCycleChargeBinding() {
+        return BindingBuilder
+                .bind(billingCycleChargeQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getRegisterBillingCycleChargeRoutingkey())
+                .noargs();
+    }
 }

@@ -2,12 +2,13 @@ package com.github.karlnicholas.merchloan.accounts.service;
 
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
+import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
+import com.github.karlnicholas.merchloan.accounts.repository.RegisterEntryRepository;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
-import com.github.karlnicholas.merchloan.jmsmessage.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,12 +26,14 @@ public class QueryService {
     private final AccountRepository accountRepository;
     private final LoanRepository loanRepository;
     private final RabbitMqSender rabbitMqSender;
+    private final RegisterEntryRepository registerEntryRepository;
 
     @Autowired
-    public QueryService(AccountRepository accountRepository, LoanRepository loanRepository, RabbitMqSender rabbitMqSender) {
+    public QueryService(AccountRepository accountRepository, LoanRepository loanRepository, RabbitMqSender rabbitMqSender, RegisterEntryRepository registerEntryRepository) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
         this.rabbitMqSender = rabbitMqSender;
+        this.registerEntryRepository = registerEntryRepository;
     }
 
     public Optional<Account> queryAccountId(UUID id) {
@@ -81,7 +85,7 @@ public class QueryService {
             statementHeader.setEndDate(loan.getStatementDates().get(loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate())+1));
             statementHeader.setStartDate(loan.getStatementDates().get(loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate())).plusDays(1));
         }
-        statementHeader = (StatementHeader) rabbitMqSender.registerStatementHeader(statementHeader);
+        List<RegisterEntry> registerEntries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
         // determine current balance, payoff amount
         BigDecimal startingBalance;
         BigDecimal interestBalance;
@@ -95,7 +99,7 @@ public class QueryService {
         BigDecimal currentBalance = startingBalance;
         // determine current payoff amount
         BigDecimal currentInterest = interestBalance.multiply(loan.getInterestRate()).divide(BigDecimal.valueOf(loan.getMonths()), RoundingMode.HALF_EVEN);
-        for (RegisterEntry re : statementHeader.getRegisterEntries()) {
+        for (RegisterEntry re : registerEntries) {
             if (re.getDebit() != null) {
                 currentBalance = currentBalance.add(re.getDebit());
             } else if (re.getCredit() != null) {
@@ -123,4 +127,7 @@ public class QueryService {
         }
     }
 
+    public List<RegisterEntry> queryRegisterByLoanId(UUID id) {
+        return registerEntryRepository.findByLoanIdOrderByRowNum(id);
+    }
 }

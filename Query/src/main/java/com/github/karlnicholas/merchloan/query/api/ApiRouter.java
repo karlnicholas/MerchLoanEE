@@ -24,7 +24,6 @@ public class ApiRouter implements WebFluxConfigurer {
                         route(GET("/request/{id}"), apiHandler::getRequest)
                                 .andRoute(GET("/account/{id}"), apiHandler::getAccount)
                                 .andRoute(GET("/loan/{id}"), apiHandler::getLoan)
-                                .andRoute(GET("/register/{id}"), apiHandler::getRegister)
                                 .andRoute(GET("/statement/{id}"), apiHandler::getStatement)
                                 .andRoute(GET("/statements/{id}"), apiHandler::getStatements)
                 );

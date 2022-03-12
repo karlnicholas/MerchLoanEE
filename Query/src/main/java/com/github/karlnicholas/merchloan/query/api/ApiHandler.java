@@ -35,12 +35,6 @@ public class ApiHandler {
                 , String.class);
     }
 
-    public Mono<ServerResponse> getRegister(ServerRequest serverRequest) {
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
-                Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryRegister)
-                , String.class);
-    }
-
     public Mono<ServerResponse> getStatement(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryStatement)
