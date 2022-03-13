@@ -27,15 +27,6 @@ rabbitmq:
         queue: account.query.statementheader.queue
       loanstocycle:
         queue: account.query.loanstocycle.queue
-  register:
-    fundloan:
-      queue: register.fundloan.queue
-    creditloan:
-      queue: register.creditloan.queue
-    debitloan:
-      queue: register.debitloan.queue
-    billingcyclecharge:
-      queue: register.billingcyclecharge.queue
 logging:
   level:
     org:

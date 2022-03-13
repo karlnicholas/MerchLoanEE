@@ -37,24 +37,16 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitRoutingkey(), debitLoan);
     }
 
+    public void accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeRoutingKey(), billingCycleCharge);
+    }
+
     public Object queryAccount(UUID id) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdRoutingKey(), id);
     }
 
     public Object accountQueryStatementHeader(StatementHeader statementHeader) {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryStatementHeaderRoutingKey(), statementHeader);
-    }
-
-    public void registerFundLoan(DebitLoan debitLoan) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterFundLoanRoutingkey(), debitLoan);
-    }
-
-    public void registerCreditLoan(CreditLoan creditLoan) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterCreditLoanRoutingkey(), creditLoan);
-    }
-
-    public void registerDebitLoan(DebitLoan debitLoan) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterDebitLoanRoutingkey(), debitLoan);
     }
 
     public void statementStatement(StatementHeader statementHeader) {
@@ -101,10 +93,6 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillingCycleChargeRoutingkey(), billingCycleChargeRequest);
     }
 
-    public void registerBillingCycleCharge(BillingCycleCharge billingCycleCharge) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getRegisterBillingCycleChargeRoutingkey(), billingCycleCharge);
-    }
-
     public void serviceRequestChargeCompleted(BillingCycleCharge billingCycleCharge) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey(), billingCycleCharge);
     }
@@ -124,4 +112,5 @@ public class RabbitMqSender {
     public void serviceRequestStatementComplete(StatementCompleteResponse requestResponse) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestStatementCompleteRoutingkey(), requestResponse);
     }
+
 }

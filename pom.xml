@@ -20,7 +20,6 @@
         <module>Dto</module>
         <module>Jms</module>
         <module>Accounts</module>
-        <module>Register</module>
         <module>ServiceRequest</module>
         <module>Query</module>
         <module>Statement</module>

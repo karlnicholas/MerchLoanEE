@@ -28,11 +28,7 @@ public class RabbitMqProperties {
     private String accountQueryLoansToCycleRoutingkey;
     private String accountQueryAccountIdRoutingKey;
     private String accountQueryLoanIdRoutingKey;
-
-    private String registerFundLoanRoutingkey;
-    private String registerCreditLoanRoutingkey;
-    private String registerDebitLoanRoutingkey;
-    private String registerBillingCycleChargeRoutingkey;
+    private String accountBillingCycleChargeRoutingKey;
 
     private String servicerequestRoutingkey;
     private String servicerequestQueryIdRoutingkey;

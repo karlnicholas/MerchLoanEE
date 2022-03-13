@@ -135,7 +135,7 @@ public class ServiceRequestService {
         UUID id = billingCycleChargeRequest.getId();
         persistRequestWithId(billingCycleChargeRequest, id);
         if ( billingCycleChargeRequest.getDebitRequest() != null ) {
-            rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
+            rabbitMqSender.accountBillingCycleCharge(BillingCycleCharge.builder()
                     .id(id)
                     .loanId(billingCycleChargeRequest.getDebitRequest().getLoanId())
                     .date(billingCycleChargeRequest.getDate())
@@ -145,7 +145,7 @@ public class ServiceRequestService {
                     .build());
 
         } else {
-            rabbitMqSender.registerBillingCycleCharge(BillingCycleCharge.builder()
+            rabbitMqSender.accountBillingCycleCharge(BillingCycleCharge.builder()
                     .id(id)
                     .loanId(billingCycleChargeRequest.getCreditRequest().getLoanId())
                     .date(billingCycleChargeRequest.getDate())
