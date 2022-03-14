@@ -47,7 +47,6 @@ public class ClientApplication {
 
     private void createLoanListeners(ApplicationReadyEvent event) {
         for ( int i =0; i < 1; ++i ) {
-//            int plusDays = ThreadLocalRandom.current().nextInt(30);
             int plusDays = 0;
             event.getApplicationContext().addApplicationListener(new LoanCycle(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));
         }

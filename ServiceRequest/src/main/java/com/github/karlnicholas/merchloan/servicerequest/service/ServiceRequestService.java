@@ -205,6 +205,5 @@ public class ServiceRequestService {
 
     public void statementComplete(StatementCompleteResponse statementCompleteResponse) {
         completeServiceRequest(statementCompleteResponse);
-//        redisComponent.removeLoanToCycle(statementCompleteResponse.getStatementDate(), statementCompleteResponse.getLoanId());
     }
 }

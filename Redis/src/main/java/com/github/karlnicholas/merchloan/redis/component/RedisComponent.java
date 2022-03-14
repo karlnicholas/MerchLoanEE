@@ -6,19 +6,16 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Component
 public class RedisComponent {
     private final RedisTemplate<Long, LocalDate> redisTemplateBusinessDate;
     private final RedisTemplate<UUID, BillingCycleCharge> redisTemplateBillingCycle;
-    private final RedisTemplate<LocalDate, UUID> redisTemplateLoansToCycle;
 
-    public RedisComponent(RedisTemplate<Long, LocalDate> redisTemplateBusinessDate, RedisTemplate<UUID, BillingCycleCharge> redisTemplateBillingCycleCharge, RedisTemplate<LocalDate, UUID> redisTemplateLoansToCycle) {
+    public RedisComponent(RedisTemplate<Long, LocalDate> redisTemplateBusinessDate, RedisTemplate<UUID, BillingCycleCharge> redisTemplateBillingCycleCharge) {
         this.redisTemplateBusinessDate = redisTemplateBusinessDate;
         this.redisTemplateBillingCycle = redisTemplateBillingCycleCharge;
-        this.redisTemplateLoansToCycle = redisTemplateLoansToCycle;
     }
 
     public void updateBusinessDate(LocalDate businessDate) {
@@ -45,19 +42,4 @@ public class RedisComponent {
         }
         return billingCycleCharge;
     }
-
-//    public void setLoansToCycle(LocalDate businessDate, List<UUID> loansToCycle) {
-//        if ( !loansToCycle.isEmpty()) {
-//            redisTemplateLoansToCycle.opsForSet().add(businessDate, loansToCycle.toArray(new UUID[loansToCycle.size()]));
-//        }
-//    }
-//
-//    public void removeLoanToCycle(LocalDate date, UUID id) {
-//        SetOperations<LocalDate, UUID> ops = redisTemplateLoansToCycle.opsForSet();
-//        ops.remove(date, id);
-//        if (  ops.size(date) == 0 ) {
-//            redisTemplateLoansToCycle.delete(date);
-//        }
-//    }
-
 }

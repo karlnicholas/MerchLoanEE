@@ -59,7 +59,6 @@ public class BusinessDateService {
             }
         }
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate);
-//        redisComponent.setLoansToCycle(priorBusinessDate, loansToCycle.stream().map(BillingCycle::getLoanId).collect(Collectors.toList()));
         loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
     }
 }

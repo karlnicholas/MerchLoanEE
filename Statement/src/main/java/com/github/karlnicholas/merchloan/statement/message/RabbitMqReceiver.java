@@ -44,6 +44,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
 
     @Override
     public void configureRabbitListeners(RabbitListenerEndpointRegistrar rabbitListenerEndpointRegistrar) {
+        // no configuration needed
     }
 
     @RabbitListener(queues = "${rabbitmq.statement.statement.queue}", returnExceptions = "true")
@@ -76,7 +77,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     BigDecimal interestBalance;
                     if (lastStatement.isPresent()) {
                         interestBalance = lastStatement.get().getEndingBalance();
-                    } else if (statementHeader.getRegisterEntries().size() > 0) {
+                    } else if (!statementHeader.getRegisterEntries().isEmpty()) {
                         //TODO: assuming this is the funding entry. Horrible logic.
                         interestBalance = statementHeader.getRegisterEntries().get(0).getDebit();
                     } else {
@@ -169,7 +170,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             statementHeader.setRegisterEntries(null);
             rabbitMqSender.accountLoanClosed(statementHeader);
         } catch (Exception ex) {
-            log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
+            log.error("void receivedCloseStatementMessage(StatementHeader statementHeader) exception {}", ex.getMessage());
             try {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(statementHeader.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
                 rabbitMqSender.serviceRequestServiceRequest(requestResponse);
@@ -186,7 +187,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("QueryStatement Received {}", loanId);
             return queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
         } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedQueryStatementMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -203,7 +204,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     .startingBalance(statement.getStartingBalance())
                     .build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
         } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedQueryMostRecentStatementMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -214,7 +215,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("QueryStatements Received {}", id);
             return objectMapper.writeValueAsString(queryService.findByLoanId(id));
         } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedQueryStatementsMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
