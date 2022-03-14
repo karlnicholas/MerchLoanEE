@@ -91,9 +91,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                                 .description(fundLoan.getDescription())
                                 .build(),
                         requestResponse);
-            } else {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
             }
+            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
             log.error("void receivedFundingMessage(FundLoan funding) {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
@@ -118,9 +117,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                         .loanId(creditLoan.getLoanId())
                         .description(creditLoan.getDescription())
                         .build(), requestResponse);
-            } else {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
             }
+            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
             log.error("void receivedValidateCreditMessage(CreditLoan creditLoan) {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
@@ -139,16 +137,15 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             accountManagementService.validateLoan(debitLoan.getLoanId(), requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.debitLoan(DebitLoan.builder()
-                        .id(debitLoan.getId())
-                        .amount(debitLoan.getAmount())
-                        .date(debitLoan.getDate())
-                        .loanId(debitLoan.getLoanId())
-                        .description(debitLoan.getDescription())
-                        .build(),
+                                .id(debitLoan.getId())
+                                .amount(debitLoan.getAmount())
+                                .date(debitLoan.getDate())
+                                .loanId(debitLoan.getLoanId())
+                                .description(debitLoan.getDescription())
+                                .build(),
                         requestResponse);
-            } else {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
             }
+            rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
             log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
@@ -224,7 +221,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             try {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(closeLoan.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
                 rabbitMqSender.serviceRequestServiceRequest(requestResponse);
-            } catch ( Exception innerEx ) {
+            } catch (Exception innerEx) {
                 log.error("ERROR SENDING ERROR", ex);
             }
             throw new AmqpRejectAndDontRequeueException(ex);
