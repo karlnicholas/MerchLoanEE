@@ -17,6 +17,8 @@ public class RabbitMQConfig {
     String accountValidateCreditQueue;
     @Value("${rabbitmq.account.validate.debit.queue}")
     String accountValidateDebitQueue;
+    @Value("${rabbitmq.account.billingcyclecharge.queue}")
+    String accountBillingCycleChargeQueue;
     @Value("${rabbitmq.account.closeloan.queue}")
     String accountCloseLoanQueue;
     @Value("${rabbitmq.account.loanclosed.queue}")
@@ -126,6 +128,19 @@ public class RabbitMQConfig {
                 .bind(accountQueryStatementHeaderQueue())
                 .to(exchange())
                 .with(rabbitMqProperties.getAccountQueryStatementHeaderRoutingKey())
+                .noargs();
+    }
+
+    @Bean
+    public Queue accountBillingCycleChargeQueue() {
+        return new Queue(accountBillingCycleChargeQueue, false);
+    }
+    @Bean
+    public Binding accountBillingCycleChargeBinding() {
+        return BindingBuilder
+                .bind(accountBillingCycleChargeQueue())
+                .to(exchange())
+                .with(rabbitMqProperties.getAccountBillingCycleChargeRoutingKey())
                 .noargs();
     }
 

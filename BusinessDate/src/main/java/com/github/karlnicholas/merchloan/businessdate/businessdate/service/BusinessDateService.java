@@ -43,21 +43,23 @@ public class BusinessDateService {
     }
 
     @Async
-    public void startBillingCycle(BusinessDate priorBusinessDate) {
+    public void startBillingCycle(LocalDate priorBusinessDate) {
         boolean waiting = true;
+        int sleepTime = 300;
         while(waiting) {
             try {
-                Thread.sleep(1000);
-                Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate.getBusinessDate());
+                Thread.sleep(sleepTime);
+                Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate);
                 if ( !requestPending.booleanValue() )
                     waiting = false;
+                sleepTime *= 2;
             } catch (InterruptedException e) {
                 log.error("Wait for prior day completion exception: {}", e.getMessage());
                 Thread.currentThread().interrupt();
             }
         }
-        List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate.getBusinessDate());
-        redisComponent.setLoansToCycle(priorBusinessDate.getBusinessDate(), loansToCycle.stream().map(BillingCycle::getLoanId).collect(Collectors.toList()));
+        List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate);
+//        redisComponent.setLoansToCycle(priorBusinessDate, loansToCycle.stream().map(BillingCycle::getLoanId).collect(Collectors.toList()));
         loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
     }
 }

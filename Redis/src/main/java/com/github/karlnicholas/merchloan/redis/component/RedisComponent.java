@@ -46,18 +46,18 @@ public class RedisComponent {
         return billingCycleCharge;
     }
 
-    public void setLoansToCycle(LocalDate businessDate, List<UUID> loansToCycle) {
-        if ( !loansToCycle.isEmpty()) {
-            redisTemplateLoansToCycle.opsForSet().add(businessDate, loansToCycle.toArray(new UUID[loansToCycle.size()]));
-        }
-    }
-
-    public void removeLoanToCycle(LocalDate date, UUID id) {
-        SetOperations<LocalDate, UUID> ops = redisTemplateLoansToCycle.opsForSet();
-        ops.remove(date, id);
-        if (  ops.size(date) == 0 ) {
-            redisTemplateLoansToCycle.delete(date);
-        }
-    }
+//    public void setLoansToCycle(LocalDate businessDate, List<UUID> loansToCycle) {
+//        if ( !loansToCycle.isEmpty()) {
+//            redisTemplateLoansToCycle.opsForSet().add(businessDate, loansToCycle.toArray(new UUID[loansToCycle.size()]));
+//        }
+//    }
+//
+//    public void removeLoanToCycle(LocalDate date, UUID id) {
+//        SetOperations<LocalDate, UUID> ops = redisTemplateLoansToCycle.opsForSet();
+//        ops.remove(date, id);
+//        if (  ops.size(date) == 0 ) {
+//            redisTemplateLoansToCycle.delete(date);
+//        }
+//    }
 
 }

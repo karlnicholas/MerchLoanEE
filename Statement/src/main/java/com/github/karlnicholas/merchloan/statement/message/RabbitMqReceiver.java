@@ -92,9 +92,9 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     );
                     responseCount++;
                     // wait for responses
-                    int sixtySeconds = 60;
+                    int sixtySeconds = 120;
                     while (sixtySeconds > 0) {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                         if (redisComponent.countChargeCompleted(statementHeader.getLoanId()) == responseCount) {
                             break;
                         }

@@ -269,6 +269,19 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
+    @RabbitListener(queues = "${rabbitmq.account.billingcyclecharge.queue}")
+    public void receivedBillingCycleChargeMessage(BillingCycleCharge billingCycleCharge) {
+        try {
+            log.info("BillingCycleCharge Received {}", billingCycleCharge);
+            registerManagementService.billingCycleCharge(billingCycleCharge);
+        } catch (Exception ex) {
+            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
+            billingCycleCharge.setError(ex.getMessage());
+            throw new AmqpRejectAndDontRequeueException(ex);
+        } finally {
+            rabbitMqSender.serviceRequestChargeCompleted(billingCycleCharge);
+        }
+    }
     @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
     public String receivedQueryAccountIdMessage(UUID id) {
         try {
@@ -351,18 +364,5 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
 //        }
 //    }
 //
-//    @RabbitListener(queues = "${rabbitmq.register.billingcyclecharge.queue}")
-//    public void receivedBillingCycleChargeMessage(BillingCycleCharge billingCycleCharge) {
-//        try {
-//            log.info("BillingCycleCharge Received {}", billingCycleCharge);
-//            registerManagementService.billingCycleCharge(billingCycleCharge);
-//        } catch (Exception ex) {
-//            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
-//            billingCycleCharge.setError(ex.getMessage());
-//            throw new AmqpRejectAndDontRequeueException(ex);
-//        } finally {
-//            rabbitMqSender.serviceRequestChargeCompleted(billingCycleCharge);
-//        }
-//    }
 
 }

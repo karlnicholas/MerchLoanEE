@@ -16,6 +16,8 @@ rabbitmq:
       queue: account.closeloan.queue
     loanclosed:
       queue: account.loanclosed.queue
+    billingcyclecharge:
+      queue: account.billingcyclecharge.queue
     query:
       account:
         id:
