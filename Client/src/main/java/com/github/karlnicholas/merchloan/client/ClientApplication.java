@@ -52,7 +52,7 @@ public class ClientApplication {
 
     private void createLoanListeners() {
         threads = new ArrayList<>();
-        for ( int i =0; i < 50; ++i ) {
+        for ( int i =0; i < 5; ++i ) {
             int plusDays = ThreadLocalRandom.current().nextInt(30);
             threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));
         }
