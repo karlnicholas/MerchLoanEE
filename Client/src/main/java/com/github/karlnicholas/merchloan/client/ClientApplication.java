@@ -1,8 +1,8 @@
 package com.github.karlnicholas.merchloan.client;
 
 import com.github.karlnicholas.merchloan.client.component.*;
-import com.github.karlnicholas.merchloan.client.process.BusinessDateEvent;
-import com.github.karlnicholas.merchloan.client.process.LoanCycle;
+import com.github.karlnicholas.merchloan.client.process.BusinessDateMonitor;
+import com.github.karlnicholas.merchloan.client.process.LoanCycleThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +12,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
@@ -38,37 +40,47 @@ public class ClientApplication {
     private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
     private BusinessDateComponent businessDateComponent;
+    private BusinessDateMonitor businessDateMonitor;
+    private List<LoanCycleThread> threads;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadData(ApplicationReadyEvent event) {
-        createLoanListeners(event);
-        runBusinessDateLoop();
+        businessDateMonitor = new BusinessDateMonitor();
+        createLoanListeners();
+        runBusinessDateThread();
     }
 
-    private void createLoanListeners(ApplicationReadyEvent event) {
-        for ( int i =0; i < 1; ++i ) {
-            int plusDays = 0;
-            event.getApplicationContext().addApplicationListener(new LoanCycle(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));
+    private void createLoanListeners() {
+        threads = new ArrayList<>();
+        for ( int i =0; i < 50; ++i ) {
+            int plusDays = ThreadLocalRandom.current().nextInt(30);
+            threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));
         }
+        threads.forEach(Thread::start);
     }
 
-    private void runBusinessDateLoop() {
+    private void runBusinessDateThread() {
         // do something
         new Thread(()->{
             try {
                 LocalDate currentDate = LocalDate.now();
-                LocalDate endDate = currentDate.plusYears(1).plusMonths(1).plusDays(1);
+                LocalDate endDate = currentDate.plusYears(1).plusMonths(2);
                 Thread.sleep(5000);
                 while ( currentDate.isBefore(endDate)) {
                     if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
                         log.error("Business date failed to update");
                         return;
                     }
-                    BusinessDateEvent businessDateEvent = new BusinessDateEvent(this, currentDate);
-                    applicationEventPublisher.publishEvent(businessDateEvent);
+                    businessDateMonitor.newDate(currentDate);
+                    if ( currentDate.getDayOfMonth() == 1 ) {
+                        log.info("{}", currentDate);
+                    }
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 }
+                businessDateMonitor.newDate(null);
+                log.info("{}", currentDate);
+                threads.forEach(LoanCycleThread::showStatement);
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);
                 Thread.currentThread().interrupt();

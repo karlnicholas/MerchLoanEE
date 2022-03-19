@@ -22,7 +22,7 @@ public class LoanStatementHandler implements LoanProcessHandler {
 
     @Override
     public boolean progressState(LoanData loanData) {
-        if ( !checkLastPaymentStatus(loanData)) {
+        if (!checkLastPaymentStatus(loanData)) {
             return false;
         }
         return getLoanState(loanData);
@@ -36,11 +36,11 @@ public class LoanStatementHandler implements LoanProcessHandler {
         do {
             try {
                 Optional<UUID> requestStatus = requestStatusComponent.checkRequestStatus(loanData.getLastPaymentRequestId());
-                if ( requestStatus.isPresent() ) {
+                if (requestStatus.isPresent()) {
                     return true;
                 }
-            } catch ( Exception ex) {
-                if ( requestCount >= 3 ) {
+            } catch (Exception ex) {
+                if (requestCount >= 3) {
                     log.warn("Request Status exception: {}", ex.getMessage());
                     loop = false;
                 }
@@ -62,20 +62,21 @@ public class LoanStatementHandler implements LoanProcessHandler {
         do {
             try {
                 Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
-                if ( loanState.isPresent() ) {
+                if (loanState.isPresent()) {
                     LoanDto loanDto = loanState.get();
-                    if ( loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate())) {
+                    if (loanDto.getLastStatementDate() != null && loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate())) {
                         loanData.setLoanState(loanDto);
                         return true;
                     }
                 }
-            } catch ( Exception ex) {
-                if ( requestCount >= 3 ) {
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                if (requestCount >= 3) {
                     log.warn("Request Status exception: {}", ex.getMessage());
                     loop = false;
                 }
             }
-            if ( loop ) {
+            if (loop) {
                 sleep(waitTime);
             }
             requestCount++;
@@ -88,7 +89,7 @@ public class LoanStatementHandler implements LoanProcessHandler {
     private void sleep(int waitTime) {
         try {
             Thread.sleep(waitTime);
-        } catch ( InterruptedException ex) {
+        } catch (InterruptedException ex) {
             log.error("Sleep while check status interrupted: {}", ex.getMessage());
             Thread.currentThread().interrupt();
         }
