@@ -31,7 +31,7 @@ public class BusinessDateService {
         log.info("updateBusinessDate {}", businessDate);
         return businessDateRepository.findById(1L).map(pr->{
             BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(pr.getBusinessDate()).build();
-            Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate.getBusinessDate());
+            Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest();
             if ( requestPending.booleanValue() ) {
                 throw new IllegalStateException("Still processing prior business date" + priorBusinessDate.getBusinessDate());
             }

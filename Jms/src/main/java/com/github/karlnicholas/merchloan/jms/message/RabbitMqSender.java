@@ -2,6 +2,7 @@ package com.github.karlnicholas.merchloan.jms.message;
 
 import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -76,8 +77,8 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey(), loanId);
     }
 
-    public Object servicerequestCheckRequest(LocalDate businessDate) {
-        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestRoutingkey(), businessDate);
+    public Object servicerequestCheckRequest() {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestRoutingkey(), new Message(new byte[0]));
     }
 
     public Object acccountQueryLoansToCycle(LocalDate businessDate) {

@@ -11,7 +11,6 @@ import java.util.UUID;
 
 @Repository
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, UUID> {
-    Boolean existsBylocalDateTimeLessThanAndStatusEquals(LocalDateTime localDateTime, ServiceRequestMessage.STATUS status);
-
     List<ServiceRequest> findByStatus(ServiceRequestMessage.STATUS error);
+    Boolean existsByStatusEquals(ServiceRequestMessage.STATUS status);
 }

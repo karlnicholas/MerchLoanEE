@@ -100,10 +100,10 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     }
 
     @RabbitListener(queues = "${rabbitmq.servicerequest.checkrequest.queue}")
-    public Boolean receivedCheckRequestMessage(LocalDate businessDate) {
+    public Boolean receivedCheckRequestMessage() {
         try {
-            log.info("CheckRequest Received {}", businessDate);
-            return queryService.checkRequest(businessDate);
+            log.info("CheckRequest Received");
+            return queryService.checkRequest();
         } catch (Exception ex) {
             log.error("String receivedCheckRequestMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);

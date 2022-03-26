@@ -50,7 +50,7 @@ public class ApiHandler {
 
     public Mono<ServerResponse> getCheckRequests(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
-                Mono.just(LocalDate.parse(serverRequest.pathVariable("businessDate"))).map(rabbitMqSender::servicerequestCheckRequest)
-                , String.class);
+                Mono.fromSupplier(()->rabbitMqSender.servicerequestCheckRequest())
+                , Boolean.class);
     }
 }
