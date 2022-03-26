@@ -13,21 +13,21 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class RetryService {
-    private final ServiceRequestService serviceRequestService;
     private final ServiceRequestRouter serviceRequestRouter;
     private final ObjectMapper objectMapper;
 
-    public RetryService(ServiceRequestService serviceRequestService, ServiceRequestRouter serviceRequestRouter, ObjectMapper objectMapper) {
-        this.serviceRequestService = serviceRequestService;
+    public RetryService(ServiceRequestRouter serviceRequestRouter, ObjectMapper objectMapper) {
         this.serviceRequestRouter = serviceRequestRouter;
         this.objectMapper = objectMapper;
     }
 
     @Async
-    public void retryServiceRequest(ServiceRequest serviceRequest)  {
+    public void retryServiceRequest(ServiceRequest serviceRequest, String requestType)  {
         try {
-            ServiceRequestMessage serviceRequestMessage = objectMapper.readValue(serviceRequest.getRequest(), ServiceRequestMessage.class);
-            serviceRequestRouter.routeRequest(serviceRequest.getRequest(), serviceRequestMessage, Boolean.TRUE);
+            Class<? extends ServiceRequestMessage> messageClass = (Class<? extends ServiceRequestMessage>) Class.forName(requestType);
+            ServiceRequestMessage serviceRequestMessage = objectMapper.readValue(serviceRequest.getRequest(), messageClass);
+            log.debug("retryServiceRequest {}", serviceRequestMessage);
+            serviceRequestRouter.routeRequest(requestType, serviceRequestMessage, Boolean.TRUE, serviceRequest.getId());
         } catch (Exception e) {
             log.error("ERROR in RETRY", e);
         }

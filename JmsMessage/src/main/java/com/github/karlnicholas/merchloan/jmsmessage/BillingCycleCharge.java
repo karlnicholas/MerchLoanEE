@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.jmsmessage;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -13,7 +14,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class BillingCycleCharge extends ServiceRequestResponse {
+public class BillingCycleCharge implements Serializable {
+    private UUID id;
     private UUID loanId;
     private BigDecimal debit;
     private BigDecimal credit;

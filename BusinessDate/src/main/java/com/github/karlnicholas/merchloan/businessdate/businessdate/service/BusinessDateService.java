@@ -28,6 +28,7 @@ public class BusinessDateService {
     }
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) {
+        log.info("updateBusinessDate {}", businessDate);
         return businessDateRepository.findById(1L).map(pr->{
             BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(pr.getBusinessDate()).build();
             businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());

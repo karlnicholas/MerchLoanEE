@@ -136,7 +136,7 @@ public class RabbitMQConfig {
         return new Queue(accountBillingCycleChargeQueue, false);
     }
     @Bean
-    public Binding accountBillingCycleChargeBinding() {
+    public Binding accountBillingCycleFeeChargeBinding() {
         return BindingBuilder
                 .bind(accountBillingCycleChargeQueue())
                 .to(exchange())

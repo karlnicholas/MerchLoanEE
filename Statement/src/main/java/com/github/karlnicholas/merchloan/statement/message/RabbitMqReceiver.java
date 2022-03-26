@@ -2,12 +2,9 @@ package com.github.karlnicholas.merchloan.statement.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.DebitRequest;
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
-import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
@@ -29,15 +26,13 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     private final QueryService queryService;
     private final RabbitMqSender rabbitMqSender;
     private final ObjectMapper objectMapper;
-    private final RedisComponent redisComponent;
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
 
-    public RabbitMqReceiver(StatementService statementService, QueryService queryService, RabbitMqSender rabbitMqSender, RedisComponent redisComponent) {
+    public RabbitMqReceiver(StatementService statementService, QueryService queryService, RabbitMqSender rabbitMqSender) {
         this.statementService = statementService;
         this.queryService = queryService;
         this.rabbitMqSender = rabbitMqSender;
-        this.redisComponent = redisComponent;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
@@ -56,23 +51,25 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 .build();
         try {
             log.info("Statement Received {}", statementHeader);
-            Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
-            if (statementExistsOpt.isEmpty()) {
-                statementHeader = (StatementHeader) rabbitMqSender.accountQueryStatementHeader(statementHeader);
-                if (statementHeader.getCustomer() != null) {
+            statementHeader = (StatementHeader) rabbitMqSender.accountQueryStatementHeader(statementHeader);
+            if (statementHeader.getCustomer() != null) {
+                boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
+                // so, let's do interest and fee calculations here.
+                if (!paymentCreditFound) {
+                    RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) rabbitMqSender.accountBillingCycleCharge(BillingCycleCharge.builder()
+                            .id(statementHeader.getFeeChargeId())
+                            .loanId(statementHeader.getLoanId())
+                            .date(statementHeader.getStatementDate())
+                            .debit(new BigDecimal("30.00"))
+                            .description("Non payment fee")
+                            .retry(statementHeader.getRetry())
+                            .build()
+                    );
+                    statementHeader.getRegisterEntries().add(feeRegisterEntry);
+                }
+                Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
+                if (statementExistsOpt.isEmpty()) {
                     Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
-                    boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
-                    int responseCount = 0;
-                    // so, let's do interest and fee calculations here.
-                    if (!paymentCreditFound) {
-                        rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
-                                .id(statementHeader.getFeeChargeId())
-                                .date(statementHeader.getStatementDate())
-                                .debitRequest(new DebitRequest(statementHeader.getLoanId(), new BigDecimal("30.00"), "Non payment fee"))
-                                .build()
-                        );
-                        responseCount++;
-                    }
                     // determine interest balance
                     BigDecimal interestBalance;
                     if (lastStatement.isPresent()) {
@@ -85,33 +82,16 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                         interestBalance = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
                     }
                     BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
-                    rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
+                    RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) rabbitMqSender.accountBillingCycleCharge(BillingCycleCharge.builder()
                             .id(statementHeader.getInterestChargeId())
+                            .loanId(statementHeader.getLoanId())
                             .date(statementHeader.getStatementDate())
-                            .debitRequest(new DebitRequest(statementHeader.getLoanId(), interestAmt, "Interest"))
+                            .debit(interestAmt)
+                            .description("Interest")
+                            .retry(statementHeader.getRetry())
                             .build()
                     );
-                    responseCount++;
-                    // wait for responses
-                    int sixtySeconds = 120;
-                    while (sixtySeconds > 0) {
-                        Thread.sleep(500);
-                        if (redisComponent.countChargeCompleted(statementHeader.getLoanId()) == responseCount) {
-                            break;
-                        }
-                        sixtySeconds--;
-                    }
-                    while (responseCount-- > 0) {
-                        BillingCycleCharge billingCycleCharge = redisComponent.popChargeCompleted(statementHeader.getLoanId());
-                        statementHeader.getRegisterEntries().add(RegisterEntryMessage.builder()
-                                .rowNum(billingCycleCharge.getRowNum())
-                                .date(billingCycleCharge.getDate())
-                                .debit(billingCycleCharge.getDebit())
-                                .credit(billingCycleCharge.getCredit())
-                                .description(billingCycleCharge.getDescription())
-                                .build());
-                    }
-                    statementHeader.getRegisterEntries().sort(Comparator.comparingInt(RegisterEntryMessage::getRowNum));
+                    statementHeader.getRegisterEntries().add(interestRegisterEntry);
                     BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
                     BigDecimal endingBalance = startingBalance;
                     for (RegisterEntryMessage re : statementHeader.getRegisterEntries()) {
@@ -127,12 +107,11 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     // so, done with interest and fee calculations here?
                     statementService.saveStatement(statementHeader, startingBalance, endingBalance);
                     requestResponse.setSuccess("Statement created");
-
                 } else {
-                    requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
+                    requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
                 }
             } else {
-                requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
+                requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
             }
         } catch (Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
@@ -174,7 +153,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             try {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(statementHeader.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
                 rabbitMqSender.serviceRequestServiceRequest(requestResponse);
-            } catch ( Exception innerEx ) {
+            } catch (Exception innerEx) {
                 log.error("ERROR SENDING ERROR", ex);
             }
             throw new AmqpRejectAndDontRequeueException(ex);

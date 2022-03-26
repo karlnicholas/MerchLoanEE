@@ -34,8 +34,6 @@ public class RabbitMqProperties {
     private String servicerequestQueryIdRoutingkey;
     private String serviceRequestCheckRequestRoutingkey;
     private String serviceRequestBillLoanRoutingkey;
-    private String serviceRequestBillingCycleChargeRoutingkey;
-    private String serviceRequestChargeCompletedRoutingkey;
     private String serviceRequestStatementCompleteRoutingkey;
 
     private String statementStatementRoutingkey;
@@ -43,5 +41,4 @@ public class RabbitMqProperties {
     private String statementQueryStatementRoutingkey;
     private String statementQueryStatementsRoutingkey;
     private String statementQueryMostRecentStatementRoutingkey;
-
 }

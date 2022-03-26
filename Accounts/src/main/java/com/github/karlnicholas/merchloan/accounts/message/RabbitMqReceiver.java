@@ -3,17 +3,14 @@ package com.github.karlnicholas.merchloan.accounts.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
+import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
 import com.github.karlnicholas.merchloan.accounts.service.RegisterManagementService;
-import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.CreditRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.DebitRequest;
-import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
+import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.accounts.service.AccountManagementService;
-import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -33,15 +30,13 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     private final RegisterManagementService registerManagementService;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
-    private final RedisComponent redisComponent;
     private final RabbitMqSender rabbitMqSender;
 
 
-    public RabbitMqReceiver(AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService, RedisComponent redisComponent, RabbitMqSender rabbitMqSender) {
+    public RabbitMqReceiver(AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService, RabbitMqSender rabbitMqSender) {
         this.accountManagementService = accountManagementService;
         this.registerManagementService = registerManagementService;
         this.queryService = queryService;
-        this.redisComponent = redisComponent;
         this.rabbitMqSender = rabbitMqSender;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -162,30 +157,21 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             Optional<LoanDto> loanOpt = queryService.queryLoanId(closeLoan.getLoanId());
             if (loanOpt.isPresent()) {
                 if (closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0) {
-                    rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
-                            .id(closeLoan.getInterestChargeId())
-                            .date(closeLoan.getDate())
-                            .debitRequest(new DebitRequest(closeLoan.getLoanId(), loanOpt.get().getCurrentInterest(), "Interest"))
-                            .build()
-                    );
+                    registerManagementService.debitLoan(DebitLoan.builder()
+                                    .id(closeLoan.getInterestChargeId())
+                                    .date(closeLoan.getDate())
+                                    .amount(loanOpt.get().getCurrentInterest())
+                                    .description("Interest")
+                                    .build()
+                            , serviceRequestResponse);
                     // determine interest balance
-                    rabbitMqSender.serviceRequestBillingCycleCharge(BillingCycleChargeRequest.builder()
-                            .id(closeLoan.getPaymentId())
-                            .date(closeLoan.getDate())
-                            .creditRequest(new CreditRequest(closeLoan.getLoanId(), closeLoan.getAmount(), "Payoff Payment"))
-                            .build()
-                    );
-                    // wait for responses
-                    int responseCount = 2;
-                    int sixtySeconds = 120;
-                    while (sixtySeconds > 0) {
-                        sleep(500);
-                        if (redisComponent.countChargeCompleted(closeLoan.getLoanId()) == responseCount) {
-                            break;
-                        }
-                        sixtySeconds--;
-                    }
-// UNDO
+                    registerManagementService.creditLoan(CreditLoan.builder()
+                                    .id(closeLoan.getPaymentId())
+                                    .date(closeLoan.getDate())
+                                    .amount(closeLoan.getAmount())
+                                    .description("Payoff Payment")
+                                    .build()
+                            , serviceRequestResponse);
                     closeLoan.setLoanDto(loanOpt.get());
                     closeLoan.setLastStatementDate(loanOpt.get().getLastStatementDate());
                     registerCloseLoan(closeLoan);
@@ -270,18 +256,23 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     }
 
     @RabbitListener(queues = "${rabbitmq.account.billingcyclecharge.queue}")
-    public void receivedBillingCycleChargeMessage(BillingCycleCharge billingCycleCharge) {
+    public RegisterEntryMessage receivedBillingCycleChargeMessage(BillingCycleCharge billingCycleCharge) {
         try {
             log.info("BillingCycleCharge Received {}", billingCycleCharge);
-            registerManagementService.billingCycleCharge(billingCycleCharge);
+            RegisterEntry re = registerManagementService.billingCycleCharge(billingCycleCharge);
+            return RegisterEntryMessage.builder()
+                            .rowNum(re.getRowNum())
+                    .date(re.getDate())
+                    .credit(re.getCredit())
+                    .debit(re.getDebit())
+                    .description(re.getDescription())
+                    .build();
         } catch (Exception ex) {
             log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
-            billingCycleCharge.setError(ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
-        } finally {
-            rabbitMqSender.serviceRequestChargeCompleted(billingCycleCharge);
         }
     }
+
     @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
     public String receivedQueryAccountIdMessage(UUID id) {
         try {
@@ -311,15 +302,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         } catch (Exception ex) {
             log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    private void sleep(int sleepTime) {
-        try {
-            Thread.sleep(sleepTime);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Thread.currentThread().interrupt();
         }
     }
 

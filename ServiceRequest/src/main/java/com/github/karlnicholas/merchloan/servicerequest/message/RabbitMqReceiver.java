@@ -1,9 +1,9 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
 import com.github.karlnicholas.merchloan.apimessage.message.StatementRequest;
 import com.github.karlnicholas.merchloan.dto.RequestStatusDto;
+import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
@@ -34,6 +34,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
 
     @Override
     public void configureRabbitListeners(RabbitListenerEndpointRegistrar rabbitListenerEndpointRegistrar) {
+        // no configuration needed
     }
 
     @RabbitListener(queues = "${rabbitmq.servicerequest.queue}", returnExceptions = "true")
@@ -42,7 +43,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("ServiceRequestResponse Received {}", serviceRequest);
             serviceRequestService.completeServiceRequest(serviceRequest);
         } catch (Exception ex) {
-            log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
+            log.error("void receivedServiceRequestMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -57,31 +58,9 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                             .startDate(billingCycle.getStartDate())
                             .endDate(billingCycle.getEndDate())
                             .build(),
-                    Boolean.FALSE);
+                    Boolean.FALSE, null);
         } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    @RabbitListener(queues = "${rabbitmq.servicerequest.billingcyclecharge.queue}", returnExceptions = "true")
-    public void receivedServiceBillingCycleChargeMessage(BillingCycleChargeRequest billingCycleChargeRequest) {
-        try {
-            log.info("BillingCycleCharge Received {}", billingCycleChargeRequest);
-            serviceRequestService.billingCycleChargeRequest(billingCycleChargeRequest, Boolean.FALSE);
-        } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    @RabbitListener(queues = "${rabbitmq.servicerequest.chargecompleted.queue}", returnExceptions = "true")
-    public void receivedServiceChargeCompletedMessage(BillingCycleCharge billingCycleCharge) {
-        try {
-            log.info("ChargeCompleted Received {}", billingCycleCharge);
-            serviceRequestService.chargeCompleted(billingCycleCharge);
-        } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedServiceRequestBillloanMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -92,7 +71,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("StatementComplete Received {}", statementCompleteResponse);
             serviceRequestService.statementComplete(statementCompleteResponse);
         } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedServiceStatementCompleteMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -115,7 +94,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 return "ERROR: id not found: " + id;
             }
         } catch (Exception ex) {
-            log.error("String receivedServiceRequestQueryIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedServiceRequestQueryIdMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -126,7 +105,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("CheckRequest Received {}", businessDate);
             return queryService.checkRequest(businessDate);
         } catch (Exception ex) {
-            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("String receivedCheckRequestMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }

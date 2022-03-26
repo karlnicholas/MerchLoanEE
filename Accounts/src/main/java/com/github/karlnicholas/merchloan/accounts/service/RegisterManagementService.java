@@ -11,13 +11,10 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.plaf.nimbus.State;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -137,8 +134,14 @@ public class RegisterManagementService {
                         .build()));
     }
 
-    public void billingCycleCharge(BillingCycleCharge billingCycleCharge) {
+    public RegisterEntry billingCycleCharge(BillingCycleCharge billingCycleCharge) {
         try {
+            if ( billingCycleCharge.getRetry().booleanValue()) {
+                Optional<RegisterEntry> optRe = registerEntryRepository.findById(billingCycleCharge.getId());
+                if ( optRe.isPresent() ) {
+                    return optRe.get();
+                }
+            }
             RegisterEntry registerEntry = RegisterEntry.builder()
                     .id(billingCycleCharge.getId())
                     .loanId(billingCycleCharge.getLoanId())
@@ -161,12 +164,10 @@ public class RegisterManagementService {
                 registerEntryRepository.save(registerEntry);
                 loanStateRepository.save(loanState);
             }
-            billingCycleCharge.setSuccess(ServiceRequestMessage.STATUS.SUCCESS.name());
+            return registerEntry;
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            if ( !billingCycleCharge.getRetry().booleanValue()) {
-                billingCycleCharge.setFailure(dke.getMessage());
-            }
+            throw dke;
         }
     }
 }

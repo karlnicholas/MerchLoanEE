@@ -5,8 +5,6 @@ import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceReques
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class RetryScheduleService {
     private final ServiceRequestRepository serviceRequestRepository;
@@ -28,15 +26,9 @@ public class RetryScheduleService {
                     }
                     serviceRequestRepository.save(sr);
                     if (sr.getRetryCount() <= 3) {
-                        retryService.retryServiceRequest(sr);
+                        retryService.retryServiceRequest(sr, sr.getRequestType());
                     }
                 });
     }
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
-    public void waitingService() {
-
-    }
-
 
 }

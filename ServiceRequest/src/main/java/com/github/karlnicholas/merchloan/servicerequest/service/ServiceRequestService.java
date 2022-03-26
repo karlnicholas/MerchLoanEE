@@ -31,9 +31,9 @@ public class ServiceRequestService {
         this.redisComponent = redisComponent;
     }
 
-    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
-        UUID id = persistRequest(accountRequest);
+        UUID id = retry.booleanValue() ? existingId : persistRequest(accountRequest);
         try {
             rabbitMqSender.accountCreateAccount(CreateAccount.builder()
                     .id(id)
@@ -47,9 +47,9 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
-        UUID id = persistRequest(fundingRequest);
+        UUID id = retry.booleanValue() ? existingId : persistRequest(fundingRequest);
         rabbitMqSender.accountFundLoan(
                 FundLoan.builder()
                         .id(id)
@@ -63,9 +63,9 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
-        UUID id = persistRequest(creditRequest);
+        UUID id = retry.booleanValue() ? existingId : persistRequest(creditRequest);
         rabbitMqSender.accountValidateCredit(
                 CreditLoan.builder()
                         .id(id)
@@ -79,9 +79,9 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
-        UUID id = persistRequest(statementRequest);
+        UUID id = retry.booleanValue() ? existingId : persistRequest(statementRequest);
         rabbitMqSender.statementStatement(
                 StatementHeader.builder()
                         .id(id)
@@ -96,9 +96,9 @@ public class ServiceRequestService {
         );
         return id;
     }
-    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
-        UUID id = persistRequest(closeRequest);
+        UUID id = retry.booleanValue() ? existingId : persistRequest(closeRequest);
         rabbitMqSender.accountCloseLoan(
                 CloseLoan.builder()
                         .id(id)
@@ -114,9 +114,9 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
+    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
-        UUID id = persistRequest(debitRequest);
+        UUID id = retry.booleanValue() ? existingId : persistRequest(debitRequest);
         rabbitMqSender.accountValidateDebit(
                 DebitLoan.builder()
                         .id(id)
@@ -128,38 +128,6 @@ public class ServiceRequestService {
                         .build()
         );
         return id;
-    }
-
-    public UUID billingCycleChargeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry) throws JsonProcessingException {
-        BillingCycleChargeRequest billingCycleChargeRequest = (BillingCycleChargeRequest) serviceRequestMessage;
-        UUID id = billingCycleChargeRequest.getId();
-        persistRequestWithId(billingCycleChargeRequest, id);
-        if ( billingCycleChargeRequest.getDebitRequest() != null ) {
-            rabbitMqSender.accountBillingCycleCharge(BillingCycleCharge.builder()
-                    .id(id)
-                    .loanId(billingCycleChargeRequest.getDebitRequest().getLoanId())
-                    .date(billingCycleChargeRequest.getDate())
-                    .debit(billingCycleChargeRequest.getDebitRequest().getAmount())
-                    .description(billingCycleChargeRequest.getDebitRequest().getDescription())
-                    .retry(retry)
-                    .build());
-
-        } else {
-            rabbitMqSender.accountBillingCycleCharge(BillingCycleCharge.builder()
-                    .id(id)
-                    .loanId(billingCycleChargeRequest.getCreditRequest().getLoanId())
-                    .date(billingCycleChargeRequest.getDate())
-                    .credit(billingCycleChargeRequest.getCreditRequest().getAmount())
-                    .description(billingCycleChargeRequest.getCreditRequest().getDescription())
-                    .retry(retry)
-                    .build());
-        }
-        return id;
-    }
-
-    public void chargeCompleted(BillingCycleCharge billingCycleCharge) {
-        completeServiceRequest(billingCycleCharge);
-        redisComponent.chargeCompleted(billingCycleCharge);
     }
 
     private UUID persistRequest(ServiceRequestMessage requestMessage) throws JsonProcessingException {
@@ -206,4 +174,5 @@ public class ServiceRequestService {
     public void statementComplete(StatementCompleteResponse statementCompleteResponse) {
         completeServiceRequest(statementCompleteResponse);
     }
+
 }

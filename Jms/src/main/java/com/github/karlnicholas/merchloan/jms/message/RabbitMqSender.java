@@ -1,6 +1,5 @@
 package com.github.karlnicholas.merchloan.jms.message;
 
-import com.github.karlnicholas.merchloan.apimessage.message.BillingCycleChargeRequest;
 import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -37,8 +36,8 @@ public class RabbitMqSender {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitRoutingkey(), debitLoan);
     }
 
-    public void accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeRoutingKey(), billingCycleCharge);
+    public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) {
+        return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeRoutingKey(), billingCycleCharge);
     }
 
     public Object queryAccount(UUID id) {
@@ -87,14 +86,6 @@ public class RabbitMqSender {
 
     public void serviceRequestBillLoan(BillingCycle billingCycle) {
         rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanRoutingkey(), billingCycle);
-    }
-
-    public void serviceRequestBillingCycleCharge(BillingCycleChargeRequest billingCycleChargeRequest) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillingCycleChargeRoutingkey(), billingCycleChargeRequest);
-    }
-
-    public void serviceRequestChargeCompleted(BillingCycleCharge billingCycleCharge) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestChargeCompletedRoutingkey(), billingCycleCharge);
     }
 
     public void accountCloseLoan(CloseLoan closeLoan) {
