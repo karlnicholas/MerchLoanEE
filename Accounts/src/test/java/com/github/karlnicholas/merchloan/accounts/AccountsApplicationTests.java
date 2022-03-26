@@ -7,7 +7,6 @@ import org.springframework.context.annotation.ComponentScan;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-@ComponentScan("com.github.karlnicholas.merchloan")
 class AccountsApplicationTests {
 
     @Test

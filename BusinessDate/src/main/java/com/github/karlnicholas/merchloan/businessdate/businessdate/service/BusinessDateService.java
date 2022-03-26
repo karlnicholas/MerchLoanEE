@@ -31,6 +31,10 @@ public class BusinessDateService {
         log.info("updateBusinessDate {}", businessDate);
         return businessDateRepository.findById(1L).map(pr->{
             BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(pr.getBusinessDate()).build();
+            Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate.getBusinessDate());
+            if ( requestPending.booleanValue() ) {
+                throw new IllegalStateException("Still processing prior business date" + priorBusinessDate.getBusinessDate());
+            }
             businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
             redisComponent.updateBusinessDate(businessDate);
             return priorBusinessDate;
@@ -45,20 +49,6 @@ public class BusinessDateService {
 
     @Async
     public void startBillingCycle(LocalDate priorBusinessDate) {
-        boolean waiting = true;
-        int sleepTime = 300;
-        while(waiting) {
-            try {
-                Thread.sleep(sleepTime);
-                Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest(priorBusinessDate);
-                if ( !requestPending.booleanValue() )
-                    waiting = false;
-                sleepTime *= 2;
-            } catch (InterruptedException e) {
-                log.error("Wait for prior day completion exception: {}", e.getMessage());
-                Thread.currentThread().interrupt();
-            }
-        }
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate);
         loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
     }

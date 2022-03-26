@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Component
@@ -44,6 +45,12 @@ public class ApiHandler {
     public Mono<ServerResponse> getStatements(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
                 Mono.just(UUID.fromString(serverRequest.pathVariable("id"))).map(rabbitMqSender::queryStatements)
+                , String.class);
+    }
+
+    public Mono<ServerResponse> getCheckRequests(ServerRequest serverRequest) {
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
+                Mono.just(LocalDate.parse(serverRequest.pathVariable("businessDate"))).map(rabbitMqSender::servicerequestCheckRequest)
                 , String.class);
     }
 }
