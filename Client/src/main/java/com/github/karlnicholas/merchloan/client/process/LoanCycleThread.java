@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Slf4j
 public class LoanCycleThread extends Thread {
-    enum CYCLE_STATES {NEW, PAYMENT, STATEMENT, CLOSE}
+    enum CYCLE_STATES {NEW, PAYMENT, STATEMENT, CLOSE, COMPLETE}
 
     private final BusinessDateMonitor businessDateMonitor;
     private final LoanProcessHandler newLoanHandler;
@@ -19,6 +19,7 @@ public class LoanCycleThread extends Thread {
     private final LoanProcessHandler loanStatementHandler;
     private final LoanProcessHandler closeLoanHandler;
     private final LoanStateComponent loanStateComponent;
+    private final LoanProcessHandler completeHandler;
     private LoanProcessHandler currentLoanHandler;
     private LocalDate currentDate;
     private LocalDate cycleDate;
@@ -33,7 +34,8 @@ public class LoanCycleThread extends Thread {
         newLoanHandler = new NewLoanHandler(accountComponent, loanComponent, loanStateComponent, requestStatusComponent);
         paymentLoanHandler = new LoanPaymentHandler(creditComponent);
         loanStatementHandler = new LoanStatementHandler(loanStateComponent, requestStatusComponent);
-        closeLoanHandler = new CloseLoanHandler(closeComponent, loanStateComponent, requestStatusComponent);
+        closeLoanHandler = new LoanCloseHandler(closeComponent, loanStateComponent, requestStatusComponent);
+        completeHandler = new LoanCompleteHandler();
         currentLoanHandler = newLoanHandler;
         cycleState = CYCLE_STATES.NEW;
         statementIndex = 0;
@@ -72,6 +74,7 @@ public class LoanCycleThread extends Thread {
                             changeToPaymentOrClosed();
                         } else if (cycleState == CYCLE_STATES.CLOSE) {
                             log.debug("Loan Closed: {}", currentDate);
+                            changeToStatement();
                         }
                     } else {
                         log.error("Loan Cycle failed: {}", currentDate);
@@ -94,7 +97,10 @@ public class LoanCycleThread extends Thread {
     }
 
     private void changeToPaymentOrClosed() {
-        if ( loanData.getLoanState().getStatementDates().get(statementIndex).compareTo(loanData.getLoanState().getStartDate().plusYears(1)) >= 0) {
+        if ( statementIndex >= loanData.getLoanState().getStatementDates().size()) {
+            currentLoanHandler = completeHandler;
+            cycleState = CYCLE_STATES.COMPLETE;
+        } else if ( loanData.getLoanState().getStatementDates().get(statementIndex).compareTo(loanData.getLoanState().getStartDate().plusYears(1)) >= 0) {
             currentLoanHandler = closeLoanHandler;
             cycleState = CYCLE_STATES.CLOSE;
         } else {

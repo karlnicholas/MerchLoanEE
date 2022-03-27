@@ -176,7 +176,16 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                             , serviceRequestResponse);
                     closeLoan.setLoanDto(loanOpt.get());
                     closeLoan.setLastStatementDate(loanOpt.get().getLastStatementDate());
-                    registerCloseLoan(closeLoan);
+                    StatementHeader statementHeader = StatementHeader.builder()
+                            .id(closeLoan.getId())
+                            .accountId(closeLoan.getLoanDto().getAccountId())
+                            .loanId(closeLoan.getLoanId())
+                            .statementDate(closeLoan.getDate())
+                            .startDate(closeLoan.getLastStatementDate().plusDays(1))
+                            .endDate(closeLoan.getDate())
+                            .build();
+                    registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
+                    rabbitMqSender.statementCloseStatement(statementHeader);
                 } else {
                     serviceRequestResponse.setFailure("PayoffAmount incorrect. Required: " + loanOpt.get().getPayoffAmount());
                     rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
@@ -191,30 +200,20 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
-    public void registerCloseLoan(CloseLoan closeLoan) {
-        try {
-            log.info("CloseLoan Received {}", closeLoan);
-            StatementHeader statementHeader = StatementHeader.builder()
-                    .id(closeLoan.getId())
-                    .accountId(closeLoan.getLoanDto().getAccountId())
-                    .loanId(closeLoan.getLoanId())
-                    .statementDate(closeLoan.getDate())
-                    .startDate(closeLoan.getLastStatementDate().plusDays(1))
-                    .endDate(closeLoan.getDate())
-                    .build();
-            registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-            rabbitMqSender.statementCloseStatement(statementHeader);
-        } catch (Exception ex) {
-            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
-            try {
-                ServiceRequestResponse requestResponse = new ServiceRequestResponse(closeLoan.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
-            } catch (Exception innerEx) {
-                log.error("ERROR SENDING ERROR", ex);
-            }
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
+//    public void registerCloseLoan(CloseLoan closeLoan) {
+//        try {
+//            log.info("CloseLoan Received {}", closeLoan);
+//        } catch (Exception ex) {
+//            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
+//            try {
+//                ServiceRequestResponse requestResponse = new ServiceRequestResponse(closeLoan.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
+//                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+//            } catch (Exception innerEx) {
+//                log.error("ERROR SENDING ERROR", ex);
+//            }
+//            throw new AmqpRejectAndDontRequeueException(ex);
+//        }
+//    }
 
     @RabbitListener(queues = "${rabbitmq.account.loanclosed.queue}")
     public void receivedLoanClosedMessage(StatementHeader statementHeader) {

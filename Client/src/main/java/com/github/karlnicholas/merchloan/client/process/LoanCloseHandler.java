@@ -10,12 +10,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
-public class CloseLoanHandler implements LoanProcessHandler {
+public class LoanCloseHandler implements LoanProcessHandler {
     private final CloseComponent closeComponent;
     private final LoanStateComponent loanStateComponent;
     private final RequestStatusComponent requestStatusComponent;
 
-    public CloseLoanHandler(CloseComponent closeComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent) {
+    public LoanCloseHandler(CloseComponent closeComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent) {
         this.closeComponent = closeComponent;
         this.loanStateComponent = loanStateComponent;
         this.requestStatusComponent = requestStatusComponent;
@@ -27,16 +27,17 @@ public class CloseLoanHandler implements LoanProcessHandler {
         if ( closeId.isEmpty()) {
             return false;
         }
-        sleep(300);
-        Optional<UUID> requestId = requestStatusComponent.checkRequestStatus(closeId.get());
-        if ( requestId.isEmpty()) {
-            return false;
-        }
-        Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
-        if ( loanState.isEmpty()) {
-            return false;
-        }
-        loanData.setLoanState(loanState.get());
+        loanData.setLastPaymentRequestId(closeId.get());
+//        sleep(300);
+//        Optional<UUID> requestId = requestStatusComponent.checkRequestStatus(closeId.get());
+//        if ( requestId.isEmpty()) {
+//            return false;
+//        }
+//        Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
+//        if ( loanState.isEmpty()) {
+//            return false;
+//        }
+//        loanData.setLoanState(loanState.get());
         return true;
     }
     private void sleep(int waitTime) {
