@@ -19,5 +19,5 @@ logging:
     org:
       springframework:
         orm:
-          jpa: debug
+          jpa: info
 

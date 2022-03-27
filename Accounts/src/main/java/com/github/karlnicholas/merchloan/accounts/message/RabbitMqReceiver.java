@@ -159,6 +159,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 if (closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0) {
                     registerManagementService.debitLoan(DebitLoan.builder()
                                     .id(closeLoan.getInterestChargeId())
+                                    .loanId(closeLoan.getLoanId())
                                     .date(closeLoan.getDate())
                                     .amount(loanOpt.get().getCurrentInterest())
                                     .description("Interest")
@@ -167,6 +168,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     // determine interest balance
                     registerManagementService.creditLoan(CreditLoan.builder()
                                     .id(closeLoan.getPaymentId())
+                                    .loanId(closeLoan.getLoanId())
                                     .date(closeLoan.getDate())
                                     .amount(closeLoan.getAmount())
                                     .description("Payoff Payment")

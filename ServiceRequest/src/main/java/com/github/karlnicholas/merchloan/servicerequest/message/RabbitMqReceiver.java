@@ -102,7 +102,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.servicerequest.checkrequest.queue}")
     public Boolean receivedCheckRequestMessage() {
         try {
-            log.info("CheckRequest Received");
+            log.debug("CheckRequest Received");
             return queryService.checkRequest();
         } catch (Exception ex) {
             log.error("String receivedCheckRequestMessage exception {}", ex.getMessage());

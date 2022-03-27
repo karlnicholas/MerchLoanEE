@@ -22,6 +22,5 @@ public class BusinessDateController {
     @PostMapping(value = "businessdate", consumes = MediaType.TEXT_PLAIN_VALUE)
     public void postBusinessDate(@RequestBody String businessDate) {
         BusinessDate priorBusinessDate = businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
-        businessDateService.startBillingCycle(priorBusinessDate.getBusinessDate());
     }
 }

@@ -25,7 +25,7 @@ public class QueryService {
     }
 
     public Boolean checkRequest() {
-        log.debug("checkRequest {}", serviceRequestRepository.findAll().stream().map(sr->sr.getLocalDateTime() + ":" + sr.getStatus()).collect(Collectors.toList()));
+        log.debug("checkRequest {}", serviceRequestRepository.findAll().stream().map(sr->System.lineSeparator() + "\t" + sr.getLocalDateTime() + ":" + sr.getStatus() + ":" + sr.getRequestType()).collect(Collectors.toList()));
         return serviceRequestRepository.existsByStatusEquals(ServiceRequestMessage.STATUS.PENDING);
     }
 }
