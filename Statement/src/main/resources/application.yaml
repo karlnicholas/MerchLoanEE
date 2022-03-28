@@ -16,6 +16,10 @@ rabbitmq:
         queue: statement.query.statements.queue
 logging:
   level:
+    com:
+      github:
+        karlnicholas:
+          merchloan: debug
     org:
       springframework:
         orm:

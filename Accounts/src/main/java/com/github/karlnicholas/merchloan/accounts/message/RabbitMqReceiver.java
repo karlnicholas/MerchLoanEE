@@ -54,7 +54,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("CreateAccount Details Received is.. {}", createAccount);
             accountManagementService.createAccount(createAccount, requestResponse);
         } catch (Exception ex) {
-            log.error("void receivedCreateAccountMessage(CreateAccount createAccount) {}", ex.getMessage());
+            log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         } finally {
@@ -89,7 +89,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             }
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
-            log.error("void receivedFundingMessage(FundLoan funding) {}", ex.getMessage());
+            log.error("receivedFundingMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -115,7 +115,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             }
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
-            log.error("void receivedValidateCreditMessage(CreditLoan creditLoan) {}", ex.getMessage());
+            log.error("receivedValidateCreditMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -142,7 +142,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             }
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
         } catch (Exception ex) {
-            log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            log.error("receivedValidateDebitMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
             rabbitMqSender.serviceRequestServiceRequest(requestResponse);
             throw new AmqpRejectAndDontRequeueException(ex);
@@ -195,7 +195,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
             }
         } catch (Exception ex) {
-            log.error("void receivedCloseLoanMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -226,7 +226,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                             .statusMessage(ServiceRequestMessage.STATUS.SUCCESS.name())
                             .build());
         } catch (Exception ex) {
-            log.error("void receivedValidateDebitMessage(DebitLoan debitLoan) {}", ex.getMessage());
+            log.error("receivedLoanClosedMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -240,7 +240,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
             return statementHeader;
         } catch (Exception ex) {
-            log.error("String receivedStatementHeaderMessage(UUID id) exception {}", ex.getMessage());
+            log.error("receivedStatementHeaderMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -251,7 +251,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             log.info("LoansToCyce Received {}", businessDate);
             return accountManagementService.loansToCycle(businessDate);
         } catch (Exception ex) {
-            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("receivedLoansToCyceMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -269,7 +269,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     .description(re.getDescription())
                     .build();
         } catch (Exception ex) {
-            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
+            log.error("receivedBillingCycleChargeMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -285,7 +285,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 return "ERROR: id not found: " + id;
             }
         } catch (Exception ex) {
-            log.error("String receivedQueryAccountIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("receivedQueryAccountIdMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
@@ -301,7 +301,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 return "ERROR: Loan not found for id: " + id;
             }
         } catch (Exception ex) {
-            log.error("String receivedQueryLoanIdMessage(UUID id) exception {}", ex.getMessage());
+            log.error("receivedQueryLoanIdMessage exception {}", ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         }
     }

@@ -31,6 +31,10 @@ rabbitmq:
         queue: account.query.loanstocycle.queue
 logging:
   level:
+    com:
+      github:
+        karlnicholas:
+          merchloan: debug
     org:
       springframework:
         orm:

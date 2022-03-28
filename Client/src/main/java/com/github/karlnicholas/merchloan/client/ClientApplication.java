@@ -41,7 +41,7 @@ public class ClientApplication {
     @Autowired
     private BusinessDateComponent businessDateComponent;
     private BusinessDateMonitor businessDateMonitor;
-    private List<LoanCycleThread> threads;
+//    private List<LoanCycleThread> threads;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadData(ApplicationReadyEvent event) {
@@ -51,12 +51,14 @@ public class ClientApplication {
     }
 
     private void createLoanListeners() {
-        threads = new ArrayList<>();
+//        threads = new ArrayList<>();
         for ( int i =0; i < 1; ++i ) {
-            int plusDays = ThreadLocalRandom.current().nextInt(30);
-            threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, closeComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));
+//            int plusDays = ThreadLocalRandom.current().nextInt(30);
+            int plusDays = 0;
+//            threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));
+            new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i).start();
         }
-        threads.forEach(Thread::start);
+//        threads.forEach(Thread::start);
     }
 
     private void runBusinessDateThread() {
@@ -79,8 +81,8 @@ public class ClientApplication {
                     Thread.sleep(500);
                 }
                 businessDateMonitor.newDate(null);
-                log.info("{}", currentDate);
-                threads.forEach(LoanCycleThread::showStatement);
+                log.info("DATES FINISHED AT {}", currentDate);
+//                threads.forEach(LoanCycleThread::showStatement);
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);
                 Thread.currentThread().interrupt();

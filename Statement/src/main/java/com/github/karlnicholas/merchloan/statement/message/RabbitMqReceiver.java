@@ -106,7 +106,12 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                     }
                     // so, done with interest and fee calculations here?
                     statementService.saveStatement(statementHeader, startingBalance, endingBalance);
-                    requestResponse.setSuccess("Statement created");
+                    if (endingBalance.compareTo(BigDecimal.ZERO) <= 0) {
+                        requestResponse.setSuccess("Loan Closed");
+                        rabbitMqSender.accountLoanClosed(statementHeader);
+                    } else {
+                        requestResponse.setSuccess("Statement created");
+                    }
                 } else {
                     requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
                 }
@@ -118,7 +123,10 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             requestResponse.setError(ex.getMessage());
             throw new AmqpRejectAndDontRequeueException(ex);
         } finally {
-            rabbitMqSender.serviceRequestStatementComplete(requestResponse);
+            //TODO: Sloppy
+            if (!requestResponse.getStatusMessage().equalsIgnoreCase("Loan Closed")) {
+                rabbitMqSender.serviceRequestStatementComplete(requestResponse);
+            }
         }
     }
 

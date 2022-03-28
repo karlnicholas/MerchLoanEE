@@ -11,15 +11,13 @@ import java.util.Optional;
 
 @Slf4j
 public class LoanCycleThread extends Thread {
-    enum CYCLE_STATES {NEW, PAYMENT, STATEMENT, CLOSE, COMPLETE}
+    enum CYCLE_STATES {NEW, PAYMENT, STATEMENT}
 
     private final BusinessDateMonitor businessDateMonitor;
     private final LoanProcessHandler newLoanHandler;
     private final LoanProcessHandler paymentLoanHandler;
     private final LoanProcessHandler loanStatementHandler;
-    private final LoanProcessHandler closeLoanHandler;
     private final LoanStateComponent loanStateComponent;
-    private final LoanProcessHandler completeHandler;
     private LoanProcessHandler currentLoanHandler;
     private LocalDate currentDate;
     private LocalDate cycleDate;
@@ -27,15 +25,13 @@ public class LoanCycleThread extends Thread {
     private LoanData loanData;
     private int statementIndex;
 
-    public LoanCycleThread(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, CloseComponent closeComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent, BusinessDateMonitor businessDateMonitor, LocalDate startDate, String customer) {
+    public LoanCycleThread(CreditComponent creditComponent, AccountComponent accountComponent, LoanComponent loanComponent, LoanStateComponent loanStateComponent, RequestStatusComponent requestStatusComponent, BusinessDateMonitor businessDateMonitor, LocalDate startDate, String customer) {
         this.businessDateMonitor = businessDateMonitor;
         cycleDate = startDate;
         this.loanStateComponent = loanStateComponent;
         newLoanHandler = new NewLoanHandler(accountComponent, loanComponent, loanStateComponent, requestStatusComponent);
         paymentLoanHandler = new LoanPaymentHandler(creditComponent);
         loanStatementHandler = new LoanStatementHandler(loanStateComponent, requestStatusComponent);
-        closeLoanHandler = new LoanCloseHandler(closeComponent, loanStateComponent, requestStatusComponent);
-        completeHandler = new LoanCompleteHandler();
         currentLoanHandler = newLoanHandler;
         cycleState = CYCLE_STATES.NEW;
         statementIndex = 0;
@@ -67,22 +63,18 @@ public class LoanCycleThread extends Thread {
                     boolean success = currentLoanHandler.progressState(loanData);
                     if (success) {
                         if (cycleState == CYCLE_STATES.NEW) {
-                            changeToPaymentOrClosed();
+                            changeToPaymentOrComplete();
                         } else if (cycleState == CYCLE_STATES.PAYMENT) {
                             changeToStatement();
                         } else if (cycleState == CYCLE_STATES.STATEMENT) {
-                            changeToPaymentOrClosed();
-                        } else if (cycleState == CYCLE_STATES.CLOSE) {
-                            log.debug("Loan Closed: {}", currentDate);
-                            changeToStatement();
+                            changeToPaymentOrComplete();
                         }
                     } else {
                         log.error("Loan Cycle failed: {}", currentDate);
                     }
-                    log.debug("{}: {}=>{} {}=>{} {}", Thread.currentThread().getName(), saveDate, cycleDate, saveState, cycleState, loanData.getLoanId());
+                    log.debug("{}: {}=>{} {}=>{} {} LAST: {}", Thread.currentThread().getName(), saveDate, cycleDate, saveState, cycleState, loanData.getLoanId(), loanData.getLastPaymentRequestId());
                 }
-
-            } while (currentDate != null);
+            } while (currentDate != null &&  cycleDate != null);
         } catch (InterruptedException ex) {
             ex.printStackTrace();
             Thread.currentThread().interrupt();
@@ -96,18 +88,25 @@ public class LoanCycleThread extends Thread {
         currentLoanHandler = loanStatementHandler;
     }
 
-    private void changeToPaymentOrClosed() {
-        if ( statementIndex >= loanData.getLoanState().getStatementDates().size()) {
-            currentLoanHandler = completeHandler;
-            cycleState = CYCLE_STATES.COMPLETE;
-        } else if ( loanData.getLoanState().getStatementDates().get(statementIndex).compareTo(loanData.getLoanState().getStartDate().plusYears(1)) >= 0) {
-            currentLoanHandler = closeLoanHandler;
-            cycleState = CYCLE_STATES.CLOSE;
+    private void changeToPaymentOrComplete() {
+//        if ( statementIndex >= loanData.getLoanState().getStatementDates().size()) {
+//            currentLoanHandler = completeHandler;
+//            cycleState = CYCLE_STATES.COMPLETE;
+//        } else if ( loanData.getLoanState().getStatementDates().get(statementIndex).compareTo(loanData.getLoanState().getStartDate().plusYears(1)) >= 0) {
+//            currentLoanHandler = closeLoanHandler;
+//            cycleState = CYCLE_STATES.CLOSE;
+//        } else {
+//            currentLoanHandler = paymentLoanHandler;
+//            cycleState = CYCLE_STATES.PAYMENT;
+//        }
+        if ( loanData.getLoanState().getLoanState().equalsIgnoreCase("CLOSED")) {
+            log.debug("Loan Closed: {} {}", currentDate, loanData);
+            cycleDate = null;
         } else {
             currentLoanHandler = paymentLoanHandler;
             cycleState = CYCLE_STATES.PAYMENT;
+            cycleDate = loanData.getLoanState().getStatementDates().get(statementIndex).minusDays(5);
         }
-        cycleDate = loanData.getLoanState().getStatementDates().get(statementIndex).minusDays(5);
     }
 
 }

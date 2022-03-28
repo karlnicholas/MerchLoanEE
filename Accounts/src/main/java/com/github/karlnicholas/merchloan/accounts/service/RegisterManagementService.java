@@ -99,15 +99,15 @@ public class RegisterManagementService {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
                 BigDecimal newBalance = loanState.getBalance().subtract(creditEntry.getCredit());
-                if (newBalance.compareTo(BigDecimal.ZERO) <= 0) {
-                    requestResponse.setFailure("Credit results in zero or less balance: " + newBalance + " Make close loan request." );
-                } else {
+//                if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+//                    requestResponse.setFailure("Credit results in negative balance: " + newBalance);
+//                } else {
                     loanState.setBalance(newBalance);
                     creditEntry.setRowNum(loanState.getCurrentRowNum());
                     registerEntryRepository.save(creditEntry);
                     loanStateRepository.save(loanState);
                     requestResponse.setSuccess("Credit transaction entered");
-                }
+//                }
             } else {
                 requestResponse.setFailure("LoanId not found: " + creditLoan.getLoanId());
             }

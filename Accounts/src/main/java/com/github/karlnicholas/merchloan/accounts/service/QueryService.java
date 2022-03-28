@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,14 +79,20 @@ public class QueryService {
         // generate a simulated new statement for current period
         StatementHeader statementHeader = StatementHeader.builder().build();
         statementHeader.setLoanId(loanId);
+        List<RegisterEntry> registerEntries = new ArrayList<>();
         if (mostRecentStatement.getStatementDate() == null) {
             statementHeader.setEndDate(loan.getStatementDates().get(0));
             statementHeader.setStartDate(loan.getStartDate());
+            registerEntries.addAll(registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate()));
         } else {
-            statementHeader.setEndDate(loan.getStatementDates().get(loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate())+1));
-            statementHeader.setStartDate(loan.getStatementDates().get(loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate())).plusDays(1));
+            int index = loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate());
+            if ( index+1 < loan.getStatementDates().size() ) {
+                statementHeader.setEndDate(loan.getStatementDates().get(index+1));
+                statementHeader.setStartDate(loan.getStatementDates().get(index).plusDays(1));
+                registerEntries.addAll(registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate()));
+            }
         }
-        List<RegisterEntry> registerEntries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
+//        List<RegisterEntry> registerEntries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
         // determine current balance, payoff amount
         BigDecimal startingBalance;
         BigDecimal interestBalance;
