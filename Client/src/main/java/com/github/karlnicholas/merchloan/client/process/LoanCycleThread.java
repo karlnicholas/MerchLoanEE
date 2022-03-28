@@ -72,7 +72,7 @@ public class LoanCycleThread extends Thread {
                     } else {
                         log.error("Loan Cycle failed: {}", currentDate);
                     }
-                    log.debug("{}: {}=>{} {}=>{} {} LAST: {}", Thread.currentThread().getName(), saveDate, cycleDate, saveState, cycleState, loanData.getLoanId(), loanData.getLastPaymentRequestId());
+                    log.debug("{} {}: {}=>{} {}=>{} {} LAST: {} STATE: {} LAST_STATEMENT_DATE: {}", success, Thread.currentThread().getName(), saveDate, cycleDate, saveState, cycleState, loanData.getLoanId(), loanData.getLastPaymentRequestId(), loanData.getLoanState().getLoanState(), loanData.getLastStatementDate());
                 }
             } while (currentDate != null &&  cycleDate != null);
         } catch (InterruptedException ex) {

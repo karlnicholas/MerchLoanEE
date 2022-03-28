@@ -124,7 +124,8 @@ public class QueryService {
             computeAmount = computeAmount.add(computeInterest).subtract(loan.getMonthlyPayments()).setScale(2, RoundingMode.HALF_EVEN);
         }
         // fill out additional response
-        loanDto.setCurrentPayment(currentBalance.add(currentInterest).setScale(2, RoundingMode.HALF_EVEN).subtract(computeAmount));
+        BigDecimal currentPayment = currentBalance.add(currentInterest).setScale(2, RoundingMode.HALF_EVEN).subtract(computeAmount);
+        loanDto.setCurrentPayment(currentPayment.compareTo(payoffAmount) < 0 ? currentPayment: payoffAmount);
         loanDto.setCurrentInterest(currentInterest.setScale(2, RoundingMode.HALF_EVEN));
         loanDto.setPayoffAmount(payoffAmount);
         loanDto.setCurrentBalance(currentBalance);

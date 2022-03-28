@@ -64,7 +64,7 @@ public class LoanStatementHandler implements LoanProcessHandler {
                 Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
                 if (loanState.isPresent()) {
                     LoanDto loanDto = loanState.get();
-                    if (loanDto.getLastStatementDate() != null && loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate())) {
+                    if (loanDto.getLoanState().equalsIgnoreCase("CLOSED") || ( loanDto.getLastStatementDate() != null && loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate()))) {
                         loanData.setLoanState(loanDto);
                         return true;
                     }
@@ -76,11 +76,14 @@ public class LoanStatementHandler implements LoanProcessHandler {
                     loop = false;
                 }
             }
+            requestCount++;
+            waitTime *= 3;
+            if ( requestCount > 3 ) {
+                loop = false;
+            }
             if (loop) {
                 sleep(waitTime);
             }
-            requestCount++;
-            waitTime *= 3;
         } while (loop);
         return false;
     }
