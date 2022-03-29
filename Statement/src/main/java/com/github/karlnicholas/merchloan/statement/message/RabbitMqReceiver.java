@@ -50,7 +50,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 .loanId(statementHeader.getLoanId())
                 .build();
         try {
-            log.info("Statement Received {}", statementHeader);
+            log.debug("receivedStatementMessage {}", statementHeader);
             statementHeader = (StatementHeader) rabbitMqSender.accountQueryStatementHeader(statementHeader);
             if (statementHeader.getCustomer() != null) {
                 boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
@@ -133,7 +133,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.statement.closestatement.queue}", returnExceptions = "true")
     public void receivedCloseStatementMessage(StatementHeader statementHeader) {
         try {
-            log.info("CloseStatement Received {}", statementHeader);
+            log.debug("receivedCloseStatementMessage {}", statementHeader);
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
             if (statementExistsOpt.isEmpty()) {
                 // determine interest balance
@@ -171,7 +171,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.statement.query.statement.queue}", returnExceptions = "true")
     public String receivedQueryStatementMessage(UUID loanId) {
         try {
-            log.info("QueryStatement Received {}", loanId);
+            log.debug("receivedQueryStatementMessage {}", loanId);
             return queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
         } catch (Exception ex) {
             log.error("String receivedQueryStatementMessage(UUID id) exception {}", ex.getMessage());
@@ -182,7 +182,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.statement.query.mostrecentstatement.queue}", returnExceptions = "true")
     public MostRecentStatement receivedQueryMostRecentStatementMessage(UUID loanId) {
         try {
-            log.info("QueryStatement Received {}", loanId);
+            log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
             return queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
                     .id(statement.getId())
                     .loanId(loanId)
@@ -199,7 +199,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.statement.query.statements.queue}", returnExceptions = "true")
     public String receivedQueryStatementsMessage(UUID id) {
         try {
-            log.info("QueryStatements Received {}", id);
+            log.debug("receivedQueryStatementsMessage Received {}", id);
             return objectMapper.writeValueAsString(queryService.findByLoanId(id));
         } catch (Exception ex) {
             log.error("String receivedQueryStatementsMessage(UUID id) exception {}", ex.getMessage());

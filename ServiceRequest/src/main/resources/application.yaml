@@ -20,4 +20,4 @@ logging:
       github:
         karlnicholas:
           merchloan:
-            servicerequest: debug
+            servicerequest: info

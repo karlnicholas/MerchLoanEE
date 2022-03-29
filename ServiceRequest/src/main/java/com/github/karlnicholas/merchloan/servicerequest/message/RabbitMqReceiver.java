@@ -40,7 +40,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.servicerequest.queue}", returnExceptions = "true")
     public void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) {
         try {
-            log.info("ServiceRequestResponse Received {}", serviceRequest);
+            log.debug("ServiceRequestResponse Received {}", serviceRequest);
             serviceRequestService.completeServiceRequest(serviceRequest);
         } catch (Exception ex) {
             log.error("void receivedServiceRequestMessage exception {}", ex.getMessage());
@@ -51,7 +51,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.servicerequest.billloan.queue}", returnExceptions = "true")
     public void receivedServiceRequestBillloanMessage(BillingCycle billingCycle) {
         try {
-            log.info("Billloan Received {}", billingCycle);
+            log.debug("Billloan Received {}", billingCycle);
             serviceRequestService.statementStatementRequest(StatementRequest.builder()
                             .loanId(billingCycle.getLoanId())
                             .statementDate(billingCycle.getStatementDate())
@@ -68,7 +68,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.servicerequest.statementcomplete.queue}", returnExceptions = "true")
     public void receivedServiceStatementCompleteMessage(StatementCompleteResponse statementCompleteResponse) {
         try {
-            log.info("StatementComplete Received {}", statementCompleteResponse);
+            log.debug("StatementComplete Received {}", statementCompleteResponse);
             serviceRequestService.statementComplete(statementCompleteResponse);
         } catch (Exception ex) {
             log.error("String receivedServiceStatementCompleteMessage exception {}", ex.getMessage());
@@ -79,7 +79,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.servicerequest.query.id.queue}", returnExceptions = "true")
     public String receivedServiceRequestQueryIdMessage(UUID id) {
         try {
-            log.info("ServiceRequestQueryId Received {}", id);
+            log.debug("ServiceRequestQueryId Received {}", id);
             Optional<ServiceRequest> requestOpt = queryService.getServiceRequest(id);
             if (requestOpt.isPresent()) {
                 ServiceRequest request = requestOpt.get();

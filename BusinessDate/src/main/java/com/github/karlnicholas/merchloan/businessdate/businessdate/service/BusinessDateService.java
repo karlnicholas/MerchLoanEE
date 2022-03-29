@@ -61,8 +61,10 @@ public class BusinessDateService {
 
     public void startBillingCycle(LocalDate priorBusinessDate) {
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate);
+        batchingRabbitTemplate.doStart();
         loansToCycle.forEach(billingCycle -> {
             batchingRabbitTemplate.send(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanRoutingkey(), simpleMessageConverter.toMessage(billingCycle, messageProperties), null);
         });
+        batchingRabbitTemplate.doStop();
     }
 }

@@ -25,7 +25,18 @@ public class BusinessDateComponent {
         HttpEntity<String> request = new HttpEntity<>(businessDate.format(DateTimeFormatter.ISO_DATE), headers);
         return restTemplate.exchange("http://localhost:8100/api/businessdate", HttpMethod.POST, request, Void.class);
     }
+
+    private ResponseEntity<Boolean> checkStillProcessing() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.ALL));
+        return restTemplate.exchange("http://localhost:8090/api/query/checkrequests", HttpMethod.GET, null, Boolean.class);
+    }
+
     public boolean updateBusinessDate(LocalDate localDate) {
+        ResponseEntity<Boolean> stillProcessingResp = checkStillProcessing();
+        if ( stillProcessingResp.getStatusCode().isError() || stillProcessingResp.getBody().booleanValue() == true) {
+            return false;
+        }
         // Open Account
         int requestCount = 0;
         boolean loop = true;
@@ -40,6 +51,9 @@ public class BusinessDateComponent {
                 }
             }
             requestCount++;
+            if ( requestCount > 3 ) {
+                loop = false;
+            }
         } while (loop);
         return (requestCount < 3);
     }

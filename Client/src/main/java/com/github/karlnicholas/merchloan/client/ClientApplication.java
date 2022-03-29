@@ -52,9 +52,9 @@ public class ClientApplication {
 
     private void createLoanListeners() {
 //        threads = new ArrayList<>();
-        for ( int i =0; i < 1; ++i ) {
-//            int plusDays = ThreadLocalRandom.current().nextInt(30);
-            int plusDays = 0;
+        for ( int i =0; i < 5; ++i ) {
+            int plusDays = ThreadLocalRandom.current().nextInt(30);
+//            int plusDays = 0;
 //            threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));
             new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i).start();
         }
@@ -68,10 +68,16 @@ public class ClientApplication {
                 LocalDate currentDate = LocalDate.now();
                 LocalDate endDate = currentDate.plusYears(1).plusMonths(2);
                 Thread.sleep(5000);
+                int bdRetry;
                 while ( currentDate.isBefore(endDate)) {
+                    bdRetry = 0;
                     if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
-                        log.error("Business date failed to update");
-                        return;
+                        if ( ++bdRetry > 10 ) {
+                            log.error("Business date failed to update");
+                            return;
+                        }
+                        log.info("Business date not ready or did not update");
+                        continue;
                     }
                     businessDateMonitor.newDate(currentDate);
                     if ( currentDate.getDayOfMonth() == 1 ) {

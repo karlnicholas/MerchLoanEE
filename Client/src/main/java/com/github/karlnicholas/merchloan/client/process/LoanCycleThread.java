@@ -101,7 +101,7 @@ public class LoanCycleThread extends Thread {
 //            cycleState = CYCLE_STATES.PAYMENT;
 //        }
         if ( loanData.getLoanState().getLoanState().equalsIgnoreCase("CLOSED")) {
-            log.debug("Loan Closed: {} {}", currentDate, loanData);
+            log.info("Loan Closed: {} {}", currentDate, loanData);
             cycleDate = null;
         } else {
             currentLoanHandler = paymentLoanHandler;

@@ -49,8 +49,7 @@ public class RabbitTemplateConfig {
     public BatchingRabbitTemplate batchingRabbitTemplate(ConnectionFactory connectionFactory) {
         BatchingStrategy strategy = new SimpleBatchingStrategy(500, 25_000, 3_000);
         TaskScheduler scheduler = new ConcurrentTaskScheduler();
-        BatchingRabbitTemplate template = new BatchingRabbitTemplate(strategy, scheduler);
-        template.setConnectionFactory(connectionFactory);
+        BatchingRabbitTemplate template = new BatchingRabbitTemplate(connectionFactory, strategy, scheduler);
         // ... other settings
         return template;
     }
