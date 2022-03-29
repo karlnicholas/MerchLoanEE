@@ -51,7 +51,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedCreateAccountMessage(CreateAccount createAccount) {
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {
-            log.info("CreateAccount Details Received is.. {}", createAccount);
+            log.debug("receivedCreateAccountMessage{}", createAccount);
             accountManagementService.createAccount(createAccount, requestResponse);
         } catch (Exception ex) {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
@@ -74,7 +74,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 .id(fundLoan.getId())
                 .build();
         try {
-            log.info("FundLoan Received {} ", fundLoan);
+            log.debug("receivedFundingMessage {} ", fundLoan);
             accountManagementService.fundAccount(fundLoan, requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.fundLoan(
@@ -102,7 +102,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 .id(creditLoan.getId())
                 .build();
         try {
-            log.info("CreditLoan Received {} ", creditLoan);
+            log.debug("receivedValidateCreditMessage {} ", creditLoan);
             accountManagementService.validateLoan(creditLoan.getLoanId(), requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.creditLoan(CreditLoan.builder()
@@ -128,7 +128,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 .id(debitLoan.getId())
                 .build();
         try {
-            log.info("DebitLoan Received {} ", debitLoan);
+            log.debug("receivedValidateDebitMessage {} ", debitLoan);
             accountManagementService.validateLoan(debitLoan.getLoanId(), requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.debitLoan(DebitLoan.builder()
@@ -153,7 +153,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     public void receivedCloseLoanMessage(CloseLoan closeLoan) {
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(closeLoan.getId()).build();
         try {
-            log.info("CloseLoan Received {} ", closeLoan);
+            log.debug("receivedCloseLoanMessage {} ", closeLoan);
             Optional<LoanDto> loanOpt = queryService.queryLoanId(closeLoan.getLoanId());
             if (loanOpt.isPresent()) {
                 if (closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0) {
@@ -218,7 +218,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.account.loanclosed.queue}")
     public void receivedLoanClosedMessage(StatementHeader statementHeader) {
         try {
-            log.info("LoanClosed Received {} ", statementHeader);
+            log.debug("receivedLoanClosedMessage {} ", statementHeader);
             accountManagementService.closeLoan(statementHeader.getLoanId());
             rabbitMqSender.serviceRequestServiceRequest(
                     ServiceRequestResponse.builder().id(statementHeader.getId())
@@ -234,7 +234,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.account.query.statementheader.queue}")
     public StatementHeader receivedStatementHeaderMessage(StatementHeader statementHeader) {
         try {
-            log.info("StatementHeader Received {}", statementHeader);
+            log.debug("receivedStatementHeaderMessage {}", statementHeader);
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
             if (serviceRequestResponse.isSuccess())
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
@@ -248,7 +248,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.account.query.loanstocycle.queue}")
     public List<BillingCycle> receivedLoansToCyceMessage(LocalDate businessDate) {
         try {
-            log.info("LoansToCyce Received {}", businessDate);
+            log.debug("receivedLoansToCyceMessage {}", businessDate);
             return accountManagementService.loansToCycle(businessDate);
         } catch (Exception ex) {
             log.error("receivedLoansToCyceMessage exception {}", ex.getMessage());
@@ -259,7 +259,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.account.billingcyclecharge.queue}")
     public RegisterEntryMessage receivedBillingCycleChargeMessage(BillingCycleCharge billingCycleCharge) {
         try {
-            log.info("BillingCycleCharge Received {}", billingCycleCharge);
+            log.debug("receivedBillingCycleChargeMessage {}", billingCycleCharge);
             RegisterEntry re = registerManagementService.billingCycleCharge(billingCycleCharge);
             return RegisterEntryMessage.builder()
                             .rowNum(re.getRowNum())
@@ -277,7 +277,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.account.query.account.id.queue}")
     public String receivedQueryAccountIdMessage(UUID id) {
         try {
-            log.info("QueryAccountId Received {}}", id);
+            log.debug("receivedQueryAccountIdMessage {}", id);
             Optional<Account> r = queryService.queryAccountId(id);
             if (r.isPresent()) {
                 return objectMapper.writeValueAsString(r.get());
@@ -293,7 +293,7 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
     @RabbitListener(queues = "${rabbitmq.account.query.loan.id.queue}")
     public String receivedQueryLoanIdMessage(UUID id) {
         try {
-            log.info("QueryLoanId Received {}", id);
+            log.debug("receivedQueryLoanIdMessage {}", id);
             Optional<LoanDto> r = queryService.queryLoanId(id);
             if (r.isPresent()) {
                 return objectMapper.writeValueAsString(r.get());
