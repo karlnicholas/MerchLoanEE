@@ -12,8 +12,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
@@ -52,7 +50,7 @@ public class ClientApplication {
 
     private void createLoanListeners() {
 //        threads = new ArrayList<>();
-        for ( int i =0; i < 5; ++i ) {
+        for ( int i =0; i < 50; ++i ) {
             int plusDays = ThreadLocalRandom.current().nextInt(30);
 //            int plusDays = 0;
 //            threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));

@@ -1,11 +1,10 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
-import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
-import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
-import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.accounts.model.LoanState;
+import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanStateRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.RegisterEntryRepository;
+import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;

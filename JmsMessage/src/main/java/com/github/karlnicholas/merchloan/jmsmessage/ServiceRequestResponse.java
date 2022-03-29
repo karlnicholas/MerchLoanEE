@@ -1,7 +1,10 @@
 package com.github.karlnicholas.merchloan.jmsmessage;
 
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;

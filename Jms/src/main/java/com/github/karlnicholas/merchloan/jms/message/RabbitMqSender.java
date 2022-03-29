@@ -103,9 +103,9 @@ public class RabbitMqSender {
         return rabbitTemplate.convertSendAndReceive(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoansToCycleRoutingkey(), businessDate);
     }
 
-//    public void serviceRequestBillLoan(BillingCycle billingCycle) {
-//        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanRoutingkey(), billingCycle);
-//    }
+    public void serviceRequestBillLoan(BillingCycle billingCycle) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanRoutingkey(), billingCycle);
+    }
 
     public void accountCloseLoan(CloseLoan closeLoan) {
         log.debug("accountCloseLoan: {}", closeLoan);

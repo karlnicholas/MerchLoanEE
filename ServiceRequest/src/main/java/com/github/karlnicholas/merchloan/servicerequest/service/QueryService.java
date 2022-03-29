@@ -6,10 +6,8 @@ import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceReques
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j

@@ -1,6 +1,5 @@
 package com.github.karlnicholas.merchloan.jms.config;
 
-import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.batch.BatchingStrategy;
 import org.springframework.amqp.rabbit.batch.SimpleBatchingStrategy;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;

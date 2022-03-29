@@ -3,7 +3,6 @@ package com.github.karlnicholas.merchloan.client.process;
 import com.github.karlnicholas.merchloan.client.component.CloseComponent;
 import com.github.karlnicholas.merchloan.client.component.LoanStateComponent;
 import com.github.karlnicholas.merchloan.client.component.RequestStatusComponent;
-import com.github.karlnicholas.merchloan.dto.LoanDto;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;

@@ -1,15 +1,11 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.service;
 
-import com.github.karlnicholas.merchloan.businessdate.businessdate.repository.BusinessDateRepository;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
-import com.github.karlnicholas.merchloan.jms.config.RabbitMqProperties;
+import com.github.karlnicholas.merchloan.businessdate.businessdate.repository.BusinessDateRepository;
 import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.core.BatchingRabbitTemplate;
-import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,21 +17,11 @@ public class BusinessDateService {
     private final RedisComponent redisComponent;
     private final BusinessDateRepository businessDateRepository;
     private final RabbitMqSender rabbitMqSender;
-    private final BatchingRabbitTemplate batchingRabbitTemplate;
-    private final RabbitMqProperties rabbitMqProperties;
-    private final SimpleMessageConverter simpleMessageConverter;
-    private final MessageProperties messageProperties;
 
-
-    public BusinessDateService(RedisComponent redisComponent, BusinessDateRepository businessDateRepository, RabbitMqSender rabbitMqSender, BatchingRabbitTemplate batchingRabbitTemplate, RabbitMqProperties rabbitMqProperties) {
+    public BusinessDateService(RedisComponent redisComponent, BusinessDateRepository businessDateRepository, RabbitMqSender rabbitMqSender) {
         this.redisComponent = redisComponent;
         this.businessDateRepository = businessDateRepository;
         this.rabbitMqSender = rabbitMqSender;
-        this.batchingRabbitTemplate = batchingRabbitTemplate;
-        this.rabbitMqProperties = rabbitMqProperties;
-        simpleMessageConverter = new SimpleMessageConverter();
-        messageProperties = new MessageProperties();
-        messageProperties.setType(MessageProperties.CONTENT_TYPE_SERIALIZED_OBJECT);
     }
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) {
@@ -61,10 +47,6 @@ public class BusinessDateService {
 
     public void startBillingCycle(LocalDate priorBusinessDate) {
         List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate);
-        batchingRabbitTemplate.doStart();
-        loansToCycle.forEach(billingCycle -> {
-            batchingRabbitTemplate.send(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanRoutingkey(), simpleMessageConverter.toMessage(billingCycle, messageProperties), null);
-        });
-        batchingRabbitTemplate.doStop();
+        loansToCycle.forEach(rabbitMqSender::serviceRequestBillLoan);
     }
 }

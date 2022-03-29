@@ -70,7 +70,7 @@ public class LoanCycleThread extends Thread {
                             changeToPaymentOrComplete();
                         }
                     } else {
-                        log.error("Loan Cycle failed: {}", currentDate);
+                        log.error("Loan Cycle failed: {} {} {}", currentDate, cycleState, loanData.getLoanId());
                         cycleDate = null;
                     }
                     log.debug("{} {}: {}=>{} {}=>{} {} LAST: {} STATE: {} LAST_STATEMENT_DATE: {}", success, Thread.currentThread().getName(), saveDate, cycleDate, saveState, cycleState, loanData.getLoanId(), loanData.getLastPaymentRequestId(), loanData.getLoanState().getLoanState(), loanData.getLastStatementDate());

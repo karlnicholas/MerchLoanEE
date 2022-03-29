@@ -1,10 +1,6 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate;
 
 import com.github.karlnicholas.merchloan.businessdate.businessdate.service.BusinessDateService;
-import org.springframework.amqp.rabbit.batch.BatchingStrategy;
-import org.springframework.amqp.rabbit.batch.SimpleBatchingStrategy;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.BatchingRabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,9 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
 import java.io.IOException;
 import java.util.Arrays;
