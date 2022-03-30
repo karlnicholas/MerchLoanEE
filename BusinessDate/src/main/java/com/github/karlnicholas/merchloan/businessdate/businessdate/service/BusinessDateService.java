@@ -6,8 +6,11 @@ import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.jni.Time;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -25,8 +28,8 @@ public class BusinessDateService {
     }
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) {
-        log.info("updateBusinessDate {}", businessDate);
         return businessDateRepository.findById(1L).map(pr -> {
+            Instant start = Instant.now();
             BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(pr.getBusinessDate()).build();
             Boolean requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest();
             if (requestPending.booleanValue()) {
@@ -35,6 +38,7 @@ public class BusinessDateService {
             businessDateRepository.save(BusinessDate.builder().id(1L).businessDate(businessDate).build());
             redisComponent.updateBusinessDate(businessDate);
             startBillingCycle(priorBusinessDate.getBusinessDate());
+            log.info("updateBusinessDate {} {}", businessDate, Duration.between(start, Instant.now()));
             return priorBusinessDate;
         }).orElseThrow();
     }

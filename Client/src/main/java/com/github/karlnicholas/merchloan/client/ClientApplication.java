@@ -75,6 +75,7 @@ public class ClientApplication {
                             return;
                         }
                         log.info("Business date not ready or did not update");
+                        Thread.sleep(500);
                         continue;
                     }
                     businessDateMonitor.newDate(currentDate);
