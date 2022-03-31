@@ -1,31 +1,57 @@
 package com.github.karlnicholas.merchloan.client.component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.FundingRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.ParseException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
 @Slf4j
 public class LoanComponent {
-    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
-    public LoanComponent(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public LoanComponent(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
-    private ResponseEntity<UUID> fundingRequest(UUID accountId, BigDecimal amount, String description) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.TEXT_PLAIN));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<FundingRequest> request = new HttpEntity<>(new FundingRequest(accountId, amount, description), headers);
-        return restTemplate.exchange("http://localhost:8080/api/v1/service/fundingRequest", HttpMethod.POST, request, UUID.class);
+    private Optional<UUID> fundingRequest(UUID accountId, BigDecimal amount, String description) {
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            String strJson = objectMapper.writeValueAsString(new FundingRequest(accountId, amount, description));
+            StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
+            HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/fundingRequest");
+            httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
+//            httpPost.setHeader("Content-type", "application/json");
+            httpPost.setEntity(strEntity);
+
+            try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+                HttpEntity entity = response.getEntity();
+                return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
+            } catch (ParseException e) {
+                log.error("accountRequest", e);
+            }
+        } catch (IOException e) {
+            log.error("accountRequest", e);
+        }
+        return Optional.empty();
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setAccept(Collections.singletonList(MediaType.TEXT_PLAIN));
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        HttpEntity<FundingRequest> request = new HttpEntity<>(new FundingRequest(accountId, amount, description), headers);
+//        return restTemplate.exchange("http://localhost:8080/api/v1/service/fundingRequest", HttpMethod.POST, request, UUID.class);
     }
 
     public Optional<UUID> fundLoan(UUID accountId, BigDecimal amount, String description) {
@@ -34,10 +60,10 @@ public class LoanComponent {
         boolean loop = true;
         do {
             try {
-                ResponseEntity<UUID> loanId = fundingRequest(accountId, amount, description);
-                loop = loanId.getStatusCode().isError();
+                Optional<UUID> loanId = fundingRequest(accountId, amount, description);
+                loop = loanId.isEmpty();
                 if (!loop) {
-                    return Optional.of(loanId.getBody());
+                    return Optional.of(loanId.get());
                 }
             } catch (Exception ex) {
                 if (requestCount >= 3) {

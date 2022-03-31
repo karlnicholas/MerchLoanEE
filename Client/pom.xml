@@ -32,6 +32,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>apimessage</artifactId>
         </dependency>

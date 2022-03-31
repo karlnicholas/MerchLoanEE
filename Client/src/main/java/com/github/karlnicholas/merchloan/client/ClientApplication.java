@@ -48,8 +48,8 @@ public class ClientApplication {
     private void createLoanListeners() {
         loans = new ArrayList<>();
         for ( int i =0; i < 5000; ++i ) {
-            int plusDays = ThreadLocalRandom.current().nextInt(30);
-//            int plusDays = 0;
+//            int plusDays = ThreadLocalRandom.current().nextInt(30);
+            int plusDays = 0;
             loans.add(new LoanCycle(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));
         }
     }
@@ -70,11 +70,12 @@ public class ClientApplication {
                     }
                     bdRetry = 0;
                     if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
-                        if ( ++bdRetry > 10 ) {
+                        if ( ++bdRetry > 100 ) {
                             log.error("Business date failed to update {}", currentDate);
                             return;
                         }
-                        log.info("Business date not ready {}", currentDate);
+                        if ( bdRetry % 10 == 0 )
+                            log.info("Business date not ready {} {}", currentDate, bdRetry);
                         Thread.sleep(500);
                         continue;
                     }
@@ -91,7 +92,10 @@ public class ClientApplication {
                     Thread.sleep(500);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
-//                threads.forEach(LoanCycleThread::showStatement);
+                loans.forEach(loan->{
+                    if ( !loan.checkClosed() )
+                        loan.showStatement();
+                });
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);
                 Thread.currentThread().interrupt();

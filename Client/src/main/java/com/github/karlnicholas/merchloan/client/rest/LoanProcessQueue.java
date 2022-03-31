@@ -20,7 +20,7 @@ public class LoanProcessQueue {
     private final ExecutorService executorService;
     private final List<Future<?>> tasks;
 
-    public LoanProcessQueue(RestTemplate restTemplate) {
+    public LoanProcessQueue() {
         executorService = Executors.newFixedThreadPool(100);
         tasks = new ArrayList<>();
     }

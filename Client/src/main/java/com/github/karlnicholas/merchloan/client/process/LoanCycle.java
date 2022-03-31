@@ -47,6 +47,10 @@ public class LoanCycle {
             log.info("{}", loanDto.get());
     }
 
+    public boolean checkClosed() {
+        return loanData.getLoanState().getLoanState().equalsIgnoreCase("CLOSED");
+    }
+
     public void cycle(LoanProcessQueue loanProcessQueue, LocalDate currentDate) {
         if (cycleDate == null)
             return;
@@ -98,7 +102,10 @@ public class LoanCycle {
 
     private void changeToPaymentOrComplete(LocalDate currentDate) {
         if (loanData.getLoanState().getLoanState().equalsIgnoreCase("CLOSED")) {
-            log.info("Loan Closed: {} {}", currentDate, loanData);
+//            log.info("Loan Closed: {} {}", currentDate, loanData);
+            cycleDate = null;
+        } else if (loanData.getLoanState().getCurrentPayment().compareTo(loanData.getLoanState().getMonthlyPayments()) > 0) {
+            log.error("Payment Error: {} {}", currentDate, loanData);
             cycleDate = null;
         } else {
             currentLoanHandler = paymentLoanHandler;
