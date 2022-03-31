@@ -10,8 +10,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -22,24 +22,26 @@ import java.util.UUID;
 @Slf4j
 public class RequestStatusComponent {
     private final ObjectMapper objectMapper;
+    private final PoolingHttpClientConnectionManager connManager;
 
-    public RequestStatusComponent(ObjectMapper objectMapper) {
+    public RequestStatusComponent(ObjectMapper objectMapper, PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = objectMapper;
+        this.connManager = connManager;
     }
 
     private Optional<RequestStatusDto> requestStatus(UUID id) {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
             HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/request/" + id.toString());
             httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
             try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
                 HttpEntity entity = response.getEntity();
                 return Optional.of(objectMapper.readValue(EntityUtils.toString(entity), RequestStatusDto.class));
-            } catch (ParseException e) {
+            } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }
-        } catch (IOException e) {
-            log.error("accountRequest", e);
-        }
+//        } catch (IOException e) {
+//            log.error("accountRequest", e);
+//        }
         return Optional.empty();
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));

@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.client.component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.CloseRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
@@ -23,13 +25,15 @@ import java.util.UUID;
 @Slf4j
 public class CloseComponent {
     private final ObjectMapper objectMapper;
+    private final PoolingHttpClientConnectionManager connManager;
 
-    public CloseComponent(ObjectMapper objectMapper) {
+    public CloseComponent(ObjectMapper objectMapper, PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = objectMapper;
+        this.connManager = connManager;
     }
 
-    private Optional<UUID> closeRequest(UUID loanId, BigDecimal amount, String description) {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+    private Optional<UUID> closeRequest(UUID loanId, BigDecimal amount, String description) throws JsonProcessingException {
+        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
             String strJson = objectMapper.writeValueAsString(new CloseRequest(loanId, amount, description));
             StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
             HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/closeRequest");
@@ -40,12 +44,12 @@ public class CloseComponent {
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
                 HttpEntity entity = response.getEntity();
                 return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
-            } catch (ParseException e) {
+            } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }
-        } catch (IOException e) {
-            log.error("accountRequest", e);
-        }
+//        } catch (IOException e) {
+//            log.error("accountRequest", e);
+//        }
         return Optional.empty();
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(Collections.singletonList(MediaType.ALL));

@@ -6,8 +6,10 @@ import com.github.karlnicholas.merchloan.client.component.LoanStateComponent;
 import com.github.karlnicholas.merchloan.client.component.RequestStatusComponent;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpException;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -28,7 +30,7 @@ public class NewLoanHandler implements LoanProcessHandler {
     }
 
     @Override
-    public boolean progressState(LoanData loanData) throws ExecutionException, InterruptedException {
+    public boolean progressState(LoanData loanData) throws ExecutionException, InterruptedException, HttpException, IOException {
         // Open Account
         Optional<UUID> accountId = accountComponent.createAccount(loanData.getCustomer());
         if ( accountId.isEmpty()) {

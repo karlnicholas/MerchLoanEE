@@ -41,10 +41,10 @@ public class LoanCycle {
                 .build();
     }
 
-    public void showStatement() {
+    public void showStatement(String comment) {
         Optional<LoanDto> loanDto = loanStateComponent.checkLoanStatus(loanData.getLoanId());
         if (loanDto.isPresent())
-            log.info("{}", loanDto.get());
+            log.info("{}{ {}", comment, loanDto.get());
     }
 
     public boolean checkClosed() {

@@ -9,6 +9,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
@@ -20,9 +21,14 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class BusinessDateComponent {
+    private final PoolingHttpClientConnectionManager connManager;
+
+    public BusinessDateComponent(PoolingHttpClientConnectionManager connManager) {
+        this.connManager = connManager;
+    }
 
     private Optional<Integer> postBusinessDate(LocalDate businessDate) {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
             String date = businessDate.format(DateTimeFormatter.ISO_DATE);
             StringEntity strEntity = new StringEntity(date, ContentType.TEXT_PLAIN);
             HttpPost httpPost = new HttpPost("http://localhost:8100/api/businessdate");
@@ -32,12 +38,12 @@ public class BusinessDateComponent {
 
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
                 return Optional.of(response.getStatusLine().getStatusCode());
-            } catch (ParseException e) {
+            } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }
-        } catch (IOException e) {
-            log.error("accountRequest", e);
-        }
+//        } catch (IOException e) {
+//            log.error("accountRequest", e);
+//        }
         return Optional.empty();
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(Collections.singletonList(MediaType.ALL));
@@ -47,18 +53,18 @@ public class BusinessDateComponent {
     }
 
     private Optional<Boolean> checkStillProcessing() {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
             HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/checkrequests");
             httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 
             try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
                 return Optional.of(Boolean.valueOf(EntityUtils.toString(response.getEntity())));
-            } catch (ParseException e) {
+            } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }
-        } catch (IOException e) {
-            log.error("accountRequest", e);
-        }
+//        } catch (IOException e) {
+//            log.error("accountRequest", e);
+//        }
         return Optional.empty();
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(Collections.singletonList(MediaType.ALL));

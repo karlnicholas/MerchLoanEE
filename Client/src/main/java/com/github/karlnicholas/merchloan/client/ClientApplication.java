@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.client;
 
 import com.github.karlnicholas.merchloan.client.component.*;
+import com.github.karlnicholas.merchloan.client.config.HttpConnectionPoolConfig;
 import com.github.karlnicholas.merchloan.client.process.LoanCycle;
 import com.github.karlnicholas.merchloan.client.rest.LoanProcessQueue;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,8 @@ public class ClientApplication {
     private BusinessDateComponent businessDateComponent;
     @Autowired
     private LoanProcessQueue loanProcessQueue;
+    @Autowired
+    private HttpConnectionPoolConfig httpConnectionPoolConfig;
     private List<LoanCycle> loans;
 
     @EventListener(ApplicationReadyEvent.class)
@@ -47,9 +50,9 @@ public class ClientApplication {
 
     private void createLoanListeners() {
         loans = new ArrayList<>();
-        for ( int i =0; i < 5000; ++i ) {
-//            int plusDays = ThreadLocalRandom.current().nextInt(30);
-            int plusDays = 0;
+        for ( int i =0; i < 100; ++i ) {
+            int plusDays = ThreadLocalRandom.current().nextInt(30);
+//            int plusDays = 0;
             loans.add(new LoanCycle(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));
         }
     }
@@ -89,13 +92,17 @@ public class ClientApplication {
                         log.info("{}", currentDate);
                     }
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(500);
+                    Thread.sleep(200);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
                 loans.forEach(loan->{
                     if ( !loan.checkClosed() )
-                        loan.showStatement();
+                        loan.showStatement("Not Closed");
+                    if ( ThreadLocalRandom.current().nextInt(100) == 50) {
+                        loan.showStatement("Show Statement");
+                    }
                 });
+                log.info("pool stats {} ", httpConnectionPoolConfig.getPoolingHttpClientConnectionManager().getTotalStats());
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);
                 Thread.currentThread().interrupt();

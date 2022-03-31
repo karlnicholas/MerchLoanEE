@@ -1,20 +1,17 @@
 package com.github.karlnicholas.merchloan.client.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.karlnicholas.merchloan.apimessage.message.CloseRequest;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -25,24 +22,26 @@ import java.util.UUID;
 @Slf4j
 public class LoanStateComponent {
     private final ObjectMapper objectMapper;
+    private final PoolingHttpClientConnectionManager connManager;
 
-    public LoanStateComponent(ObjectMapper objectMapper) {
+    public LoanStateComponent(ObjectMapper objectMapper, PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = objectMapper;
+        this.connManager = connManager;
     }
 
     private Optional<LoanDto> loanStatus(UUID loanId) {
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
             HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/loan/" + loanId.toString());
             httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
             try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
                 HttpEntity entity = response.getEntity();
                 return Optional.of(objectMapper.readValue(EntityUtils.toString(entity), LoanDto.class));
-            } catch (ParseException e) {
+            } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }
-        } catch (IOException e) {
-            log.error("accountRequest", e);
-        }
+//        } catch (IOException e) {
+//            log.error("accountRequest", e);
+//        }
         return Optional.empty();
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
