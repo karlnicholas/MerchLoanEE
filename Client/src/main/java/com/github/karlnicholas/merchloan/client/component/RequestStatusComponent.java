@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.client.component;
 import com.github.karlnicholas.merchloan.dto.RequestStatusDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,7 @@ public class RequestStatusComponent {
     private ResponseEntity<RequestStatusDto> requestStatus(UUID id) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        return restTemplate.getForEntity("http://localhost:8090/api/query/request/{id}", RequestStatusDto.class, id);
+        return restTemplate.exchange("http://localhost:8090/api/query/request/{id}", HttpMethod.GET, null, RequestStatusDto.class, id);
     }
 
     public Optional<UUID> checkRequestStatus(UUID id) {
@@ -35,7 +36,7 @@ public class RequestStatusComponent {
         do {
             try {
                 ResponseEntity<RequestStatusDto> requestStatusDto = requestStatus(id);
-                loop = requestStatusDto.getStatusCode().isError();
+                loop = requestStatusDto == null || requestStatusDto.getStatusCode().isError();
                 if (!loop) {
                     RequestStatusDto statusDto = requestStatusDto.getBody();
                     if (statusDto != null && statusDto.getStatus().compareToIgnoreCase("SUCCESS") == 0) {
@@ -51,11 +52,14 @@ public class RequestStatusComponent {
                     loop = false;
                 }
             }
+            requestCount++;
+            if (requestCount > 3) {
+                loop = false;
+            }
             if (loop) {
                 sleep(waitTime);
+                waitTime *= 3;
             }
-            requestCount++;
-            waitTime *= 3;
         } while (loop);
         return Optional.empty();
     }

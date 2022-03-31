@@ -34,22 +34,18 @@ public class LoanStatementHandler implements LoanProcessHandler {
         boolean loop = true;
         int waitTime = 300;
         do {
-            try {
-                Optional<UUID> requestStatus = requestStatusComponent.checkRequestStatus(loanData.getLastPaymentRequestId());
-                if (requestStatus.isPresent()) {
-                    return true;
-                }
-            } catch (Exception ex) {
-                if (requestCount >= 3) {
-                    log.warn("Request Status exception: {}", ex.getMessage());
-                    loop = false;
-                }
+            Optional<UUID> requestStatus = requestStatusComponent.checkRequestStatus(loanData.getLastPaymentRequestId());
+            if (requestStatus != null && requestStatus.isPresent()) {
+                return true;
+            }
+            requestCount++;
+            if ( requestCount > 3 ) {
+                loop = false;
             }
             if (loop) {
                 sleep(waitTime);
+                waitTime *= 3;
             }
-            requestCount++;
-            waitTime *= 3;
         } while (loop);
         return false;
     }
@@ -60,29 +56,21 @@ public class LoanStatementHandler implements LoanProcessHandler {
         boolean loop = true;
         int waitTime = 300;
         do {
-            try {
-                Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
-                if (loanState.isPresent()) {
-                    LoanDto loanDto = loanState.get();
-                    if (loanDto.getLoanState().equalsIgnoreCase("CLOSED") || ( loanDto.getLastStatementDate() != null && loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate()))) {
-                        loanData.setLoanState(loanDto);
-                        return true;
-                    }
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                if (requestCount >= 3) {
-                    log.warn("Request Status exception: {}", ex.getMessage());
-                    loop = false;
+            Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
+            if (loanState != null && loanState.isPresent()) {
+                LoanDto loanDto = loanState.get();
+                if (loanDto.getLoanState().equalsIgnoreCase("CLOSED") || ( loanDto.getLastStatementDate() != null && loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate()))) {
+                    loanData.setLoanState(loanDto);
+                    return true;
                 }
             }
             requestCount++;
-            waitTime *= 3;
             if ( requestCount > 3 ) {
                 loop = false;
             }
             if (loop) {
                 sleep(waitTime);
+                waitTime *= 3;
             }
         } while (loop);
         return false;

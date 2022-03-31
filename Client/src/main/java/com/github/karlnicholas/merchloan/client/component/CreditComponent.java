@@ -35,17 +35,20 @@ public class CreditComponent {
         do {
             try {
                 ResponseEntity<UUID> creditId = creditRequest(loanId, amount, description);
-                loop = creditId.getStatusCode().isError();
+                loop = creditId == null || creditId.getStatusCode().isError();
                 if (!loop) {
                     return Optional.of(creditId.getBody());
                 }
             } catch (Exception ex) {
                 if (requestCount >= 3) {
-                    log.warn("CREATE ACCOUNT EXCEPTION: {}", ex.getMessage());
+                    log.warn("MAKE PAYMENT EXCEPTION: {}", ex.getMessage());
                     loop = false;
                 }
             }
             requestCount++;
+            if( requestCount > 3) {
+                loop = false;
+            }
         } while (loop);
         return Optional.empty();
     }

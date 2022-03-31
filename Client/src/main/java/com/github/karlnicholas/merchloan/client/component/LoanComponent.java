@@ -46,6 +46,9 @@ public class LoanComponent {
                 }
             }
             requestCount++;
+            if (requestCount > 3) {
+                loop = false;
+            }
         } while (loop);
         return Optional.empty();
     }

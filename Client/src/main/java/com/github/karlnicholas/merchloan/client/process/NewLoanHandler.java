@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @Slf4j
@@ -27,13 +28,12 @@ public class NewLoanHandler implements LoanProcessHandler {
     }
 
     @Override
-    public boolean progressState(LoanData loanData) {
+    public boolean progressState(LoanData loanData) throws ExecutionException, InterruptedException {
         // Open Account
         Optional<UUID> accountId = accountComponent.createAccount(loanData.getCustomer());
         if ( accountId.isEmpty()) {
             return false;
         }
-        sleep(300);
         Optional<UUID> requestId = requestStatusComponent.checkRequestStatus(accountId.get());
         if ( requestId.isEmpty()) {
             return false;
@@ -43,7 +43,6 @@ public class NewLoanHandler implements LoanProcessHandler {
             return false;
         }
         loanData.setLoanId(loanId.get());
-        sleep(300);
         requestId = requestStatusComponent.checkRequestStatus(loanId.get());
         if ( requestId.isEmpty()) {
             return false;
@@ -54,14 +53,5 @@ public class NewLoanHandler implements LoanProcessHandler {
         }
         loanData.setLoanState(loanState.get());
         return true;
-    }
-
-    private void sleep(int waitTime) {
-        try {
-            Thread.sleep(waitTime);
-        } catch ( InterruptedException ex) {
-            log.error("Sleep while check status interrupted: {}", ex.getMessage());
-            Thread.currentThread().interrupt();
-        }
     }
 }

@@ -23,28 +23,10 @@ public class LoanCloseHandler implements LoanProcessHandler {
     @Override
     public boolean progressState(LoanData loanData) {
         Optional<UUID> closeId = closeComponent.closeLoan(loanData.getLoanId(), loanData.getLoanState().getPayoffAmount(), LoanData.CLOSE_DESCRIPTION);
-        if ( closeId.isEmpty()) {
+        if ( closeId == null || closeId.isEmpty()) {
             return false;
         }
         loanData.setLastPaymentRequestId(closeId.get());
-//        sleep(300);
-//        Optional<UUID> requestId = requestStatusComponent.checkRequestStatus(closeId.get());
-//        if ( requestId.isEmpty()) {
-//            return false;
-//        }
-//        Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
-//        if ( loanState.isEmpty()) {
-//            return false;
-//        }
-//        loanData.setLoanState(loanState.get());
         return true;
-    }
-    private void sleep(int waitTime) {
-        try {
-            Thread.sleep(waitTime);
-        } catch ( InterruptedException ex) {
-            log.error("Sleep while check status interrupted: {}", ex.getMessage());
-            Thread.currentThread().interrupt();
-        }
     }
 }

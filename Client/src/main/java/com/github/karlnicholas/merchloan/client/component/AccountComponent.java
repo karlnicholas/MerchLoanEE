@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @Slf4j
@@ -27,25 +28,9 @@ public class AccountComponent {
         return restTemplate.exchange("http://localhost:8080/api/v1/service/accountRequest", HttpMethod.POST, request, UUID.class);
     }
 
-    public Optional<UUID> createAccount(String customer) {
+    public Optional<UUID> createAccount(String customer) throws ExecutionException, InterruptedException {
         // Open Account
-        int requestCount = 0;
-        boolean loop = true;
-        do {
-            try {
-                ResponseEntity<UUID> accountId = accountRequest(customer);
-                loop = accountId.getStatusCode().isError();
-                if ( !loop ) {
-                    return Optional.of(accountId.getBody());
-                }
-            } catch (Exception ex) {
-                if (requestCount >= 3) {
-                    log.warn("CREATE ACCOUNT EXCEPTION: {}", ex.getMessage());
-                    loop = false;
-                }
-            }
-            requestCount++;
-        } while (loop);
-        return Optional.empty();
+        ResponseEntity<UUID> responseEntity = accountRequest(customer);
+        return responseEntity == null ? Optional.empty() : Optional.of(responseEntity.getBody());
     }
 }

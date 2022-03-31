@@ -1,17 +1,18 @@
 package com.github.karlnicholas.merchloan.client;
 
 import com.github.karlnicholas.merchloan.client.component.*;
-import com.github.karlnicholas.merchloan.client.process.BusinessDateMonitor;
-import com.github.karlnicholas.merchloan.client.process.LoanCycleThread;
+import com.github.karlnicholas.merchloan.client.process.LoanCycle;
+import com.github.karlnicholas.merchloan.client.rest.LoanProcessQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
@@ -29,34 +30,28 @@ public class ClientApplication {
     @Autowired
     private CreditComponent creditComponent;
     @Autowired
-    private CloseComponent closeComponent;
-    @Autowired
     private LoanStateComponent loanStateComponent;
     @Autowired
     private RequestStatusComponent requestStatusComponent;
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
-    @Autowired
     private BusinessDateComponent businessDateComponent;
-    private BusinessDateMonitor businessDateMonitor;
-//    private List<LoanCycleThread> threads;
+    @Autowired
+    private LoanProcessQueue loanProcessQueue;
+    private List<LoanCycle> loans;
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadData(ApplicationReadyEvent event) {
-        businessDateMonitor = new BusinessDateMonitor();
         createLoanListeners();
         runBusinessDateThread();
     }
 
     private void createLoanListeners() {
-//        threads = new ArrayList<>();
-        for ( int i =0; i < 50; ++i ) {
+        loans = new ArrayList<>();
+        for ( int i =0; i < 5000; ++i ) {
             int plusDays = ThreadLocalRandom.current().nextInt(30);
 //            int plusDays = 0;
-//            threads.add(new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i));
-            new LoanCycleThread(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, businessDateMonitor, LocalDate.now().plusDays(plusDays), "Client " + i).start();
+            loans.add(new LoanCycle(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));
         }
-//        threads.forEach(Thread::start);
     }
 
     private void runBusinessDateThread() {
@@ -68,24 +63,33 @@ public class ClientApplication {
                 Thread.sleep(5000);
                 int bdRetry;
                 while ( currentDate.isBefore(endDate)) {
-                    bdRetry = 0;
-                    if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
-                        if ( ++bdRetry > 10 ) {
-                            log.error("Business date failed to update");
-                            return;
-                        }
-                        log.info("Business date not ready or did not update");
+                    if ( loanProcessQueue.checkWorking() ) {
+                        log.info("RestQueue still working {}", currentDate);
                         Thread.sleep(500);
                         continue;
                     }
-                    businessDateMonitor.newDate(currentDate);
+                    bdRetry = 0;
+                    if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
+                        if ( ++bdRetry > 10 ) {
+                            log.error("Business date failed to update {}", currentDate);
+                            return;
+                        }
+                        log.info("Business date not ready {}", currentDate);
+                        Thread.sleep(500);
+                        continue;
+                    }
+                    for( LoanCycle loan: loans) {
+                        loan.cycle(loanProcessQueue, currentDate);
+                    }
+                    for( LoanCycle loan: loans) {
+                        loan.updateState(currentDate);
+                    }
                     if ( currentDate.getDayOfMonth() == 1 ) {
                         log.info("{}", currentDate);
                     }
                     currentDate = currentDate.plusDays(1);
                     Thread.sleep(500);
                 }
-                businessDateMonitor.newDate(null);
                 log.info("DATES FINISHED AT {}", currentDate);
 //                threads.forEach(LoanCycleThread::showStatement);
             } catch (InterruptedException e) {

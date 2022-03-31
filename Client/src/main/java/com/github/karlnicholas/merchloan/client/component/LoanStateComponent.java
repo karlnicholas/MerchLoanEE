@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.client.component;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,7 @@ public class LoanStateComponent {
     private ResponseEntity<LoanDto> loanStatus(UUID loanId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        return restTemplate.getForEntity("http://localhost:8090/api/query/loan/{loanId}", LoanDto.class, loanId);
+        return restTemplate.exchange("http://localhost:8090/api/query/loan/{loanId}", HttpMethod.GET, null, LoanDto.class, loanId);
     }
 
     public Optional<LoanDto> checkLoanStatus(UUID loanId) {
@@ -45,6 +46,9 @@ public class LoanStateComponent {
                 }
             }
             requestCount++;
+            if (requestCount > 3) {
+                loop = false;
+            }
         } while (loop);
         return Optional.empty();
     }

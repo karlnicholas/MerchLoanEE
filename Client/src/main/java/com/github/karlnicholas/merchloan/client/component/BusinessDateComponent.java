@@ -33,13 +33,30 @@ public class BusinessDateComponent {
     }
 
     public boolean updateBusinessDate(LocalDate localDate) {
-        ResponseEntity<Boolean> stillProcessingResp = checkStillProcessing();
-        if ( stillProcessingResp.getStatusCode().isError() || stillProcessingResp.getBody().booleanValue() == true) {
+        int requestCount = 0;
+        boolean loop = true;
+        do {
+            try {
+                ResponseEntity<Boolean> stillProcessingResp = checkStillProcessing();
+                if ( stillProcessingResp.getStatusCode().isError() || stillProcessingResp.getBody().booleanValue() == true) {
+                    return false;
+                }
+                loop = false;
+            } catch (Exception ex) {
+                if (requestCount >= 3) {
+                    log.warn("BUSINESS DATE UPDATE EXCEPTION: {}", ex.getMessage());
+                    loop = false;
+                }
+            }
+            requestCount++;
+            if ( requestCount > 3 ) {
+                loop = false;
+            }
+        } while (loop);
+        if ( requestCount >= 3) {
             return false;
         }
         // Open Account
-        int requestCount = 0;
-        boolean loop = true;
         do {
             try {
                 ResponseEntity<Void> requestResponse = postBusinessDate(localDate);

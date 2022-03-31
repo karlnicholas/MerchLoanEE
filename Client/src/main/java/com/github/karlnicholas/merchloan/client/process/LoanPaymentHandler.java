@@ -17,7 +17,7 @@ public class LoanPaymentHandler implements LoanProcessHandler {
     @Override
     public boolean progressState(LoanData loanData) {
         Optional<UUID> creditId = creditComponent.makePayment(loanData.getLoanId(), loanData.getLoanState().getCurrentPayment(), LoanData.PAYMENT_DESCRIPTION);
-        if ( creditId.isEmpty()) {
+        if ( creditId == null || creditId.isEmpty()) {
             return false;
         }
         loanData.setLastPaymentRequestId(creditId.get());
