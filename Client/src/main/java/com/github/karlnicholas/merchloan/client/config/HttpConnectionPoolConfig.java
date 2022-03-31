@@ -10,6 +10,7 @@ public class HttpConnectionPoolConfig {
     public PoolingHttpClientConnectionManager getPoolingHttpClientConnectionManager() {
         PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
         connManager.setMaxTotal(100);
+        connManager.setDefaultMaxPerRoute(100);
         return connManager;
 //        CloseableHttpClient client
 //                = HttpClients.custom().setConnectionManager(poolingConnManager)
