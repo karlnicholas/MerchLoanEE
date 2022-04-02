@@ -2,9 +2,11 @@ package com.github.karlnicholas.merchloan.client.component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.CloseRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -27,8 +29,9 @@ public class CloseComponent {
     private final ObjectMapper objectMapper;
     private final PoolingHttpClientConnectionManager connManager;
 
-    public CloseComponent(ObjectMapper objectMapper, PoolingHttpClientConnectionManager connManager) {
-        this.objectMapper = objectMapper;
+    public CloseComponent(PoolingHttpClientConnectionManager connManager) {
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.connManager = connManager;
     }
 
@@ -42,8 +45,10 @@ public class CloseComponent {
             httpPost.setEntity(strEntity);
 
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                HttpEntity entity = response.getEntity();
-                return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
+                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    HttpEntity entity = response.getEntity();
+                    return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
+                }
             } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }

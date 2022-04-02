@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.client.component;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -37,7 +38,9 @@ public class BusinessDateComponent {
             httpPost.setEntity(strEntity);
 
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                return Optional.of(response.getStatusLine().getStatusCode());
+                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    return Optional.of(response.getStatusLine().getStatusCode());
+                }
             } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }

@@ -3,9 +3,7 @@ package com.github.karlnicholas.merchloan.client.rest;
 import com.github.karlnicholas.merchloan.client.process.LoanData;
 import com.github.karlnicholas.merchloan.client.process.LoanProcessHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -51,5 +49,8 @@ public class LoanProcessQueue {
             else working = true;
         }
         return working;
+    }
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 }

@@ -1,9 +1,11 @@
 package com.github.karlnicholas.merchloan.client.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.dto.RequestStatusDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -24,8 +26,9 @@ public class RequestStatusComponent {
     private final ObjectMapper objectMapper;
     private final PoolingHttpClientConnectionManager connManager;
 
-    public RequestStatusComponent(ObjectMapper objectMapper, PoolingHttpClientConnectionManager connManager) {
-        this.objectMapper = objectMapper;
+    public RequestStatusComponent(PoolingHttpClientConnectionManager connManager) {
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.connManager = connManager;
     }
 
@@ -34,8 +37,10 @@ public class RequestStatusComponent {
             HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/request/" + id.toString());
             httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
             try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-                HttpEntity entity = response.getEntity();
-                return Optional.of(objectMapper.readValue(EntityUtils.toString(entity), RequestStatusDto.class));
+                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    HttpEntity entity = response.getEntity();
+                    return Optional.of(objectMapper.readValue(EntityUtils.toString(entity), RequestStatusDto.class));
+                }
             } catch (ParseException | IOException e) {
                 log.error("accountRequest", e);
             }

@@ -43,45 +43,46 @@ public class ClientApplication {
     private List<LoanCycle> loans;
 
     @EventListener(ApplicationReadyEvent.class)
-    public void loadData(ApplicationReadyEvent event) {
+    public void loadData(ApplicationReadyEvent event) throws InterruptedException {
         createLoanListeners();
         runBusinessDateThread();
     }
 
     private void createLoanListeners() {
         loans = new ArrayList<>();
-        for ( int i =0; i < 100; ++i ) {
+        for ( int i =0; i < 1000; ++i ) {
             int plusDays = ThreadLocalRandom.current().nextInt(30);
 //            int plusDays = 0;
             loans.add(new LoanCycle(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));
         }
     }
 
-    private void runBusinessDateThread() {
+    private void runBusinessDateThread() throws InterruptedException {
         // do something
-        new Thread(()->{
+        Thread thread = new Thread(()->{
             try {
                 LocalDate currentDate = LocalDate.now();
                 LocalDate endDate = currentDate.plusYears(1).plusMonths(2);
                 Thread.sleep(5000);
-                int bdRetry;
+                int bdRetry = 0;
                 while ( currentDate.isBefore(endDate)) {
                     if ( loanProcessQueue.checkWorking() ) {
                         log.info("RestQueue still working {}", currentDate);
                         Thread.sleep(500);
                         continue;
                     }
-                    bdRetry = 0;
                     if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
-                        if ( ++bdRetry > 100 ) {
+                        if ( bdRetry > 100 ) {
                             log.error("Business date failed to update {}", currentDate);
                             return;
                         }
                         if ( bdRetry % 10 == 0 )
                             log.info("Business date not ready {} {}", currentDate, bdRetry);
+                        bdRetry++;
                         Thread.sleep(500);
                         continue;
                     }
+                    bdRetry = 0;
                     for( LoanCycle loan: loans) {
                         loan.cycle(loanProcessQueue, currentDate);
                     }
@@ -92,22 +93,26 @@ public class ClientApplication {
                         log.info("{}", currentDate);
                     }
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(200);
+                    Thread.sleep(250);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
                 loans.forEach(loan->{
                     if ( !loan.checkClosed() )
                         loan.showStatement("Not Closed");
-                    if ( ThreadLocalRandom.current().nextInt(100) == 50) {
-                        loan.showStatement("Show Statement");
-                    }
+//                    if ( ThreadLocalRandom.current().nextInt(100) == 50) {
+//                        loan.showStatement("Show Statement");
+//                    }
                 });
                 log.info("pool stats {} ", httpConnectionPoolConfig.getPoolingHttpClientConnectionManager().getTotalStats());
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);
                 Thread.currentThread().interrupt();
             }
-        }).start();
+        });
+        thread.start();
+        thread.join();
+        httpConnectionPoolConfig.getPoolingHttpClientConnectionManager().close();
+        loanProcessQueue.getExecutorService().shutdown();
     }
 
 }

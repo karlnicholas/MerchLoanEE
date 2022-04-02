@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.client.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.AccountRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.*;
@@ -33,8 +34,9 @@ public class AccountComponent {
     private final ObjectMapper objectMapper;
     private final PoolingHttpClientConnectionManager connManager;
 
-    public AccountComponent(ObjectMapper objectMapper, PoolingHttpClientConnectionManager connManager) {
-        this.objectMapper = objectMapper;
+    public AccountComponent(PoolingHttpClientConnectionManager connManager) {
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.connManager = connManager;
     }
 
@@ -74,8 +76,10 @@ public class AccountComponent {
             httpPost.setEntity(strEntity);
 
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                HttpEntity entity = response.getEntity();
-                return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
+                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    HttpEntity entity = response.getEntity();
+                    return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
+                }
             } catch (ParseException e) {
                 log.error("accountRequest", e);
             }
