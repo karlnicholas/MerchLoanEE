@@ -1,6 +1,6 @@
 package com.github.karlnicholas.merchloan.query.api;
 
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.jms.message.RabbitMqSenderOrig;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -11,9 +11,9 @@ import java.util.UUID;
 
 @Component
 public class ApiHandler {
-    private final RabbitMqSender rabbitMqSender;
+    private final RabbitMqSenderOrig rabbitMqSender;
 
-    public ApiHandler(RabbitMqSender rabbitMqSender) {
+    public ApiHandler(RabbitMqSenderOrig rabbitMqSender) {
         this.rabbitMqSender = rabbitMqSender;
     }
 

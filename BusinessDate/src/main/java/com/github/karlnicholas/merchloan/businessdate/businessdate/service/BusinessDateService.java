@@ -2,11 +2,10 @@ package com.github.karlnicholas.merchloan.businessdate.businessdate.service;
 
 import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.repository.BusinessDateRepository;
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.jms.message.RabbitMqSenderOrig;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.jni.Time;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -19,9 +18,9 @@ import java.util.List;
 public class BusinessDateService {
     private final RedisComponent redisComponent;
     private final BusinessDateRepository businessDateRepository;
-    private final RabbitMqSender rabbitMqSender;
+    private final RabbitMqSenderOrig rabbitMqSender;
 
-    public BusinessDateService(RedisComponent redisComponent, BusinessDateRepository businessDateRepository, RabbitMqSender rabbitMqSender) {
+    public BusinessDateService(RedisComponent redisComponent, BusinessDateRepository businessDateRepository, RabbitMqSenderOrig rabbitMqSender) {
         this.redisComponent = redisComponent;
         this.businessDateRepository = businessDateRepository;
         this.rabbitMqSender = rabbitMqSender;

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping(value = "/api/v1/service/")
 @Slf4j
@@ -22,32 +24,32 @@ public class ServiceRequestController {
         this.serviceRequestRouter = serviceRequestRouter;
     }
     @PostMapping(value = "accountRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String createAccountRequest(@RequestBody AccountRequest accountRequest) throws JsonProcessingException {
+    public String createAccountRequest(@RequestBody AccountRequest accountRequest) throws IOException {
         log.debug("accountRequest: {}", accountRequest);
         return serviceRequestRouter.routeRequest(accountRequest.getClass().getName(), accountRequest, Boolean.FALSE, null).toString();
     }
     @PostMapping(value = "fundingRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String fundingRequest(@RequestBody FundingRequest fundingRequest) throws JsonProcessingException {
+    public String fundingRequest(@RequestBody FundingRequest fundingRequest) throws IOException {
         log.debug("fundingRequest: {}", fundingRequest);
         return serviceRequestRouter.routeRequest(fundingRequest.getClass().getName(), fundingRequest, Boolean.FALSE, null).toString();
     }
     @PostMapping(value = "creditRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String creditRequest(@RequestBody CreditRequest creditRequest) throws JsonProcessingException {
+    public String creditRequest(@RequestBody CreditRequest creditRequest) throws IOException {
         log.debug("creditRequest: {}", creditRequest);
         return serviceRequestRouter.routeRequest(creditRequest.getClass().getName(), creditRequest, Boolean.FALSE, null).toString();
     }
     @PostMapping(value = "debitRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String debitRequest(@RequestBody DebitRequest debitRequest) throws JsonProcessingException {
+    public String debitRequest(@RequestBody DebitRequest debitRequest) throws IOException {
         log.debug("debitRequest: {}", debitRequest);
         return serviceRequestRouter.routeRequest(debitRequest.getClass().getName(), debitRequest, Boolean.FALSE, null).toString();
     }
     @PostMapping(value = "statementRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String statementRequest(@RequestBody StatementRequest statementRequest) throws JsonProcessingException {
+    public String statementRequest(@RequestBody StatementRequest statementRequest) throws IOException {
         log.debug("statementRequest: {}", statementRequest);
         return serviceRequestRouter.routeRequest(statementRequest.getClass().getName(), statementRequest, Boolean.FALSE, null).toString();
     }
     @PostMapping(value = "closeRequest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String fundingRequest(@RequestBody CloseRequest closeRequest) throws JsonProcessingException {
+    public String fundingRequest(@RequestBody CloseRequest closeRequest) throws IOException {
         log.debug("closeRequest: {}", closeRequest);
         return serviceRequestRouter.routeRequest(closeRequest.getClass().getName(), closeRequest, Boolean.FALSE, null).toString();
     }

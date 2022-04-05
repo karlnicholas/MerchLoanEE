@@ -3,15 +3,16 @@ package com.github.karlnicholas.merchloan.servicerequest.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
+import com.github.karlnicholas.merchloan.servicerequest.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,7 +48,7 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
         UUID id = retry.booleanValue() ? existingId : persistRequest(fundingRequest);
         rabbitMqSender.accountFundLoan(
@@ -63,7 +64,7 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
         UUID id = retry.booleanValue() ? existingId : persistRequest(creditRequest);
         rabbitMqSender.accountValidateCredit(
@@ -79,7 +80,7 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
         UUID id = retry.booleanValue() ? existingId : persistRequest(statementRequest);
         rabbitMqSender.statementStatement(
@@ -96,7 +97,7 @@ public class ServiceRequestService {
         );
         return id;
     }
-    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
         UUID id = retry.booleanValue() ? existingId : persistRequest(closeRequest);
         rabbitMqSender.accountCloseLoan(
@@ -114,7 +115,7 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
         UUID id = retry.booleanValue() ? existingId : persistRequest(debitRequest);
         rabbitMqSender.accountValidateDebit(

@@ -6,6 +6,7 @@ import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestSe
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -25,7 +26,7 @@ public class ServiceRequestRouter {
         routingMap.put(StatementRequest.class.getName(), serviceRequestService::statementStatementRequest);
     }
 
-    public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         return routingMap.get(clazz).route(serviceRequestMessage, retry, existingId);
     }
 }

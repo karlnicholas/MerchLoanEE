@@ -2,18 +2,6 @@ spring:
   jpa:
     show-sql: false
     open-in-view: false
-rabbitmq:
-  servicerequest:
-    queue: servicerequest.queue
-    checkrequest:
-      queue: servicerequest.checkrequest.queue
-    billloan:
-      queue: servicerequest.billloan.queue
-    statementcomplete:
-      queue: servicerequest.statementcomplete.queue
-    query:
-      id:
-        queue: servicerequest.querybyid.queue
 logging:
   level:
     com:

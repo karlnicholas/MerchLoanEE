@@ -18,27 +18,28 @@ public class RabbitMqProperties {
     private String username;
     private String exchange;
 
-    private String accountCreateaccountRoutingKey;
-    private String accountFundingRoutingKey;
-    private String accountValidateCreditRoutingkey;
-    private String accountValidateDebitRoutingkey;
-    private String accountCloseLoanRoutingkey;
-    private String accountLoanClosedRoutingkey;
-    private String accountQueryStatementHeaderRoutingKey;
-    private String accountQueryLoansToCycleRoutingkey;
-    private String accountQueryAccountIdRoutingKey;
-    private String accountQueryLoanIdRoutingKey;
-    private String accountBillingCycleChargeRoutingKey;
+    private String accountCreateaccountQueue;
+    private String accountFundingQueue;
+    private String accountValidateCreditQueue;
+    private String accountValidateDebitQueue;
+    private String accountCloseLoanQueue;
+    private String accountLoanClosedQueue;
+    private String accountQueryStatementHeaderQueue;
+    private String accountQueryLoansToCycleQueue;
+    private String accountQueryAccountIdQueue;
+    private String accountQueryLoanIdQueue;
+    private String accountBillingCycleChargeQueue;
+    private String accountPublishChannel;
 
-    private String servicerequestRoutingkey;
-    private String servicerequestQueryIdRoutingkey;
-    private String serviceRequestCheckRequestRoutingkey;
-    private String serviceRequestBillLoanRoutingkey;
-    private String serviceRequestStatementCompleteRoutingkey;
+    private String servicerequestQueue;
+    private String servicerequestQueryIdQueue;
+    private String serviceRequestCheckRequestQueue;
+    private String serviceRequestBillLoanQueue;
+    private String serviceRequestStatementCompleteQueue;
 
-    private String statementStatementRoutingkey;
-    private String statementCloseStatementRoutingkey;
-    private String statementQueryStatementRoutingkey;
-    private String statementQueryStatementsRoutingkey;
-    private String statementQueryMostRecentStatementRoutingkey;
+    private String statementStatementQueue;
+    private String statementCloseStatementQueue;
+    private String statementQueryStatementQueue;
+    private String statementQueryStatementsQueue;
+    private String statementQueryMostRecentStatementQueue;
 }

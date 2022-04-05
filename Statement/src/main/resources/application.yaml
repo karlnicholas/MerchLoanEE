@@ -1,19 +1,6 @@
 spring:
   jpa:
     show-sql: false
-rabbitmq:
-  statement:
-    statement:
-      queue: statement.statement.queue
-    closestatement:
-      queue: statement.closestatement.queue
-    query:
-      statement:
-        queue: statement.query.statement.queue
-      mostrecentstatement:
-        queue: statement.query.mostrecentstatement.queue
-      statements:
-        queue: statement.query.statements.queue
 logging:
   level:
     com:

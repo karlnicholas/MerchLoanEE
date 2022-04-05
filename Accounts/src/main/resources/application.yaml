@@ -1,34 +1,6 @@
 spring:
   jpa:
     show-sql: false
-rabbitmq:
-  account:
-    createaccount:
-      queue: account.createaccount.queue
-    funding:
-      queue: account.funding.queue
-    validate:
-      credit:
-        queue: account.validate.credit.queue
-      debit:
-        queue: account.validate.debit.queue
-    closeloan:
-      queue: account.closeloan.queue
-    loanclosed:
-      queue: account.loanclosed.queue
-    billingcyclecharge:
-      queue: account.billingcyclecharge.queue
-    query:
-      account:
-        id:
-          queue: account.query.account.id.queue
-      loan:
-        id:
-          queue: account.query.loan.id.queue
-      statementheader:
-        queue: account.query.statementheader.queue
-      loanstocycle:
-        queue: account.query.loanstocycle.queue
 logging:
   level:
     com:

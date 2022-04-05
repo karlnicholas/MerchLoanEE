@@ -3,18 +3,16 @@ package com.github.karlnicholas.merchloan.statement.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
+import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpRejectAndDontRequeueException;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
-import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.stereotype.Component;
+import org.springframework.util.SerializationUtils;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
@@ -22,7 +20,7 @@ import java.util.UUID;
 
 @Component
 @Slf4j
-public class RabbitMqReceiver implements RabbitListenerConfigurer {
+public class RabbitMqReceiver {
     private final StatementService statementService;
     private final QueryService queryService;
     private final RabbitMqSender rabbitMqSender;
@@ -38,13 +36,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
-    @Override
-    public void configureRabbitListeners(RabbitListenerEndpointRegistrar rabbitListenerEndpointRegistrar) {
-        // no configuration needed
-    }
-
-    @RabbitListener(queues = "${rabbitmq.statement.statement.queue}", returnExceptions = "true")
-    public void receivedStatementMessage(StatementHeader statementHeader) {
+    public void receivedStatementMessage(String consumerTag, Delivery delivery) throws IOException {
+        StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
         StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
                 .id(statementHeader.getId())
                 .statementDate(statementHeader.getStatementDate())
@@ -122,7 +115,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         } catch (Exception ex) {
             log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
         } finally {
             //TODO: Sloppy
             if (!requestResponse.getStatusMessage().equalsIgnoreCase("Loan Closed")) {
@@ -131,8 +123,8 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
         }
     }
 
-    @RabbitListener(queues = "${rabbitmq.statement.closestatement.queue}", returnExceptions = "true")
-    public void receivedCloseStatementMessage(StatementHeader statementHeader) {
+    public void receivedCloseStatementMessage(String consumerTag, Delivery delivery) {
+        StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
         try {
             log.debug("receivedCloseStatementMessage {}", statementHeader);
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
@@ -165,47 +157,6 @@ public class RabbitMqReceiver implements RabbitListenerConfigurer {
             } catch (Exception innerEx) {
                 log.error("ERROR SENDING ERROR", ex);
             }
-            throw new AmqpRejectAndDontRequeueException(ex);
         }
     }
-
-    @RabbitListener(queues = "${rabbitmq.statement.query.statement.queue}", returnExceptions = "true")
-    public String receivedQueryStatementMessage(UUID loanId) {
-        try {
-            log.debug("receivedQueryStatementMessage {}", loanId);
-            return queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
-        } catch (Exception ex) {
-            log.error("String receivedQueryStatementMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    @RabbitListener(queues = "${rabbitmq.statement.query.mostrecentstatement.queue}", returnExceptions = "true")
-    public MostRecentStatement receivedQueryMostRecentStatementMessage(UUID loanId) {
-        try {
-            log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
-            return queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
-                    .id(statement.getId())
-                    .loanId(loanId)
-                    .statementDate(statement.getStatementDate())
-                    .endingBalance(statement.getEndingBalance())
-                    .startingBalance(statement.getStartingBalance())
-                    .build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
-        } catch (Exception ex) {
-            log.error("String receivedQueryMostRecentStatementMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
-    @RabbitListener(queues = "${rabbitmq.statement.query.statements.queue}", returnExceptions = "true")
-    public String receivedQueryStatementsMessage(UUID id) {
-        try {
-            log.debug("receivedQueryStatementsMessage Received {}", id);
-            return objectMapper.writeValueAsString(queryService.findByLoanId(id));
-        } catch (Exception ex) {
-            log.error("String receivedQueryStatementsMessage(UUID id) exception {}", ex.getMessage());
-            throw new AmqpRejectAndDontRequeueException(ex);
-        }
-    }
-
 }

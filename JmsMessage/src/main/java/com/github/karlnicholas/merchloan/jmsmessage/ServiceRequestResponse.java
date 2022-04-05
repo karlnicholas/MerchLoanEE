@@ -32,26 +32,30 @@ public class ServiceRequestResponse implements Serializable {
     }
 
     // SUCCESS is with "SUCCESS" statusMessage
-    public void setSuccess() {
+    public ServiceRequestResponse setSuccess() {
         this.status = ServiceRequestMessage.STATUS.SUCCESS;
         this.statusMessage = ServiceRequestMessage.STATUS.SUCCESS.name();
+        return this;
     }
 
     // SUCCESS is good.
-    public void setSuccess(String statusMessage) {
+    public ServiceRequestResponse setSuccess(String statusMessage) {
         this.status = ServiceRequestMessage.STATUS.SUCCESS;
         this.statusMessage = statusMessage;
+        return this;
     }
 
     // FAILURE is fatal and requires intervention
-    public void setFailure(String statusMessage) {
+    public ServiceRequestResponse setFailure(String statusMessage) {
         this.status = ServiceRequestMessage.STATUS.FAILURE;
         this.statusMessage = statusMessage;
+        return this;
     }
 
     // ERROR can be retried
-    public void setError(String statusMessage) {
+    public ServiceRequestResponse setError(String statusMessage) {
         this.status = ServiceRequestMessage.STATUS.ERROR;
         this.statusMessage = statusMessage;
+        return this;
     }
 }
