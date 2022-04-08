@@ -26,35 +26,6 @@ public class RabbitMqSender {
         Connection connection = connectionFactory.newConnection();
         querySendQueue = connection.createChannel();
 
-//        servicerequestQueryIdQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-//        servicerequestQueryIdQueue.queueDeclare(rabbitMqProperties.getServicerequestQueryIdQueue(), false, false, false, null);
-//        servicerequestQueryIdQueue.exchangeBind(rabbitMqProperties.getServicerequestQueryIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueryIdQueue());
-//
-//        accountQueryAccountIdQueue = connection.createChannel();
-//        accountQueryAccountIdQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-//        accountQueryAccountIdQueue.queueDeclare(rabbitMqProperties.getAccountQueryAccountIdQueue(), false, false, false, null);
-//        accountQueryAccountIdQueue.exchangeBind(rabbitMqProperties.getAccountQueryAccountIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdQueue());
-//
-//        accountQueryLoanIdQueue = connection.createChannel();
-//        accountQueryLoanIdQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-//        accountQueryLoanIdQueue.queueDeclare(rabbitMqProperties.getAccountQueryLoanIdQueue(), false, false, false, null);
-//        accountQueryLoanIdQueue.exchangeBind(rabbitMqProperties.getAccountQueryLoanIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdQueue());
-//
-//        statementQueryStatementQueue = connection.createChannel();
-//        statementQueryStatementQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-//        statementQueryStatementQueue.queueDeclare(rabbitMqProperties.getStatementQueryStatementQueue(), false, false, false, null);
-//        statementQueryStatementQueue.exchangeBind(rabbitMqProperties.getStatementQueryStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementQueue());
-//
-//        statementQueryStatementsQueue = connection.createChannel();
-//        statementQueryStatementsQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-//        statementQueryStatementsQueue.queueDeclare(rabbitMqProperties.getStatementQueryStatementsQueue(), false, false, false, null);
-//        statementQueryStatementsQueue.exchangeBind(rabbitMqProperties.getStatementQueryStatementsQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementsQueue());
-//
-//        serviceRequestCheckRequestQueue = connection.createChannel();
-//        serviceRequestCheckRequestQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-//        serviceRequestCheckRequestQueue.queueDeclare(rabbitMqProperties.getServiceRequestCheckRequestQueue(), false, false, false, null);
-//        serviceRequestCheckRequestQueue.exchangeBind(rabbitMqProperties.getServiceRequestCheckRequestQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestQueue());
-
         connection = connectionFactory.newConnection();
         Channel queryReplyQueue = connection.createChannel();
         queryReplyQueue.queueDeclare(rabbitMqProperties.getQueryReplyQueue(), false, true, true, null);
