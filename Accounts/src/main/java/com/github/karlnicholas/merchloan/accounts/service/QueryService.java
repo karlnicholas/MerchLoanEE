@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
+import com.github.karlnicholas.merchloan.accounts.message.RabbitMqSender;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
@@ -7,13 +8,13 @@ import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
 import com.github.karlnicholas.merchloan.accounts.repository.RegisterEntryRepository;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSenderOrig;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -26,11 +27,11 @@ import java.util.UUID;
 public class QueryService {
     private final AccountRepository accountRepository;
     private final LoanRepository loanRepository;
-    private final RabbitMqSenderOrig rabbitMqSender;
+    private final RabbitMqSender rabbitMqSender;
     private final RegisterEntryRepository registerEntryRepository;
 
     @Autowired
-    public QueryService(AccountRepository accountRepository, LoanRepository loanRepository, RabbitMqSenderOrig rabbitMqSender, RegisterEntryRepository registerEntryRepository) {
+    public QueryService(AccountRepository accountRepository, LoanRepository loanRepository, RabbitMqSender rabbitMqSender, RegisterEntryRepository registerEntryRepository) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
         this.rabbitMqSender = rabbitMqSender;
@@ -40,7 +41,7 @@ public class QueryService {
     public Optional<Account> queryAccountId(UUID id) {
         return accountRepository.findById(id);
     }
-    public Optional<LoanDto> queryLoanId(UUID loanId) {
+    public Optional<LoanDto> queryLoanId(UUID loanId) throws IOException, InterruptedException {
         // get last statement
         // get register entries
         // return last statement date
@@ -73,7 +74,7 @@ public class QueryService {
         }
     }
 
-    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) {
+    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws IOException, InterruptedException {
         // get most recent statement
         MostRecentStatement mostRecentStatement = (MostRecentStatement) rabbitMqSender.queryMostRecentStatement(loanId);
         // generate a simulated new statement for current period

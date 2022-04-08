@@ -34,7 +34,7 @@ public class ServiceRequestService {
 
     public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
         AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
-        UUID id = retry.booleanValue() ? existingId : persistRequest(accountRequest);
+        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(accountRequest);
         try {
             rabbitMqSender.accountCreateAccount(CreateAccount.builder()
                     .id(id)
@@ -50,7 +50,7 @@ public class ServiceRequestService {
 
     public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
-        UUID id = retry.booleanValue() ? existingId : persistRequest(fundingRequest);
+        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(fundingRequest);
         rabbitMqSender.accountFundLoan(
                 FundLoan.builder()
                         .id(id)
@@ -66,7 +66,7 @@ public class ServiceRequestService {
 
     public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
-        UUID id = retry.booleanValue() ? existingId : persistRequest(creditRequest);
+        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(creditRequest);
         rabbitMqSender.accountValidateCredit(
                 CreditLoan.builder()
                         .id(id)
@@ -82,7 +82,7 @@ public class ServiceRequestService {
 
     public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
-        UUID id = retry.booleanValue() ? existingId : persistRequest(statementRequest);
+        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
         rabbitMqSender.statementStatement(
                 StatementHeader.builder()
                         .id(id)
@@ -97,9 +97,10 @@ public class ServiceRequestService {
         );
         return id;
     }
+
     public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
-        UUID id = retry.booleanValue() ? existingId : persistRequest(closeRequest);
+        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(closeRequest);
         rabbitMqSender.accountCloseLoan(
                 CloseLoan.builder()
                         .id(id)
@@ -117,7 +118,7 @@ public class ServiceRequestService {
 
     public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
-        UUID id = retry.booleanValue() ? existingId : persistRequest(debitRequest);
+        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(debitRequest);
         rabbitMqSender.accountValidateDebit(
                 DebitLoan.builder()
                         .id(id)

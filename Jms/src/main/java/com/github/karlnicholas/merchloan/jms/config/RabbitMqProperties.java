@@ -30,6 +30,7 @@ public class RabbitMqProperties {
     private String accountQueryLoanIdQueue;
     private String accountBillingCycleChargeQueue;
     private String accountPublishChannel;
+    private String accountReplyQueue;
 
     private String servicerequestQueue;
     private String servicerequestQueryIdQueue;
@@ -42,4 +43,8 @@ public class RabbitMqProperties {
     private String statementQueryStatementQueue;
     private String statementQueryStatementsQueue;
     private String statementQueryMostRecentStatementQueue;
+    private String statementReplyQueue;
+
+    private String businessDateReplyQueue;
+
 }

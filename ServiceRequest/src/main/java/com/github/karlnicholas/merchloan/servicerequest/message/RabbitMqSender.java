@@ -90,4 +90,5 @@ public class RabbitMqSender {
         log.debug("accountCloseLoan: {}", closeLoan);
         accountCloseLoanChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue(), null, SerializationUtils.serialize(closeLoan));
     }
+
 }
