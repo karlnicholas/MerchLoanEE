@@ -16,7 +16,7 @@ import java.util.concurrent.TimeoutException;
 @Service
 @Slf4j
 public class RabbitMqSender {
-    private RabbitMqProperties rabbitMqProperties;
+    private final RabbitMqProperties rabbitMqProperties;
     private final Channel serviceRequestCheckRequestQueue;
     private final Channel accountQueryLoansToCycleQueue;
     private final Channel serviceRequestBillLoanQueue;

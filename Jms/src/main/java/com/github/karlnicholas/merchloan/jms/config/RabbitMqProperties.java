@@ -47,4 +47,5 @@ public class RabbitMqProperties {
 
     private String businessDateReplyQueue;
 
+    private String queryReplyQueue;
 }
