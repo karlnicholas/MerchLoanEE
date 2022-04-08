@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -78,7 +77,7 @@ public class RabbitMQConfig {
         UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
         log.debug("receivedQueryStatementMessage {}", loanId);
         String result = queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
-        reply(delivery, result.getBytes(StandardCharsets.UTF_8));
+        reply(delivery, result);
     }
 
     public void receivedQueryMostRecentStatementMessage(String consumerTag, Delivery delivery) throws IOException {
@@ -91,22 +90,21 @@ public class RabbitMQConfig {
                 .endingBalance(statement.getEndingBalance())
                 .startingBalance(statement.getStartingBalance())
                 .build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
-        reply(delivery, objectMapper.writeValueAsString(mostRecentStatement).getBytes(StandardCharsets.UTF_8));
+        reply(delivery, objectMapper.writeValueAsString(mostRecentStatement));
     }
 
     public void receivedQueryStatementsMessage(String consumerTag, Delivery delivery) throws IOException {
         UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
         log.debug("receivedQueryStatementsMessage Received {}", id);
         String result = objectMapper.writeValueAsString(queryService.findByLoanId(id));
-        reply(delivery, result.getBytes(StandardCharsets.UTF_8));
+        reply(delivery, result);
     }
 
-    private void reply(Delivery delivery, byte[] data) throws IOException {
+    private void reply(Delivery delivery, Object data) throws IOException {
         AMQP.BasicProperties replyProps = new AMQP.BasicProperties
                 .Builder()
                 .correlationId(delivery.getProperties().getCorrelationId())
                 .build();
-        replyChannel.basicPublish(rabbitMqProperties.getExchange(), delivery.getProperties().getReplyTo(), replyProps, data);
-        replyChannel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+        replyChannel.basicPublish(rabbitMqProperties.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
     }
 }

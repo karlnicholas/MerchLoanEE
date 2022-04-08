@@ -19,76 +19,71 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
-    private final Channel accountCreateAccountChannel;
-    private final Channel accountFundLoanChannel;
-    private final Channel accountValidateCreditChannel;
-    private final Channel accountValidateDebitChannel;
-    private final Channel statementStatementChannel;
-    private final Channel accountCloseLoanChannel;
+    private final Channel serviceRequestSenderChannel;
+//    private final Channel accountFundLoanChannel;
+//    private final Channel accountValidateCreditChannel;
+//    private final Channel accountValidateDebitChannel;
+//    private final Channel statementStatementChannel;
+//    private final Channel accountCloseLoanChannel;
 
     @Autowired
     public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         Connection connection = connectionFactory.newConnection();
-        accountCreateAccountChannel = connection.createChannel();
-        accountCreateAccountChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-        accountCreateAccountChannel.queueDeclare(rabbitMqProperties.getAccountCreateaccountQueue(), false, false, false, null);
-        accountCreateAccountChannel.exchangeBind(rabbitMqProperties.getAccountCreateaccountQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountQueue());
-
-        accountFundLoanChannel = connection.createChannel();
-        accountFundLoanChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-        accountFundLoanChannel.queueDeclare(rabbitMqProperties.getAccountFundingQueue(), false, false, false, null);
-        accountFundLoanChannel.exchangeBind(rabbitMqProperties.getAccountFundingQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingQueue());
-
-        accountValidateCreditChannel = connection.createChannel();
-        accountValidateCreditChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-        accountValidateCreditChannel.queueDeclare(rabbitMqProperties.getAccountValidateCreditQueue(), false, false, false, null);
-        accountValidateCreditChannel.exchangeBind(rabbitMqProperties.getAccountValidateCreditQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditQueue());
-
-        accountValidateDebitChannel = connection.createChannel();
-        accountValidateDebitChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-        accountValidateDebitChannel.queueDeclare(rabbitMqProperties.getAccountValidateDebitQueue(), false, false, false, null);
-        accountValidateDebitChannel.exchangeBind(rabbitMqProperties.getAccountValidateDebitQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitQueue());
-
-        statementStatementChannel = connection.createChannel();
-        statementStatementChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-        statementStatementChannel.queueDeclare(rabbitMqProperties.getStatementStatementQueue(), false, false, false, null);
-        statementStatementChannel.exchangeBind(rabbitMqProperties.getStatementStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue());
-
-        accountCloseLoanChannel = connection.createChannel();
-        accountCloseLoanChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT);
-        accountCloseLoanChannel.queueDeclare(rabbitMqProperties.getAccountCloseLoanQueue(), false, false, false, null);
-        accountCloseLoanChannel.exchangeBind(rabbitMqProperties.getAccountCloseLoanQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue());
+        serviceRequestSenderChannel = connection.createChannel();
+//        serviceRequestSenderChannel.queueDeclare(rabbitMqProperties.getAccountCreateaccountQueue(), false, true, true, null);
+//        serviceRequestSenderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+//        serviceRequestSenderChannel.queueBind(rabbitMqProperties.getAccountCreateaccountQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountQueue());
+//
+//        serviceRequestSenderChannel.queueDeclare(rabbitMqProperties.getAccountFundingQueue(), false, true, true, null);
+//        serviceRequestSenderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+//        serviceRequestSenderChannel.queueBind(rabbitMqProperties.getAccountFundingQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingQueue());
+//
+//        serviceRequestSenderChannel.queueDeclare(rabbitMqProperties.getAccountValidateCreditQueue(), false, true, true, null);
+//        serviceRequestSenderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+//        serviceRequestSenderChannel.queueBind(rabbitMqProperties.getAccountValidateCreditQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditQueue());
+//
+//        serviceRequestSenderChannel.queueDeclare(rabbitMqProperties.getAccountValidateDebitQueue(), false, true, true, null);
+//        serviceRequestSenderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+//        serviceRequestSenderChannel.queueBind(rabbitMqProperties.getAccountValidateDebitQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitQueue());
+//
+//        serviceRequestSenderChannel.queueDeclare(rabbitMqProperties.getStatementStatementQueue(), false, true, true, null);
+//        serviceRequestSenderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+//        serviceRequestSenderChannel.queueBind(rabbitMqProperties.getStatementStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue());
+//
+//        serviceRequestSenderChannel.queueDeclare(rabbitMqProperties.getAccountCloseLoanQueue(), false, true, true, null);
+//        serviceRequestSenderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+//        serviceRequestSenderChannel.queueBind(rabbitMqProperties.getAccountCloseLoanQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue());
     }
 
     public void accountCreateAccount(CreateAccount createAccount) throws IOException {
         log.debug("accountCreateAccount: {}", createAccount);
-        accountCreateAccountChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountQueue(), null, SerializationUtils.serialize(createAccount));
+        serviceRequestSenderChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountQueue(), null, SerializationUtils.serialize(createAccount));
     }
 
     public void accountFundLoan(FundLoan fundLoan) throws IOException {
         log.debug("accountFundLoan: {}", fundLoan);
-        accountFundLoanChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingQueue(), null, SerializationUtils.serialize(fundLoan));
+        serviceRequestSenderChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingQueue(), null, SerializationUtils.serialize(fundLoan));
     }
 
     public void accountValidateCredit(CreditLoan creditLoan) throws IOException {
         log.debug("accountValidateCredit: {}", creditLoan);
-        accountValidateCreditChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditQueue(), null, SerializationUtils.serialize(creditLoan));
+        serviceRequestSenderChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditQueue(), null, SerializationUtils.serialize(creditLoan));
     }
 
     public void accountValidateDebit(DebitLoan debitLoan) throws IOException {
         log.debug("accountValidateDebit: {}", debitLoan);
-        accountValidateDebitChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitQueue(), null, SerializationUtils.serialize(debitLoan));
+        serviceRequestSenderChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitQueue(), null, SerializationUtils.serialize(debitLoan));
     }
 
     public void statementStatement(StatementHeader statementHeader) throws IOException {
         log.debug("statementStatement: {}", statementHeader);
-        statementStatementChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue(), null, SerializationUtils.serialize(statementHeader));
+        serviceRequestSenderChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue(), null, SerializationUtils.serialize(statementHeader));
     }
 
     public void accountCloseLoan(CloseLoan closeLoan) throws IOException {
         log.debug("accountCloseLoan: {}", closeLoan);
-        accountCloseLoanChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue(), null, SerializationUtils.serialize(closeLoan));
+        serviceRequestSenderChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue(), null, SerializationUtils.serialize(closeLoan));
     }
 
 }

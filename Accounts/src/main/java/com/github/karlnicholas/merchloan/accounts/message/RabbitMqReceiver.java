@@ -183,21 +183,6 @@ public class RabbitMqReceiver {
         }
     }
 
-//    public void registerCloseLoan(CloseLoan closeLoan) {
-//        try {
-//            log.info("CloseLoan Received {}", closeLoan);
-//        } catch (Exception ex) {
-//            log.error("void receivedDebitLoanMessage(DebitLoan debitLoan) exception {}", ex.getMessage());
-//            try {
-//                ServiceRequestResponse requestResponse = new ServiceRequestResponse(closeLoan.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
-//                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
-//            } catch (Exception innerEx) {
-//                log.error("ERROR SENDING ERROR", ex);
-//            }
-//            throw new AmqpRejectAndDontRequeueException(ex);
-//        }
-//    }
-
     public void receivedLoanClosedMessage(String consumerTag, Delivery delivery) throws IOException {
         StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();

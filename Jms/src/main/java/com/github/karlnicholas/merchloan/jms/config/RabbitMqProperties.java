@@ -37,6 +37,7 @@ public class RabbitMqProperties {
     private String serviceRequestCheckRequestQueue;
     private String serviceRequestBillLoanQueue;
     private String serviceRequestStatementCompleteQueue;
+    private String serviceRequestResponseQueue;
 
     private String statementStatementQueue;
     private String statementCloseStatementQueue;
@@ -48,4 +49,5 @@ public class RabbitMqProperties {
     private String businessDateReplyQueue;
 
     private String queryReplyQueue;
+
 }
