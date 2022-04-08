@@ -109,7 +109,7 @@ public class RabbitMQConfig {
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
             if (serviceRequestResponse.isSuccess())
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-            reply(delivery, objectMapper.writeValueAsString(statementHeader));
+            reply(delivery, statementHeader);
         } catch (Exception ex) {
             log.error("receivedStatementHeaderMessage exception {}", ex.getMessage());
         }
@@ -119,7 +119,7 @@ public class RabbitMQConfig {
         LocalDate businessDate = (LocalDate) SerializationUtils.deserialize(delivery.getBody());
         try {
             log.debug("receivedLoansToCyceMessage {}", businessDate);
-            reply(delivery, objectMapper.writeValueAsString(accountManagementService.loansToCycle(businessDate)));
+            reply(delivery, accountManagementService.loansToCycle(businessDate));
         } catch (Exception ex) {
             log.error("receivedLoansToCyceMessage exception {}", ex.getMessage());
         }
@@ -137,7 +137,7 @@ public class RabbitMQConfig {
                     .debit(re.getDebit())
                     .description(re.getDescription())
                     .build();
-            reply(delivery, objectMapper.writeValueAsString(registerEntryMessage));
+            reply(delivery, registerEntryMessage);
         } catch (Exception ex) {
             log.error("receivedBillingCycleChargeMessage exception {}", ex.getMessage());
         }

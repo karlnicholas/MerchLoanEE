@@ -31,7 +31,7 @@ public class BusinessDateService {
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) throws IOException, InterruptedException {
         Optional<BusinessDate> existingBusinessDate = businessDateRepository.findById(1L);
-        if ( existingBusinessDate.isEmpty()) {
+        if ( existingBusinessDate.isPresent()) {
             Instant start = Instant.now();
             BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(existingBusinessDate.get().getBusinessDate()).build();
             Boolean requestPending = null;
@@ -45,7 +45,7 @@ public class BusinessDateService {
             log.info("updateBusinessDate {} {}", businessDate, Duration.between(start, Instant.now()));
             return priorBusinessDate;
         } else {
-            throw new IllegalStateException("Business Date already exists: " + businessDate);
+            throw new IllegalStateException("Business Date No State: " + businessDate);
         }
     }
 

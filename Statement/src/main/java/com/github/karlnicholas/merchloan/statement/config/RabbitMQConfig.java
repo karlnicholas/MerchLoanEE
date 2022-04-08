@@ -23,10 +23,13 @@ public class RabbitMQConfig {
     private final QueryService queryService;
     private Channel statementReceiveChannel;
     private Channel responseChannel;
+    private final ObjectMapper objectMapper;
 
     public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, RabbitMqReceiver rabbitMqReceiver, QueryService queryService, ConnectionFactory connectionFactory) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         this.queryService = queryService;
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         Connection connection = connectionFactory.newConnection();
         statementReceiveChannel = connection.createChannel();
@@ -80,7 +83,7 @@ public class RabbitMQConfig {
     public void receivedQueryStatementsMessage(String consumerTag, Delivery delivery) throws IOException {
         UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
         log.debug("receivedQueryStatementsMessage Received {}", id);
-        reply(delivery, queryService.findByLoanId(id));
+        reply(delivery, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
     }
 
     private void reply(Delivery delivery, Object data) throws IOException {
