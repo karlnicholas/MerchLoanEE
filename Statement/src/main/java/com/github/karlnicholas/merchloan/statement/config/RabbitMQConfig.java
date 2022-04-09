@@ -38,23 +38,28 @@ public class RabbitMQConfig {
 //                .with(rabbitMqProperties.getStatementStatementRoutingkey())
         statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementStatementQueue(), false, true, true, null);
         statementReceiveChannel.queueBind(rabbitMqProperties.getStatementStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementStatementQueue(), true, rabbitMqReceiver::receivedStatementMessage, consumerTag -> {});
+        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementStatementQueue(), true, rabbitMqReceiver::receivedStatementMessage, consumerTag -> {
+        });
 //                .with(rabbitMqProperties.getStatementCloseStatementRoutingkey())
         statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementCloseStatementQueue(), false, true, true, null);
         statementReceiveChannel.queueBind(rabbitMqProperties.getStatementCloseStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementCloseStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementCloseStatementQueue(), true, rabbitMqReceiver::receivedCloseStatementMessage, consumerTag -> {});
+        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementCloseStatementQueue(), true, rabbitMqReceiver::receivedCloseStatementMessage, consumerTag -> {
+        });
 //                .with(rabbitMqProperties.getStatementQueryStatementRoutingkey())
         statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryStatementQueue(), false, true, true, null);
         statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementQueue(), true, this::receivedQueryStatementMessage, consumerTag -> {});
+        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementQueue(), true, this::receivedQueryStatementMessage, consumerTag -> {
+        });
 //                .with(rabbitMqProperties.getStatementQueryStatementsRoutingkey())
         statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryStatementsQueue(), false, true, true, null);
         statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryStatementsQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementsQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementsQueue(), true, this::receivedQueryStatementsMessage, consumerTag -> {});
+        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementsQueue(), true, this::receivedQueryStatementsMessage, consumerTag -> {
+        });
 //                .with(rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey())
         statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), false, true, true, null);
         statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {});
+        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {
+        });
 
         connection = connectionFactory.newConnection();
         responseChannel = connection.createChannel();
@@ -69,14 +74,15 @@ public class RabbitMQConfig {
 
     public void receivedQueryMostRecentStatementMessage(String consumerTag, Delivery delivery) throws IOException {
         UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
+        log.info("receivedQueryMostRecentStatementMessage {}", loanId);
         MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
-                .id(statement.getId())
-                .loanId(loanId)
-                .statementDate(statement.getStatementDate())
-                .endingBalance(statement.getEndingBalance())
-                .startingBalance(statement.getStartingBalance())
-                .build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
+                        .id(statement.getId())
+                        .loanId(loanId)
+                        .statementDate(statement.getStatementDate())
+                        .endingBalance(statement.getEndingBalance())
+                        .startingBalance(statement.getStartingBalance())
+                        .build())
+                .orElse(MostRecentStatement.builder().loanId(loanId).build());
         reply(delivery, mostRecentStatement);
     }
 

@@ -49,7 +49,7 @@ public class ApiHandler {
 
     public Mono<ServerResponse> getCheckRequests(ServerRequest serverRequest) {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
-                Mono.fromSupplier(()->rabbitMqSender.servicerequestCheckRequest())
+                Mono.fromSupplier(()->rabbitMqSender.queryCheckRequest())
                 , Boolean.class);
     }
 }

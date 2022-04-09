@@ -64,13 +64,13 @@ public class RabbitMqSender {
     }
 
     public Object queryMostRecentStatement(UUID loanId) throws IOException, InterruptedException {
-        log.debug("queryMostRecentStatement: {}", loanId);
+        log.info("queryMostRecentStatement: {}", loanId);
         String responseKey = UUID.randomUUID().toString();
         repliesWaiting.put(responseKey, null);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getAccountReplyQueue()).build();
         accountSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);

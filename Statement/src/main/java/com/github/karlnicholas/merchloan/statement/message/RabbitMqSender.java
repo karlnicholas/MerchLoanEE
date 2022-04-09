@@ -48,7 +48,7 @@ public class RabbitMqSender {
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getStatementReplyQueue()).build();
         statementSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeQueue(), props, SerializationUtils.serialize(billingCycleCharge));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);
@@ -62,7 +62,7 @@ public class RabbitMqSender {
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getStatementReplyQueue()).build();
         statementSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryStatementHeaderQueue(), props, SerializationUtils.serialize(statementHeader));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);
