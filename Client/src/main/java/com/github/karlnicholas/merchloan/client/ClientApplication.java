@@ -97,7 +97,6 @@ public class ClientApplication {
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
                 int[] first = new int[1];
-                first[0] = 0;
                 loans.forEach(loan->{
                     if ( !loan.checkClosed() )
                         loan.showStatement("Not Closed");
@@ -105,9 +104,6 @@ public class ClientApplication {
                         loan.showStatement("Show Statement");
                         first[0] = 1;
                     }
-//                    if ( ThreadLocalRandom.current().nextInt(100) == 50) {
-//                        loan.showStatement("Show Statement");
-//                    }
                 });
                 log.info("pool stats {} ", httpConnectionPoolConfig.getPoolingHttpClientConnectionManager().getTotalStats());
             } catch (InterruptedException e) {
