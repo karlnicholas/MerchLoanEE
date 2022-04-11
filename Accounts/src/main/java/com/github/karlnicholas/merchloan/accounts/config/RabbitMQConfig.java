@@ -105,7 +105,7 @@ public class RabbitMQConfig {
     public void receivedStatementHeaderMessage(String consumerTag, Delivery delivery) {
         StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
         try {
-            log.debug("receivedStatementHeaderMessage {}", statementHeader);
+            log.info("receivedStatementHeaderMessage {}", statementHeader);
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
             if (serviceRequestResponse.isSuccess())
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);

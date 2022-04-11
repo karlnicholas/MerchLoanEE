@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 
 @Component
@@ -22,13 +24,14 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
     private final Channel statementSendChannel;
-    private final Map<String, Object> repliesWaiting;
+    private final ConcurrentMap<String, Object> repliesWaiting;
     private static final int responseTimeout = 10000;
+    private static final String emptyString = "";
 
     @Autowired
     public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
-        repliesWaiting = new TreeMap<>();
+        repliesWaiting = new ConcurrentHashMap<>();
         Connection connection = connectionFactory.newConnection();
         statementSendChannel = connection.createChannel();
 
@@ -43,12 +46,12 @@ public class RabbitMqSender {
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws IOException, InterruptedException {
         log.debug("accountBillingCycleCharge: {}", billingCycleCharge);
-        String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, null);
+        String responseKey = billingCycleCharge.getId().toString();
+        repliesWaiting.put(responseKey, emptyString);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getStatementReplyQueue()).build();
         statementSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeQueue(), props, SerializationUtils.serialize(billingCycleCharge));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == emptyString ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);
@@ -56,13 +59,13 @@ public class RabbitMqSender {
     }
 
     public Object accountQueryStatementHeader(StatementHeader statementHeader) throws IOException, InterruptedException {
-        log.debug("accountQueryStatementHeader: {}", statementHeader);
-        String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, null);
+        log.info("accountQueryStatementHeader: {}", statementHeader);
+        String responseKey = statementHeader.getId().toString();
+        repliesWaiting.put(responseKey, emptyString);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getStatementReplyQueue()).build();
         statementSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryStatementHeaderQueue(), props, SerializationUtils.serialize(statementHeader));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == emptyString ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);

@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -21,13 +23,14 @@ public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
     private final Channel accountSendChannel;
     private final Channel accountReplyChannel;
-    private final Map<String, Object> repliesWaiting;
+    private final ConcurrentMap<String, Object> repliesWaiting;
     private static final int responseTimeout = 10000;
+    private static final String emptyString = "";
 
     @Autowired
     public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
-        repliesWaiting = new TreeMap<>();
+        repliesWaiting = new ConcurrentHashMap<>();
 
         Connection connection = connectionFactory.newConnection();
         accountSendChannel = connection.createChannel();
@@ -64,13 +67,13 @@ public class RabbitMqSender {
     }
 
     public Object queryMostRecentStatement(UUID loanId) throws IOException, InterruptedException {
-        log.info("queryMostRecentStatement: {}", loanId);
-        String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, null);
+        log.debug("queryMostRecentStatement: {}", loanId);
+        String responseKey = loanId.toString();
+        repliesWaiting.put(responseKey, emptyString);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getAccountReplyQueue()).build();
         accountSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == emptyString ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);

@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -18,12 +20,13 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
     private final Channel querySendQueue;
-    private final Map<String, ResponseClass> repliesWaiting;
+    private final ConcurrentMap<String, ResponseClass> repliesWaiting;
+    private static final String emptyString = "";
     private static final int responseTimeout = 10000;
 
     public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException, InterruptedException {
         this.rabbitMqProperties = rabbitMqProperties;
-        repliesWaiting = Collections.synchronizedMap(new TreeMap<>());
+        repliesWaiting = new ConcurrentHashMap<>();
         Connection connection = connectionFactory.newConnection();
         querySendQueue = connection.createChannel();
 
@@ -37,7 +40,7 @@ public class RabbitMqSender {
 
     public Object queryServiceRequest(UUID id) {
         log.debug("queryServiceRequest: {}", id);
-        String responseKey = UUID.randomUUID().toString();
+        String responseKey = id.toString();
         repliesWaiting.put(responseKey, ResponseClass.builder().type("queryServiceRequest").build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getQueryReplyQueue()).build();
         try {
@@ -56,7 +59,7 @@ public class RabbitMqSender {
 
     public Object queryAccount(UUID id) {
         log.debug("queryAccount: {}", id);
-        String responseKey = UUID.randomUUID().toString();
+        String responseKey = id.toString();
         repliesWaiting.put(responseKey, ResponseClass.builder().type("queryAccount").build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getQueryReplyQueue()).build();
         try {
@@ -76,7 +79,7 @@ public class RabbitMqSender {
 
     public Object queryLoan(UUID id) {
         log.debug("queryLoan: {}", id);
-        String responseKey = UUID.randomUUID().toString();
+        String responseKey = id.toString();
         repliesWaiting.put(responseKey, ResponseClass.builder().type("queryLoan").thread(Thread.currentThread().getName()).build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getQueryReplyQueue()).build();
         try {
@@ -95,7 +98,7 @@ public class RabbitMqSender {
 
     public Object queryStatement(UUID id) {
         log.debug("queryStatement: {}", id);
-        String responseKey = UUID.randomUUID().toString();
+        String responseKey = id.toString();
         repliesWaiting.put(responseKey, ResponseClass.builder().type("queryStatement").build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getQueryReplyQueue()).build();
         try {
@@ -114,7 +117,7 @@ public class RabbitMqSender {
 
     public Object queryStatements(UUID id) {
         log.debug("queryStatements: {}", id);
-        String responseKey = UUID.randomUUID().toString();
+        String responseKey = id.toString();
         repliesWaiting.put(responseKey, ResponseClass.builder().type("queryStatements").build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getQueryReplyQueue()).build();
         try {

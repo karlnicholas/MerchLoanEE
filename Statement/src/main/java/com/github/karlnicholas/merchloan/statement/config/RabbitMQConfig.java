@@ -58,8 +58,7 @@ public class RabbitMQConfig {
 //                .with(rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey())
         statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), false, true, true, null);
         statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {
-        });
+        String mrtag = statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {System.out.println("CANCEL????");});
 
         connection = connectionFactory.newConnection();
         responseChannel = connection.createChannel();
@@ -74,7 +73,7 @@ public class RabbitMQConfig {
 
     public void receivedQueryMostRecentStatementMessage(String consumerTag, Delivery delivery) throws IOException {
         UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
-        log.info("receivedQueryMostRecentStatementMessage {}", loanId);
+        log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
         MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
                         .id(statement.getId())
                         .loanId(loanId)

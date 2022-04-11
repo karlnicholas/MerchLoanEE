@@ -11,6 +11,8 @@ import org.springframework.util.SerializationUtils;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -18,12 +20,13 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
     private final Channel businessDateSendChannel;
-    private final Map<String, Object> repliesWaiting;
+    private final ConcurrentMap<String, Object> repliesWaiting;
     private static final int responseTimeout = 10000;
+    private static final String emptyString = "";
     @Autowired
     public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
-        repliesWaiting = new TreeMap<>();
+        repliesWaiting = new ConcurrentHashMap<>();
 
         Connection connection = connectionFactory.newConnection();
         businessDateSendChannel = connection.createChannel();
@@ -40,11 +43,11 @@ public class RabbitMqSender {
     public Object servicerequestCheckRequest() throws IOException, InterruptedException {
         log.debug("servicerequestCheckRequest:");
         String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, null);
+        repliesWaiting.put(responseKey, emptyString);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getBusinessDateReplyQueue()).build();
         businessDateSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestQueue(), props, SerializationUtils.serialize(new byte[0]));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == emptyString ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);
@@ -54,11 +57,11 @@ public class RabbitMqSender {
     public Object acccountQueryLoansToCycle(LocalDate businessDate) throws IOException, InterruptedException {
         log.debug("acccountQueryLoansToCycle: {}", businessDate);
         String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, null);
+        repliesWaiting.put(responseKey, emptyString);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getBusinessDateReplyQueue()).build();
         businessDateSendChannel.basicPublish(rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoansToCycleQueue(), props, SerializationUtils.serialize(businessDate));
         synchronized (repliesWaiting) {
-            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == null ) {
+            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == emptyString ) {
                 repliesWaiting.wait(responseTimeout);
             }
             return repliesWaiting.remove(responseKey);
