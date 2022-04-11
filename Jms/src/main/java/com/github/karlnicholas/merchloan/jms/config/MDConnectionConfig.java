@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 @Configuration
-public class RabbitTemplateConfig {
+public class MDConnectionConfig {
     @Value("${rabbitmq.username}")
     private String username;
     @Value("${rabbitmq.password}")

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
-import com.github.karlnicholas.merchloan.servicerequest.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.servicerequest.message.MQProducers;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +20,13 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class ServiceRequestService {
-    private final RabbitMqSender rabbitMqSender;
+    private final MQProducers mqProducers;
     private final ServiceRequestRepository serviceRequestRepository;
     private final ObjectMapper objectMapper;
     private final RedisComponent redisComponent;
 
-    public ServiceRequestService(RabbitMqSender rabbitMqSender, ServiceRequestRepository serviceRequestRepository, ObjectMapper objectMapper, RedisComponent redisComponent) {
-        this.rabbitMqSender = rabbitMqSender;
+    public ServiceRequestService(MQProducers mqProducers, ServiceRequestRepository serviceRequestRepository, ObjectMapper objectMapper, RedisComponent redisComponent) {
+        this.mqProducers = mqProducers;
         this.serviceRequestRepository = serviceRequestRepository;
         this.objectMapper = objectMapper;
         this.redisComponent = redisComponent;
@@ -36,7 +36,7 @@ public class ServiceRequestService {
         AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(accountRequest);
         try {
-            rabbitMqSender.accountCreateAccount(CreateAccount.builder()
+            mqProducers.accountCreateAccount(CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
                     .createDate(redisComponent.getBusinessDate())
@@ -51,7 +51,7 @@ public class ServiceRequestService {
     public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(fundingRequest);
-        rabbitMqSender.accountFundLoan(
+        mqProducers.accountFundLoan(
                 FundLoan.builder()
                         .id(id)
                         .accountId(fundingRequest.getAccountId())
@@ -67,7 +67,7 @@ public class ServiceRequestService {
     public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(creditRequest);
-        rabbitMqSender.accountValidateCredit(
+        mqProducers.accountValidateCredit(
                 CreditLoan.builder()
                         .id(id)
                         .loanId(creditRequest.getLoanId())
@@ -83,7 +83,7 @@ public class ServiceRequestService {
     public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
-        rabbitMqSender.statementStatement(
+        mqProducers.statementStatement(
                 StatementHeader.builder()
                         .id(id)
                         .loanId(statementRequest.getLoanId())
@@ -101,7 +101,7 @@ public class ServiceRequestService {
     public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(closeRequest);
-        rabbitMqSender.accountCloseLoan(
+        mqProducers.accountCloseLoan(
                 CloseLoan.builder()
                         .id(id)
                         .loanId(closeRequest.getLoanId())
@@ -119,7 +119,7 @@ public class ServiceRequestService {
     public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
         DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(debitRequest);
-        rabbitMqSender.accountValidateDebit(
+        mqProducers.accountValidateDebit(
                 DebitLoan.builder()
                         .id(id)
                         .loanId(debitRequest.getLoanId())

@@ -1,9 +1,8 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.service;
 
-import com.github.karlnicholas.merchloan.businessdate.businessdate.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.businessdate.businessdate.message.MQProducers;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.repository.BusinessDateRepository;
-import com.github.karlnicholas.merchloan.jms.message.RabbitMqSenderOrig;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +20,12 @@ import java.util.Optional;
 public class BusinessDateService {
     private final RedisComponent redisComponent;
     private final BusinessDateRepository businessDateRepository;
-    private final RabbitMqSender rabbitMqSender;
+    private final MQProducers mqProducers;
 
-    public BusinessDateService(RedisComponent redisComponent, BusinessDateRepository businessDateRepository, RabbitMqSender rabbitMqSender) {
+    public BusinessDateService(RedisComponent redisComponent, BusinessDateRepository businessDateRepository, MQProducers mqProducers) {
         this.redisComponent = redisComponent;
         this.businessDateRepository = businessDateRepository;
-        this.rabbitMqSender = rabbitMqSender;
+        this.mqProducers = mqProducers;
     }
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) throws IOException, InterruptedException {
@@ -35,7 +34,7 @@ public class BusinessDateService {
             Instant start = Instant.now();
             BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(existingBusinessDate.get().getBusinessDate()).build();
             Boolean requestPending = null;
-            requestPending = (Boolean) rabbitMqSender.servicerequestCheckRequest();
+            requestPending = (Boolean) mqProducers.servicerequestCheckRequest();
             if (requestPending.booleanValue()) {
                 throw new IllegalStateException("Still processing prior business date" + priorBusinessDate.getBusinessDate());
             }
@@ -56,9 +55,9 @@ public class BusinessDateService {
     }
 
     public void startBillingCycle(LocalDate priorBusinessDate) throws IOException, InterruptedException {
-        List<BillingCycle> loansToCycle = (List<BillingCycle>) rabbitMqSender.acccountQueryLoansToCycle(priorBusinessDate);
+        List<BillingCycle> loansToCycle = (List<BillingCycle>) mqProducers.acccountQueryLoansToCycle(priorBusinessDate);
         for( BillingCycle billingCycle: loansToCycle) {
-            rabbitMqSender.serviceRequestBillLoan(billingCycle);
+            mqProducers.serviceRequestBillLoan(billingCycle);
         }
     }
 }

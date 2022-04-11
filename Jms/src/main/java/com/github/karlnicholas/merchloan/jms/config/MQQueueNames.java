@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 @ConfigurationProperties(prefix = "rabbitmq")
 @PropertySource(value = "classpath:rabbitmq-config.properties")
 @Data
-public class RabbitMqProperties {
+public class MQQueueNames {
     private String host;
     private String port;
     private String virtualHost;

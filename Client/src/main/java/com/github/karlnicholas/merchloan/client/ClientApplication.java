@@ -96,9 +96,15 @@ public class ClientApplication {
                     Thread.sleep(250);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
+                int[] first = new int[1];
+                first[0] = 0;
                 loans.forEach(loan->{
                     if ( !loan.checkClosed() )
                         loan.showStatement("Not Closed");
+                    if ( first[0] == 0 ) {
+                        loan.showStatement("Show Statement");
+                        first[0] = 1;
+                    }
 //                    if ( ThreadLocalRandom.current().nextInt(100) == 50) {
 //                        loan.showStatement("Show Statement");
 //                    }

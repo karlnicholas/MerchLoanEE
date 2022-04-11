@@ -1,6 +1,6 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
-import com.github.karlnicholas.merchloan.accounts.message.RabbitMqSender;
+import com.github.karlnicholas.merchloan.accounts.message.MQProducers;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
@@ -27,11 +27,11 @@ import java.util.UUID;
 public class QueryService {
     private final AccountRepository accountRepository;
     private final LoanRepository loanRepository;
-    private final RabbitMqSender rabbitMqSender;
+    private final MQProducers rabbitMqSender;
     private final RegisterEntryRepository registerEntryRepository;
 
     @Autowired
-    public QueryService(AccountRepository accountRepository, LoanRepository loanRepository, RabbitMqSender rabbitMqSender, RegisterEntryRepository registerEntryRepository) {
+    public QueryService(AccountRepository accountRepository, LoanRepository loanRepository, MQProducers rabbitMqSender, RegisterEntryRepository registerEntryRepository) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
         this.rabbitMqSender = rabbitMqSender;
