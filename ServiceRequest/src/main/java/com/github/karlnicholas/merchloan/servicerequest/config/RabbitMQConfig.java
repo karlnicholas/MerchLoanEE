@@ -26,37 +26,42 @@ public class RabbitMQConfig {
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, ConnectionFactory connectionFactory, RabbitMqReceiver rabbitMqReceiver, QueryService queryService) throws IOException, TimeoutException {
+    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, Connection connection, RabbitMqReceiver rabbitMqReceiver, QueryService queryService) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        Connection connection = connectionFactory.newConnection();
-        Channel serviceRequestReceiveChannel = connection.createChannel();
-        serviceRequestReceiveChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        Channel servicerequestChannel = connection.createChannel();
+        servicerequestChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        servicerequestChannel.queueDeclare(rabbitMqProperties.getServicerequestQueue(), false, true, true, null);
+        servicerequestChannel.queueBind(rabbitMqProperties.getServicerequestQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueue());
+        servicerequestChannel.basicConsume(rabbitMqProperties.getServicerequestQueue(), true, rabbitMqReceiver::receivedServiceRequestMessage, consumerTag -> { });
 
-        serviceRequestReceiveChannel.queueDeclare(rabbitMqProperties.getServicerequestQueue(), false, true, true, null);
-        serviceRequestReceiveChannel.queueBind(rabbitMqProperties.getServicerequestQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueue());
-        serviceRequestReceiveChannel.basicConsume(rabbitMqProperties.getServicerequestQueue(), true, rabbitMqReceiver::receivedServiceRequestMessage, consumerTag -> { });
+        Channel servicerequestQueryIdChannel = connection.createChannel();
+        servicerequestQueryIdChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        servicerequestQueryIdChannel.queueDeclare(rabbitMqProperties.getServicerequestQueryIdQueue(), false, true, true, null);
+        servicerequestQueryIdChannel.queueBind(rabbitMqProperties.getServicerequestQueryIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueryIdQueue());
+        servicerequestQueryIdChannel.basicConsume(rabbitMqProperties.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage, consumerTag -> { });
 
-        serviceRequestReceiveChannel.queueDeclare(rabbitMqProperties.getServicerequestQueryIdQueue(), false, true, true, null);
-        serviceRequestReceiveChannel.queueBind(rabbitMqProperties.getServicerequestQueryIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServicerequestQueryIdQueue());
-        serviceRequestReceiveChannel.basicConsume(rabbitMqProperties.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage, consumerTag -> { });
+        Channel serviceRequestCheckRequestChannel = connection.createChannel();
+        serviceRequestCheckRequestChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        serviceRequestCheckRequestChannel.queueDeclare(rabbitMqProperties.getServiceRequestCheckRequestQueue(), false, true, true, null);
+        serviceRequestCheckRequestChannel.queueBind(rabbitMqProperties.getServiceRequestCheckRequestQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestQueue());
+        serviceRequestCheckRequestChannel.basicConsume(rabbitMqProperties.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage, consumerTag -> { });
 
-        serviceRequestReceiveChannel.queueDeclare(rabbitMqProperties.getServiceRequestCheckRequestQueue(), false, true, true, null);
-        serviceRequestReceiveChannel.queueBind(rabbitMqProperties.getServiceRequestCheckRequestQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestCheckRequestQueue());
-        serviceRequestReceiveChannel.basicConsume(rabbitMqProperties.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage, consumerTag -> { });
+        Channel serviceRequestBillLoanChannel = connection.createChannel();
+        serviceRequestBillLoanChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        serviceRequestBillLoanChannel.queueDeclare(rabbitMqProperties.getServiceRequestBillLoanQueue(), false, true, true, null);
+        serviceRequestBillLoanChannel.queueBind(rabbitMqProperties.getServiceRequestBillLoanQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanQueue());
+        serviceRequestBillLoanChannel.basicConsume(rabbitMqProperties.getServiceRequestBillLoanQueue(), true, rabbitMqReceiver::receivedServiceRequestBillloanMessage, consumerTag -> { });
 
-        serviceRequestReceiveChannel.queueDeclare(rabbitMqProperties.getServiceRequestBillLoanQueue(), false, true, true, null);
-        serviceRequestReceiveChannel.queueBind(rabbitMqProperties.getServiceRequestBillLoanQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestBillLoanQueue());
-        serviceRequestReceiveChannel.basicConsume(rabbitMqProperties.getServiceRequestBillLoanQueue(), true, rabbitMqReceiver::receivedServiceRequestBillloanMessage, consumerTag -> { });
+        Channel serviceRequestStatementCompleteQueue = connection.createChannel();
+        serviceRequestStatementCompleteQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        serviceRequestStatementCompleteQueue.queueDeclare(rabbitMqProperties.getServiceRequestStatementCompleteQueue(), false, true, true, null);
+        serviceRequestStatementCompleteQueue.queueBind(rabbitMqProperties.getServiceRequestStatementCompleteQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestStatementCompleteQueue());
+        serviceRequestStatementCompleteQueue.basicConsume(rabbitMqProperties.getServiceRequestStatementCompleteQueue(), true, rabbitMqReceiver::receivedServiceStatementCompleteMessage, consumerTag -> { });
 
-        serviceRequestReceiveChannel.queueDeclare(rabbitMqProperties.getServiceRequestStatementCompleteQueue(), false, true, true, null);
-        serviceRequestReceiveChannel.queueBind(rabbitMqProperties.getServiceRequestStatementCompleteQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getServiceRequestStatementCompleteQueue());
-        serviceRequestReceiveChannel.basicConsume(rabbitMqProperties.getServiceRequestStatementCompleteQueue(), true, rabbitMqReceiver::receivedServiceStatementCompleteMessage, consumerTag -> { });
-
-        connection = connectionFactory.newConnection();
         responseChannel = connection.createChannel();
     }
 

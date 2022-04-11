@@ -21,46 +21,48 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQConfig {
     private final RabbitMqProperties rabbitMqProperties;
     private final QueryService queryService;
-    private Channel statementReceiveChannel;
     private Channel responseChannel;
     private final ObjectMapper objectMapper;
 
-    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, RabbitMqReceiver rabbitMqReceiver, QueryService queryService, ConnectionFactory connectionFactory) throws IOException, TimeoutException {
+    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, RabbitMqReceiver rabbitMqReceiver, QueryService queryService, Connection connection) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        Connection connection = connectionFactory.newConnection();
-        statementReceiveChannel = connection.createChannel();
-        statementReceiveChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
 
 //                .with(rabbitMqProperties.getStatementStatementRoutingkey())
-        statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementStatementQueue(), false, true, true, null);
-        statementReceiveChannel.queueBind(rabbitMqProperties.getStatementStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementStatementQueue(), true, rabbitMqReceiver::receivedStatementMessage, consumerTag -> {
-        });
-//                .with(rabbitMqProperties.getStatementCloseStatementRoutingkey())
-        statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementCloseStatementQueue(), false, true, true, null);
-        statementReceiveChannel.queueBind(rabbitMqProperties.getStatementCloseStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementCloseStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementCloseStatementQueue(), true, rabbitMqReceiver::receivedCloseStatementMessage, consumerTag -> {
-        });
-//                .with(rabbitMqProperties.getStatementQueryStatementRoutingkey())
-        statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryStatementQueue(), false, true, true, null);
-        statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementQueue(), true, this::receivedQueryStatementMessage, consumerTag -> {
-        });
-//                .with(rabbitMqProperties.getStatementQueryStatementsRoutingkey())
-        statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryStatementsQueue(), false, true, true, null);
-        statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryStatementsQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementsQueue());
-        statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementsQueue(), true, this::receivedQueryStatementsMessage, consumerTag -> {
-        });
-//                .with(rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey())
-        statementReceiveChannel.queueDeclare(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), false, true, true, null);
-        statementReceiveChannel.queueBind(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue());
-        String mrtag = statementReceiveChannel.basicConsume(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {System.out.println("CANCEL????");});
+        Channel statementStatementChannel = connection.createChannel();
+        statementStatementChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        statementStatementChannel.queueDeclare(rabbitMqProperties.getStatementStatementQueue(), false, true, true, null);
+        statementStatementChannel.queueBind(rabbitMqProperties.getStatementStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementStatementQueue());
+        statementStatementChannel.basicConsume(rabbitMqProperties.getStatementStatementQueue(), true, rabbitMqReceiver::receivedStatementMessage, consumerTag -> {});
 
-        connection = connectionFactory.newConnection();
+//                .with(rabbitMqProperties.getStatementCloseStatementRoutingkey())
+        Channel statementCloseStatementChannel = connection.createChannel();
+        statementCloseStatementChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        statementCloseStatementChannel.queueDeclare(rabbitMqProperties.getStatementCloseStatementQueue(), false, true, true, null);
+        statementCloseStatementChannel.queueBind(rabbitMqProperties.getStatementCloseStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementCloseStatementQueue());
+        statementCloseStatementChannel.basicConsume(rabbitMqProperties.getStatementCloseStatementQueue(), true, rabbitMqReceiver::receivedCloseStatementMessage, consumerTag -> {});
+//                .with(rabbitMqProperties.getStatementQueryStatementRoutingkey())
+        Channel statementQueryStatementChannel = connection.createChannel();
+        statementQueryStatementChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        statementQueryStatementChannel.queueDeclare(rabbitMqProperties.getStatementQueryStatementQueue(), false, true, true, null);
+        statementQueryStatementChannel.queueBind(rabbitMqProperties.getStatementQueryStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementQueue());
+        statementQueryStatementChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementQueue(), true, this::receivedQueryStatementMessage, consumerTag -> {});
+//                .with(rabbitMqProperties.getStatementQueryStatementsRoutingkey())
+        Channel statementQueryStatementsChannel = connection.createChannel();
+        statementQueryStatementsChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        statementQueryStatementsChannel.queueDeclare(rabbitMqProperties.getStatementQueryStatementsQueue(), false, true, true, null);
+        statementQueryStatementsChannel.queueBind(rabbitMqProperties.getStatementQueryStatementsQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryStatementsQueue());
+        statementQueryStatementsChannel.basicConsume(rabbitMqProperties.getStatementQueryStatementsQueue(), true, this::receivedQueryStatementsMessage, consumerTag -> {});
+//                .with(rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey())
+        Channel statementQueryMostRecentStatementChannel = connection.createChannel();
+        statementQueryMostRecentStatementChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        statementQueryMostRecentStatementChannel.queueDeclare(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), false, true, true, null);
+        statementQueryMostRecentStatementChannel.queueBind(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue());
+        statementQueryMostRecentStatementChannel.basicConsume(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {log.error("CANCEL????");});
+
         responseChannel = connection.createChannel();
     }
 

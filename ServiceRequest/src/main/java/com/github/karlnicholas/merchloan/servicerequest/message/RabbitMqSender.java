@@ -20,9 +20,8 @@ public class RabbitMqSender {
     private final Channel serviceRequestSenderChannel;
 
     @Autowired
-    public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
+    public RabbitMqSender(Connection connection, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
-        Connection connection = connectionFactory.newConnection();
         serviceRequestSenderChannel = connection.createChannel();
     }
 

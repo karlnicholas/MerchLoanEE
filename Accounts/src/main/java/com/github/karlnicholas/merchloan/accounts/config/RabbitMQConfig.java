@@ -32,80 +32,98 @@ public class RabbitMQConfig {
     private final ObjectMapper objectMapper;
     private final QueryService queryService;
 
-    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, ConnectionFactory connectionFactory, RabbitMqReceiver rabbitMqReceiver, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws IOException, TimeoutException {
+    public RabbitMQConfig(RabbitMqProperties rabbitMqProperties, Connection connection, RabbitMqReceiver rabbitMqReceiver, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         this.accountManagementService = accountManagementService;
         this.registerManagementService = registerManagementService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.queryService = queryService;
-        Connection connection = connectionFactory.newConnection();
-        Channel accountReceiveChannel = connection.createChannel();
-        accountReceiveChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
 
 //                .with(rabbitMqProperties.getAccountCreateaccountRoutingKey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountCreateaccountQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountCreateaccountQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountCreateaccountQueue(), true, rabbitMqReceiver::receivedCreateAccountMessage, consumerTag -> {});
+        Channel accountCreateaccountChannel = connection.createChannel();
+        accountCreateaccountChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountCreateaccountChannel.queueDeclare(rabbitMqProperties.getAccountCreateaccountQueue(), false, true, true, null);
+        accountCreateaccountChannel.queueBind(rabbitMqProperties.getAccountCreateaccountQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCreateaccountQueue());
+        accountCreateaccountChannel.basicConsume(rabbitMqProperties.getAccountCreateaccountQueue(), true, rabbitMqReceiver::receivedCreateAccountMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountFundingRoutingKey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountFundingQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountFundingQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountFundingQueue(), true, rabbitMqReceiver::receivedFundingMessage, consumerTag -> {});
+        Channel accountFundingChannel = connection.createChannel();
+        accountFundingChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountFundingChannel.queueDeclare(rabbitMqProperties.getAccountFundingQueue(), false, true, true, null);
+        accountFundingChannel.queueBind(rabbitMqProperties.getAccountFundingQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountFundingQueue());
+        accountFundingChannel.basicConsume(rabbitMqProperties.getAccountFundingQueue(), true, rabbitMqReceiver::receivedFundingMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountValidateCreditRoutingkey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountValidateCreditQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountValidateCreditQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountValidateCreditQueue(), true, rabbitMqReceiver::receivedValidateCreditMessage, consumerTag -> {});
+        Channel accountValidateCreditChannel = connection.createChannel();
+        accountValidateCreditChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountValidateCreditChannel.queueDeclare(rabbitMqProperties.getAccountValidateCreditQueue(), false, true, true, null);
+        accountValidateCreditChannel.queueBind(rabbitMqProperties.getAccountValidateCreditQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateCreditQueue());
+        accountValidateCreditChannel.basicConsume(rabbitMqProperties.getAccountValidateCreditQueue(), true, rabbitMqReceiver::receivedValidateCreditMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountValidateDebitRoutingkey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountValidateDebitQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountValidateDebitQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountValidateDebitQueue(), true, rabbitMqReceiver::receivedValidateDebitMessage, consumerTag -> {});
+        Channel accountValidateDebitChannel = connection.createChannel();
+        accountValidateDebitChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountValidateDebitChannel.queueDeclare(rabbitMqProperties.getAccountValidateDebitQueue(), false, true, true, null);
+        accountValidateDebitChannel.queueBind(rabbitMqProperties.getAccountValidateDebitQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountValidateDebitQueue());
+        accountValidateDebitChannel.basicConsume(rabbitMqProperties.getAccountValidateDebitQueue(), true, rabbitMqReceiver::receivedValidateDebitMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountCloseLoanRoutingkey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountCloseLoanQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountCloseLoanQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountCloseLoanQueue(), true, rabbitMqReceiver::receivedCloseLoanMessage, consumerTag -> {});
+        Channel accountCloseLoanChannel = connection.createChannel();
+        accountCloseLoanChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountCloseLoanChannel.queueDeclare(rabbitMqProperties.getAccountCloseLoanQueue(), false, true, true, null);
+        accountCloseLoanChannel.queueBind(rabbitMqProperties.getAccountCloseLoanQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountCloseLoanQueue());
+        accountCloseLoanChannel.basicConsume(rabbitMqProperties.getAccountCloseLoanQueue(), true, rabbitMqReceiver::receivedCloseLoanMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountLoanClosedRoutingkey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountLoanClosedQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountLoanClosedQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountLoanClosedQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountLoanClosedQueue(), true, rabbitMqReceiver::receivedLoanClosedMessage, consumerTag -> {});
+        Channel accountLoanClosedChannel = connection.createChannel();
+        accountLoanClosedChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountLoanClosedChannel.queueDeclare(rabbitMqProperties.getAccountLoanClosedQueue(), false, true, true, null);
+        accountLoanClosedChannel.queueBind(rabbitMqProperties.getAccountLoanClosedQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountLoanClosedQueue());
+        accountLoanClosedChannel.basicConsume(rabbitMqProperties.getAccountLoanClosedQueue(), true, rabbitMqReceiver::receivedLoanClosedMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountQueryStatementHeaderRoutingKey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountQueryStatementHeaderQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountQueryStatementHeaderQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryStatementHeaderQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountQueryStatementHeaderQueue(), true, this::receivedStatementHeaderMessage, consumerTag -> {});
+        Channel accountQueryStatementHeaderChannel = connection.createChannel();
+        accountQueryStatementHeaderChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountQueryStatementHeaderChannel.queueDeclare(rabbitMqProperties.getAccountQueryStatementHeaderQueue(), false, true, true, null);
+        accountQueryStatementHeaderChannel.queueBind(rabbitMqProperties.getAccountQueryStatementHeaderQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryStatementHeaderQueue());
+        accountQueryStatementHeaderChannel.basicConsume(rabbitMqProperties.getAccountQueryStatementHeaderQueue(), true, this::receivedStatementHeaderMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountBillingCycleChargeRoutingKey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountBillingCycleChargeQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountBillingCycleChargeQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountBillingCycleChargeQueue(), true, this::receivedBillingCycleChargeMessage, consumerTag -> {});
+        Channel accountBillingCycleChargeChannel = connection.createChannel();
+        accountBillingCycleChargeChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountBillingCycleChargeChannel.queueDeclare(rabbitMqProperties.getAccountBillingCycleChargeQueue(), false, true, true, null);
+        accountBillingCycleChargeChannel.queueBind(rabbitMqProperties.getAccountBillingCycleChargeQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountBillingCycleChargeQueue());
+        accountBillingCycleChargeChannel.basicConsume(rabbitMqProperties.getAccountBillingCycleChargeQueue(), true, this::receivedBillingCycleChargeMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountQueryLoansToCycleRoutingkey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountQueryLoansToCycleQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountQueryLoansToCycleQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoansToCycleQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountQueryLoansToCycleQueue(), true, this::receivedLoansToCyceMessage, consumerTag -> {});
+        Channel accountQueryLoansToCycleChannel = connection.createChannel();
+        accountQueryLoansToCycleChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountQueryLoansToCycleChannel.queueDeclare(rabbitMqProperties.getAccountQueryLoansToCycleQueue(), false, true, true, null);
+        accountQueryLoansToCycleChannel.queueBind(rabbitMqProperties.getAccountQueryLoansToCycleQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoansToCycleQueue());
+        accountQueryLoansToCycleChannel.basicConsume(rabbitMqProperties.getAccountQueryLoansToCycleQueue(), true, this::receivedLoansToCyceMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountQueryAccountIdRoutingKey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountQueryAccountIdQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountQueryAccountIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountQueryAccountIdQueue(), true, this::receivedQueryAccountIdMessage, consumerTag -> {});
+        Channel accountQueryAccountIdChannel = connection.createChannel();
+        accountQueryAccountIdChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountQueryAccountIdChannel.queueDeclare(rabbitMqProperties.getAccountQueryAccountIdQueue(), false, true, true, null);
+        accountQueryAccountIdChannel.queueBind(rabbitMqProperties.getAccountQueryAccountIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryAccountIdQueue());
+        accountQueryAccountIdChannel.basicConsume(rabbitMqProperties.getAccountQueryAccountIdQueue(), true, this::receivedQueryAccountIdMessage, consumerTag -> {});
 
 //                .with(rabbitMqProperties.getAccountQueryLoanIdRoutingKey())
-        accountReceiveChannel.queueDeclare(rabbitMqProperties.getAccountQueryLoanIdQueue(), false, true, true, null);
-        accountReceiveChannel.queueBind(rabbitMqProperties.getAccountQueryLoanIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdQueue());
-        accountReceiveChannel.basicConsume(rabbitMqProperties.getAccountQueryLoanIdQueue(), true, this::receivedQueryLoanIdMessage, consumerTag -> {});
+        Channel accountQueryLoanIdQueue = connection.createChannel();
+        accountQueryLoanIdQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+        accountQueryLoanIdQueue.queueDeclare(rabbitMqProperties.getAccountQueryLoanIdQueue(), false, true, true, null);
+        accountQueryLoanIdQueue.queueBind(rabbitMqProperties.getAccountQueryLoanIdQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountQueryLoanIdQueue());
+        accountQueryLoanIdQueue.basicConsume(rabbitMqProperties.getAccountQueryLoanIdQueue(), true, this::receivedQueryLoanIdMessage, consumerTag -> {});
 
-        connection = connectionFactory.newConnection();
         responseChannel = connection.createChannel();
     }
 
     public void receivedStatementHeaderMessage(String consumerTag, Delivery delivery) {
         StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
         try {
-            log.info("receivedStatementHeaderMessage {}", statementHeader);
+            log.debug("receivedStatementHeaderMessage {}", statementHeader);
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
             if (serviceRequestResponse.isSuccess())
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);

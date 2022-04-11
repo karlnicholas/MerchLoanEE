@@ -22,17 +22,15 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
     private final Channel accountSendChannel;
-    private final Channel accountReplyChannel;
     private final ConcurrentMap<String, Object> repliesWaiting;
     private static final int responseTimeout = 10000;
     private static final String emptyString = "";
 
     @Autowired
-    public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
+    public RabbitMqSender(Connection connection, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         repliesWaiting = new ConcurrentHashMap<>();
 
-        Connection connection = connectionFactory.newConnection();
         accountSendChannel = connection.createChannel();
 
 //        accountSendChannel.queueDeclare(rabbitMqProperties.getServicerequestQueue(), false, true, true, null);
@@ -47,10 +45,9 @@ public class RabbitMqSender {
 //        accountSendChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
 //        accountSendChannel.queueBind(rabbitMqProperties.getStatementQueryMostRecentStatementQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementQueryMostRecentStatementQueue());
 
-        connection = connectionFactory.newConnection();
-        accountReplyChannel = connection.createChannel();
-
+        Channel accountReplyChannel = connection.createChannel();
         accountReplyChannel.queueDeclare(rabbitMqProperties.getAccountReplyQueue(), false, true, true, null);
+
         accountReplyChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         accountReplyChannel.queueBind(rabbitMqProperties.getAccountReplyQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getAccountReplyQueue());
         accountReplyChannel.basicConsume(rabbitMqProperties.getAccountReplyQueue(), true, this::handleReplyQueue, consumerTag->{});

@@ -24,14 +24,12 @@ public class RabbitMqSender {
     private static final int responseTimeout = 10000;
     private static final String emptyString = "";
     @Autowired
-    public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
+    public RabbitMqSender(Connection connection, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         repliesWaiting = new ConcurrentHashMap<>();
 
-        Connection connection = connectionFactory.newConnection();
         businessDateSendChannel = connection.createChannel();
 
-        connection = connectionFactory.newConnection();
         Channel businessDateResponseChannel = connection.createChannel();
         businessDateResponseChannel.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
 

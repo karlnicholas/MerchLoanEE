@@ -21,19 +21,17 @@ public class RabbitMqSender {
     private final RabbitMqProperties rabbitMqProperties;
     private final Channel querySendQueue;
     private final ConcurrentMap<String, ResponseClass> repliesWaiting;
-    private static final String emptyString = "";
     private static final int responseTimeout = 10000;
 
-    public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException, InterruptedException {
+    public RabbitMqSender(Connection connection, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException, InterruptedException {
         this.rabbitMqProperties = rabbitMqProperties;
         repliesWaiting = new ConcurrentHashMap<>();
-        Connection connection = connectionFactory.newConnection();
         querySendQueue = connection.createChannel();
 
-        connection = connectionFactory.newConnection();
         Channel queryReplyQueue = connection.createChannel();
-        queryReplyQueue.queueDeclare(rabbitMqProperties.getQueryReplyQueue(), false, true, true, null);
         queryReplyQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
+
+        queryReplyQueue.queueDeclare(rabbitMqProperties.getQueryReplyQueue(), false, true, true, null);
         queryReplyQueue.queueBind(rabbitMqProperties.getQueryReplyQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getQueryReplyQueue());
         queryReplyQueue.basicConsume(rabbitMqProperties.getQueryReplyQueue(), true, this::handleReplyQueue, consumerTag -> {});
     }

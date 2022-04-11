@@ -29,16 +29,13 @@ public class RabbitMqSender {
     private static final String emptyString = "";
 
     @Autowired
-    public RabbitMqSender(ConnectionFactory connectionFactory, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
+    public RabbitMqSender(Connection connection, RabbitMqProperties rabbitMqProperties) throws IOException, TimeoutException {
         this.rabbitMqProperties = rabbitMqProperties;
         repliesWaiting = new ConcurrentHashMap<>();
-        Connection connection = connectionFactory.newConnection();
         statementSendChannel = connection.createChannel();
 
-        connection = connectionFactory.newConnection();
         Channel statementReplyQueue = connection.createChannel();
         statementReplyQueue.exchangeDeclare(rabbitMqProperties.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-
         statementReplyQueue.queueDeclare(rabbitMqProperties.getStatementReplyQueue(), false, true, true, null);
         statementReplyQueue.queueBind(rabbitMqProperties.getStatementReplyQueue(), rabbitMqProperties.getExchange(), rabbitMqProperties.getStatementReplyQueue());
         statementReplyQueue.basicConsume(rabbitMqProperties.getStatementReplyQueue(), true, this::handleReplyQueue, consumerTag -> {});
@@ -59,7 +56,7 @@ public class RabbitMqSender {
     }
 
     public Object accountQueryStatementHeader(StatementHeader statementHeader) throws IOException, InterruptedException {
-        log.info("accountQueryStatementHeader: {}", statementHeader);
+        log.debug("accountQueryStatementHeader: {}", statementHeader);
         String responseKey = statementHeader.getId().toString();
         repliesWaiting.put(responseKey, emptyString);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(rabbitMqProperties.getStatementReplyQueue()).build();
