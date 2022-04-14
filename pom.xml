@@ -19,6 +19,7 @@
         <module>JmsMessage</module>
         <module>Dto</module>
         <module>Jms</module>
+        <module>SqlUtil</module>
         <module>Accounts</module>
         <module>ServiceRequest</module>
         <module>Query</module>
@@ -47,6 +48,11 @@
             <dependency>
                 <groupId>com.github.karlnicholas.merchloan</groupId>
                 <artifactId>jms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>sqlutil</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

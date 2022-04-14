@@ -166,9 +166,9 @@ public class MQConsumers {
         UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
         try {
             log.debug("receivedQueryAccountIdMessage {}", id);
-            Optional<Account> r = queryService.queryAccountId(id);
-            if (r.isPresent()) {
-                reply(delivery, objectMapper.writeValueAsString(r.get()));
+            Account account = queryService.queryAccountId(id);
+            if (account != null) {
+                reply(delivery, objectMapper.writeValueAsString(account));
             } else {
                 reply(delivery, "ERROR: id not found: " + id);
             }

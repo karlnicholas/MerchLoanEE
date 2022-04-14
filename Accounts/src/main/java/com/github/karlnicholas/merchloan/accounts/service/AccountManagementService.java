@@ -1,137 +1,120 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
+import com.github.karlnicholas.merchloan.accounts.dao.AccountDao;
+import com.github.karlnicholas.merchloan.accounts.dao.LoanDao;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
-import com.github.karlnicholas.merchloan.accounts.repository.AccountRepository;
-import com.github.karlnicholas.merchloan.accounts.repository.LoanRepository;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Service
 @Slf4j
 public class AccountManagementService {
-    private final AccountRepository accountRepository;
-    private final LoanRepository loanRepository;
+    private final DataSource dataSource;
+    private final AccountDao accountDao;
+    private final LoanDao loanDao;
 
     @Autowired
-    public AccountManagementService(AccountRepository accountRepository, LoanRepository loanRepository) {
-        this.accountRepository = accountRepository;
-        this.loanRepository = loanRepository;
+    public AccountManagementService(DataSource dataSource, AccountDao accountDao, LoanDao loanDao) {
+        this.dataSource = dataSource;
+        this.accountDao = accountDao;
+        this.loanDao = loanDao;
     }
 
-    public void createAccount(CreateAccount createAccount, ServiceRequestResponse requestResponse) {
-        try {
-            accountRepository.save(Account.builder()
+    public void createAccount(CreateAccount createAccount, ServiceRequestResponse requestResponse) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            accountDao.createAccount(con, Account.builder()
                     .id(createAccount.getId())
                     .customer(createAccount.getCustomer())
                     .createDate(createAccount.getCreateDate())
-                    .build()
-            );
-            requestResponse.setSuccess("Account created");
-        } catch (DuplicateKeyException dke) {
-            log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-            if (createAccount.getRetry().booleanValue()) {
-                requestResponse.setSuccess("Account created");
-            } else {
-                requestResponse.setFailure(dke.getMessage());
-            }
+                    .build());
         }
+        requestResponse.setSuccess("Account created");
     }
 
-    public void fundAccount(FundLoan fundLoan, ServiceRequestResponse requestResponse) {
-        Optional<Account> accountQ = accountRepository.findById(fundLoan.getAccountId());
-        if (accountQ.isPresent()) {
-            try {
-                LocalDate[] statementDates = new LocalDate[12];
-                statementDates[11] = fundLoan.getStartDate().plusYears(1);
-                for ( int i = 0; i < 11; ++i ) {
-                    statementDates[i] = fundLoan.getStartDate().plusDays((int)((i+1)*365.0/12.0));
-                }
-
-                loanRepository.save(
-                        Loan.builder()
-                                .id(fundLoan.getId())
-                                .account(accountQ.get())
-                                .startDate(fundLoan.getStartDate())
-                                .statementDates(Arrays.asList(statementDates))
-                                .funding(fundLoan.getAmount())
-                                .months(12)
-                                .interestRate(new BigDecimal("0.10"))
-                                .monthlyPayments(new BigDecimal("879.16"))
-                                .loanState(Loan.LOAN_STATE.OPEN)
-                                .build());
-                requestResponse.setSuccess();
-            } catch (DuplicateKeyException dke) {
-                log.warn("Create Account duplicate key exception: {}", dke.getMessage());
-                if (!fundLoan.getRetry().booleanValue()) {
-                    requestResponse.setFailure(dke.getMessage());
-                }
+    public void fundAccount(FundLoan fundLoan, ServiceRequestResponse requestResponse) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            Account account = accountDao.findById(con, fundLoan.getAccountId());
+            LocalDate[] statementDates = new LocalDate[12];
+            statementDates[11] = fundLoan.getStartDate().plusYears(1);
+            for (int i = 0; i < 11; ++i) {
+                statementDates[i] = fundLoan.getStartDate().plusDays((int) ((i + 1) * 365.0 / 12.0));
             }
-        } else {
-            requestResponse.setFailure("Account not found for " + fundLoan.getAccountId());
-        }
-    }
-
-    public void validateLoan(UUID loanId, ServiceRequestResponse requestResponse) {
-        Optional<Loan> loanQ = loanRepository.findById(loanId);
-        if (loanQ.isPresent()) {
+            loanDao.insert(con,
+                    Loan.builder()
+                            .id(fundLoan.getId())
+                            .accountId(account.getId())
+                            .startDate(fundLoan.getStartDate())
+                            .statementDates(Arrays.asList(statementDates))
+                            .funding(fundLoan.getAmount())
+                            .months(12)
+                            .interestRate(new BigDecimal("0.10"))
+                            .monthlyPayments(new BigDecimal("879.16"))
+                            .loanState(Loan.LOAN_STATE.OPEN)
+                            .build());
             requestResponse.setSuccess();
-        } else {
-            requestResponse.setFailure("Loan not found for " + loanId);
         }
     }
 
-    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
-        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                .id(statementHeader.getId())
-                .build();
-        Optional<Loan> loanOpt = loanRepository.findById(statementHeader.getLoanId());
-        if (loanOpt.isPresent()) {
-            Optional<Account> accountQ = accountRepository.findById(loanOpt.get().getAccount().getId());
-            if (accountQ.isPresent()) {
-                statementHeader.setCustomer(accountQ.get().getCustomer());
-                statementHeader.setAccountId(loanOpt.get().getAccount().getId());
-                requestResponse.setSuccess();
-            } else {
-                requestResponse.setFailure("Account not found for loanId: " + statementHeader.getLoanId());
-            }
-        } else {
-            requestResponse.setFailure("Loan not found for loanId: " + statementHeader.getLoanId());
+    public void validateLoan(UUID loanId, ServiceRequestResponse requestResponse) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            Loan loanQ = loanDao.findById(con, loanId);
+            requestResponse.setSuccess();
         }
-        return requestResponse;
     }
 
-    public List<BillingCycle> loansToCycle(LocalDate businessDate) {
-        return loanRepository.findByLoanState(Loan.LOAN_STATE.OPEN)
-                .stream()
-                .filter(l -> Collections.binarySearch(l.getStatementDates(), businessDate) >= 0)
-                .map(l -> {
-                    List<LocalDate> statementDates = l.getStatementDates();
-                    int i = Collections.binarySearch(statementDates, businessDate);
-                    return BillingCycle.builder()
-                            .accountId(l.getAccount().getId())
-                            .loanId(l.getId())
+    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
+                    .id(statementHeader.getId())
+                    .build();
+            Loan loan = loanDao.findById(con, statementHeader.getLoanId());
+            Account account = accountDao.findById(con, loan.getAccountId());
+            statementHeader.setCustomer(account.getCustomer());
+            statementHeader.setAccountId(loan.getAccountId());
+            requestResponse.setSuccess();
+            return requestResponse;
+        }
+    }
+
+    public List<BillingCycle> loansToCycle(LocalDate businessDate) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            Iterator<Loan> lIt = loanDao.findByLoanState(con, Loan.LOAN_STATE.OPEN);
+            ArrayList<BillingCycle> loansToCycle = new ArrayList<>();
+            while (lIt.hasNext()) {
+                Loan loan = lIt.next();
+                List<LocalDate> statementDates = loan.getStatementDates();
+                int i = Collections.binarySearch(statementDates, businessDate);
+                if (i >= 0) {
+                    loansToCycle.add(BillingCycle.builder()
+                            .loanId(loan.getId())
+                            .accountId(loan.getAccountId())
                             .statementDate(businessDate)
-                            .startDate(i == 0 ? l.getStartDate() : statementDates.get(i - 1).plusDays(1))
+                            .startDate(i == 0 ? loan.getStartDate() : statementDates.get(i - 1).plusDays(1))
                             .endDate(businessDate)
-                            .build();
-                })
-                .collect(Collectors.toList());
+                            .build());
+                }
+            }
+            return loansToCycle;
+        }
     }
 
-    public void closeLoan(UUID loanId) {
-        loanRepository.findById(loanId).ifPresent(loan -> {
-            loan.setLoanState(Loan.LOAN_STATE.CLOSED);
-            loanRepository.save(loan);
-        });
+    public void closeLoan(UUID loanId) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            loanDao.updateState(con, loanId, Loan.LOAN_STATE.CLOSED);
+        }
     }
-
 }

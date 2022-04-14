@@ -2,13 +2,11 @@ package com.github.karlnicholas.merchloan.accounts.model;
 
 import lombok.*;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
 @Getter
 @Setter
 @Builder
@@ -16,13 +14,13 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Loan {
     public enum LOAN_STATE {OPEN, CLOSED}
-    @Id
-    @Column(columnDefinition = "BINARY(16)")
+//    @Id
+//    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-    @ManyToOne
-    private Account account;
+//    @ManyToOne
+    private UUID accountId;
     private LocalDate startDate;
-    @Convert(converter = StatementDatesConverter.class)
+//    @Convert(converter = StatementDatesConverter.class)
     private List<LocalDate> statementDates;
     private BigDecimal funding;
     private Integer months;

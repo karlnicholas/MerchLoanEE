@@ -1,0 +1,94 @@
+package com.github.karlnicholas.merchloan.accounts.dao;
+
+import com.github.karlnicholas.merchloan.accounts.model.Account;
+import com.github.karlnicholas.merchloan.accounts.model.Loan;
+import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
+import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.SerializationUtils;
+
+import java.math.BigDecimal;
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@Slf4j
+public class RegisterEntryDao {
+
+    public RegisterEntry findById(Connection con, UUID loanId) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("select from account where id = ?")) {
+            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return RegisterEntry.builder()
+                        .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                        .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                        .rowNum(rs.getInt(3))
+                        .date(((Date) rs.getObject(4)).toLocalDate())
+                        .description(rs.getString(5))
+                        .debit(rs.getBigDecimal(6))
+                        .credit(rs.getBigDecimal(7))
+                        .build();
+            }
+        }
+    }
+
+    public Iterator<RegisterEntry> findByLoanIdAndDateBetweenOrderByRowNum(Connection con, UUID loanId, LocalDate startDate, LocalDate endDate) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("select from register_entry where loan_id = ? and date > ? and date <= ? order by row_num")) {
+            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setObject(2, startDate);
+            ps.setObject(3, endDate);
+            try (ResultSet rs = ps.executeQuery()) {
+                return new Iterator() {
+                    @Override
+                    public boolean hasNext() {
+                        try {
+                            return rs.next();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public Object next() {
+                        try {
+                            return RegisterEntry.builder()
+                                    .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                                    .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                                    .rowNum(rs.getInt(3))
+                                    .date(((Date) rs.getObject(4)).toLocalDate())
+                                    .description(rs.getString(5))
+                                    .debit(rs.getBigDecimal(6))
+                                    .credit(rs.getBigDecimal(7))
+                                    .build();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                };
+            }
+        }
+    }
+
+    public Iterator<RegisterEntry> findByLoanIdOrderByRowNum(Connection con, UUID id) {
+        return null;
+    }
+
+    public void insert(Connection con, RegisterEntry registerEntry) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("insert into register_entry values(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setBytes(1, UUIDToBytes.uuidToBytes(registerEntry.getId()));
+            ps.setBytes(2, UUIDToBytes.uuidToBytes(registerEntry.getLoanId()));
+            ps.setInt(3, registerEntry.getRowNum());
+            ps.setObject(4, registerEntry.getDate());
+            ps.setString(5, registerEntry.getDescription());
+            ps.setBigDecimal(6, registerEntry.getDebit());
+            ps.setBigDecimal(7, registerEntry.getCredit());
+            ps.executeUpdate();
+        }
+    }
+}
