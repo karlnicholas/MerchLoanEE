@@ -40,7 +40,7 @@ public class QueryService {
         this.rabbitMqSender = rabbitMqSender;
     }
 
-    public Account queryAccountId(UUID id) throws SQLException {
+    public Optional<Account> queryAccountId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             return accountDao.findById(con, id);
         }
@@ -55,26 +55,32 @@ public class QueryService {
         // return payoff amount
         // loan has AccountId, startDate, funding, months, interestRate, monthlyPayment, loanState
         try (Connection con = dataSource.getConnection()) {
-            Loan loan = loanDao.findById(con, loanId);
-            if (loan != null) {
-                Account account = accountDao.findById(con, loan.getAccountId());
-                // start building response
-                LoanDto loanDto = LoanDto.builder()
-                        .loanId(loanId)
-                        .accountId(account.getId())
-                        .customer(account.getCustomer())
-                        .funding(loan.getFunding())
-                        .loanState(loan.getLoanState().name())
-                        .interestRate(loan.getInterestRate())
-                        .startDate(loan.getStartDate())
-                        .statementDates(loan.getStatementDates())
-                        .monthlyPayments(loan.getMonthlyPayments())
-                        .months(loan.getMonths())
-                        .build();
-                if (loan.getLoanState() != Loan.LOAN_STATE.CLOSED) {
-                    computeLoanValues(loanId, loan, loanDto);
+            Optional<Loan> loanOpt = loanDao.findById(con, loanId);
+            if ( loanOpt.isPresent() ) {
+                Loan loan = loanOpt.get();
+                Optional<Account> accountOpt = accountDao.findById(con, loan.getAccountId());
+                if ( accountOpt.isPresent() ) {
+                    Account account = accountOpt.get();
+                    // start building response
+                    LoanDto loanDto = LoanDto.builder()
+                            .loanId(loanId)
+                            .accountId(account.getId())
+                            .customer(account.getCustomer())
+                            .funding(loan.getFunding())
+                            .loanState(loan.getLoanState().name())
+                            .interestRate(loan.getInterestRate())
+                            .startDate(loan.getStartDate())
+                            .statementDates(loan.getStatementDates())
+                            .monthlyPayments(loan.getMonthlyPayments())
+                            .months(loan.getMonths())
+                            .build();
+                    if (loan.getLoanState() != Loan.LOAN_STATE.CLOSED) {
+                        computeLoanValues(loanId, loan, loanDto);
+                    }
+                    return Optional.of(loanDto);
+                } else {
+                    return Optional.empty();
                 }
-                return Optional.of(loanDto);
             } else {
                 return Optional.empty();
             }

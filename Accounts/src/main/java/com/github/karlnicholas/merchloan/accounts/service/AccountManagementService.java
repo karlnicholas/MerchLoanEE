@@ -47,32 +47,40 @@ public class AccountManagementService {
 
     public void fundAccount(FundLoan fundLoan, ServiceRequestResponse requestResponse) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            Account account = accountDao.findById(con, fundLoan.getAccountId());
-            LocalDate[] statementDates = new LocalDate[12];
-            statementDates[11] = fundLoan.getStartDate().plusYears(1);
-            for (int i = 0; i < 11; ++i) {
-                statementDates[i] = fundLoan.getStartDate().plusDays((int) ((i + 1) * 365.0 / 12.0));
+            Optional<Account> accountQ = accountDao.findById(con, fundLoan.getAccountId());
+            if (accountQ.isPresent()) {
+                LocalDate[] statementDates = new LocalDate[12];
+                statementDates[11] = fundLoan.getStartDate().plusYears(1);
+                for (int i = 0; i < 11; ++i) {
+                    statementDates[i] = fundLoan.getStartDate().plusDays((int) ((i + 1) * 365.0 / 12.0));
+                }
+                loanDao.insert(con,
+                        Loan.builder()
+                                .id(fundLoan.getId())
+                                .accountId(accountQ.get().getId())
+                                .startDate(fundLoan.getStartDate())
+                                .statementDates(Arrays.asList(statementDates))
+                                .funding(fundLoan.getAmount())
+                                .months(12)
+                                .interestRate(new BigDecimal("0.10"))
+                                .monthlyPayments(new BigDecimal("879.16"))
+                                .loanState(Loan.LOAN_STATE.OPEN)
+                                .build());
+                requestResponse.setSuccess();
+            } else {
+                requestResponse.setFailure("Account not found for " + fundLoan.getAccountId());
             }
-            loanDao.insert(con,
-                    Loan.builder()
-                            .id(fundLoan.getId())
-                            .accountId(account.getId())
-                            .startDate(fundLoan.getStartDate())
-                            .statementDates(Arrays.asList(statementDates))
-                            .funding(fundLoan.getAmount())
-                            .months(12)
-                            .interestRate(new BigDecimal("0.10"))
-                            .monthlyPayments(new BigDecimal("879.16"))
-                            .loanState(Loan.LOAN_STATE.OPEN)
-                            .build());
-            requestResponse.setSuccess();
         }
     }
 
     public void validateLoan(UUID loanId, ServiceRequestResponse requestResponse) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            Loan loanQ = loanDao.findById(con, loanId);
-            requestResponse.setSuccess();
+            Optional<Loan> loanQ = loanDao.findById(con, loanId);
+            if (loanQ.isPresent()) {
+                requestResponse.setSuccess();
+            } else {
+                requestResponse.setFailure("Loan not found for " + loanId);
+            }
         }
     }
 
@@ -81,11 +89,20 @@ public class AccountManagementService {
             ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                     .id(statementHeader.getId())
                     .build();
-            Loan loan = loanDao.findById(con, statementHeader.getLoanId());
-            Account account = accountDao.findById(con, loan.getAccountId());
-            statementHeader.setCustomer(account.getCustomer());
-            statementHeader.setAccountId(loan.getAccountId());
-            requestResponse.setSuccess();
+            Optional<Loan> loanOpt = loanDao.findById(con, statementHeader.getLoanId());
+            if (loanOpt.isPresent()) {
+                Optional<Account> accountQ = accountDao.findById(con, loanOpt.get().getAccountId());
+                if (accountQ.isPresent()) {
+
+                    statementHeader.setCustomer(accountQ.get().getCustomer());
+                statementHeader.setAccountId(loanOpt.get().getAccountId());
+                requestResponse.setSuccess();
+                } else {
+                    requestResponse.setFailure("Account not found for loanId: " + statementHeader.getLoanId());
+                }
+            } else {
+                requestResponse.setFailure("Loan not found for loanId: " + statementHeader.getLoanId());
+            }
             return requestResponse;
         }
     }

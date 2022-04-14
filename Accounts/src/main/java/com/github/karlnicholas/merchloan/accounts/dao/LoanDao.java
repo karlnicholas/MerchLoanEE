@@ -30,22 +30,24 @@ public class LoanDao {
         }
     }
 
-    public Loan findById(Connection con, UUID loanId) throws SQLException {
+    public Optional<Loan> findById(Connection con, UUID loanId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select from account where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                return Loan.builder()
-                        .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                        .accountId(UUIDToBytes.toUUID(rs.getBytes(2)))
-                        .startDate(((Date) rs.getObject(3)).toLocalDate())
-                        .statementDates((List<LocalDate>) SerializationUtils.deserialize(rs.getBytes(4)))
-                        .funding(rs.getBigDecimal(5))
-                        .months(rs.getInt(6))
-                        .interestRate(rs.getBigDecimal(7))
-                        .monthlyPayments(rs.getBigDecimal(8))
-                        .loanState(Loan.LOAN_STATE.valueOf(rs.getString(9)))
-                        .build();
+                if (rs.next())
+                    return Optional.of(Loan.builder()
+                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .accountId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .startDate(((Date) rs.getObject(3)).toLocalDate())
+                            .statementDates((List<LocalDate>) SerializationUtils.deserialize(rs.getBytes(4)))
+                            .funding(rs.getBigDecimal(5))
+                            .months(rs.getInt(6))
+                            .interestRate(rs.getBigDecimal(7))
+                            .monthlyPayments(rs.getBigDecimal(8))
+                            .loanState(Loan.LOAN_STATE.valueOf(rs.getString(9)))
+                            .build());
+                else
+                    return Optional.empty();
             }
         }
     }

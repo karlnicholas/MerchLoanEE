@@ -21,16 +21,18 @@ public class AccountDao {
         }
     }
 
-    public Account findById(Connection con, UUID accountId) throws SQLException {
+    public Optional<Account> findById(Connection con, UUID accountId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select from account where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(accountId));
             try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                return Account.builder()
-                        .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                        .customer(rs.getString(2))
-                        .createDate(((Date) rs.getObject(3)).toLocalDate())
-                        .build();
+                if (rs.next())
+                    return Optional.of(Account.builder()
+                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .customer(rs.getString(2))
+                            .createDate(((Date) rs.getObject(3)).toLocalDate())
+                            .build());
+                else
+                    return Optional.empty();
             }
         }
     }

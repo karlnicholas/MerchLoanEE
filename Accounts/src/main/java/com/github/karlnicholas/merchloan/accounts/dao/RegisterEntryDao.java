@@ -10,30 +10,30 @@ import org.springframework.util.SerializationUtils;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
 public class RegisterEntryDao {
 
-    public RegisterEntry findById(Connection con, UUID loanId) throws SQLException {
+    public Optional<RegisterEntry> findById(Connection con, UUID loanId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select from account where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
-                rs.next();
-                return RegisterEntry.builder()
-                        .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                        .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
-                        .rowNum(rs.getInt(3))
-                        .date(((Date) rs.getObject(4)).toLocalDate())
-                        .description(rs.getString(5))
-                        .debit(rs.getBigDecimal(6))
-                        .credit(rs.getBigDecimal(7))
-                        .build();
+                if (rs.next())
+                    return Optional.of(RegisterEntry.builder()
+                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .rowNum(rs.getInt(3))
+                            .date(((Date) rs.getObject(4)).toLocalDate())
+                            .description(rs.getString(5))
+                            .debit(rs.getBigDecimal(6))
+                            .credit(rs.getBigDecimal(7))
+                            .build());
+                else
+                    return Optional.empty();
             }
         }
     }

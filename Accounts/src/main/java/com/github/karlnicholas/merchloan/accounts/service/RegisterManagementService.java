@@ -70,7 +70,8 @@ public class RegisterManagementService {
                     .debit(debitLoan.getAmount())
                     .description(debitLoan.getDescription())
                     .build();
-            Optional<LoanState> loanStateOpt = loanStateDao.getWithWriteLock(con, debitLoan.getLoanId());
+            loanStateDao.readWriteTablesLock(con);
+            Optional<LoanState> loanStateOpt = loanStateDao.findByLoanId(con, debitLoan.getLoanId());
             if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
@@ -79,6 +80,7 @@ public class RegisterManagementService {
                 registerEntryDao.insert(con, debitEntry);
                 loanStateDao.update(con, loanState);
             }
+            loanStateDao.tablesUnlock(con);
             requestResponse.setSuccess("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
@@ -99,7 +101,8 @@ public class RegisterManagementService {
                     .credit(creditLoan.getAmount())
                     .description(creditLoan.getDescription())
                     .build();
-            Optional<LoanState> loanStateOpt = loanStateDao.getWithWriteLock(con, creditLoan.getLoanId());
+            loanStateDao.readWriteTablesLock(con);
+            Optional<LoanState> loanStateOpt = loanStateDao.findByLoanId(con, creditLoan.getLoanId());
             if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
@@ -148,9 +151,9 @@ public class RegisterManagementService {
     public RegisterEntry billingCycleCharge(BillingCycleCharge billingCycleCharge) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             if (billingCycleCharge.getRetry().booleanValue()) {
-                RegisterEntry re = registerEntryDao.findById(con, billingCycleCharge.getId());
-                if (re != null) {
-                    return re;
+                Optional<RegisterEntry> reOpt = registerEntryDao.findById(con, billingCycleCharge.getId());
+                if (reOpt.isPresent()) {
+                    return reOpt.get();
                 }
             }
             RegisterEntry registerEntry = RegisterEntry.builder()
@@ -161,7 +164,8 @@ public class RegisterManagementService {
                     .credit(billingCycleCharge.getCredit())
                     .description(billingCycleCharge.getDescription())
                     .build();
-            Optional<LoanState> loanStateOpt = loanStateDao.getWithWriteLock(con, billingCycleCharge.getLoanId());
+            loanStateDao.readWriteTablesLock(con);
+            Optional<LoanState> loanStateOpt = loanStateDao.findByLoanId(con, billingCycleCharge.getLoanId());
             if (loanStateOpt.isPresent()) {
                 LoanState loanState = loanStateOpt.get();
                 loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
