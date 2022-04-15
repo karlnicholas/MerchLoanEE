@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @Service
 public class LoanStateDao {
+    //     loan_id, start_date, current_row_num, balance
     public void insert(Connection con, LoanState loanState) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("insert into loan_state(loan_id, start_date, balance, row_num) values(?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanState.getLoanId()));

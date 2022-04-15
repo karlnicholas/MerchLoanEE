@@ -1,0 +1,5 @@
+-- noinspection SqlDialectInspectionForFile
+
+-- noinspection SqlNoDataSourceInspectionForFile
+
+create table service_request (id BINARY(16) not null, local_date_time timestamp, request clob, request_type varchar(255), retry_count integer, status integer, status_message varchar(255), primary key (id))

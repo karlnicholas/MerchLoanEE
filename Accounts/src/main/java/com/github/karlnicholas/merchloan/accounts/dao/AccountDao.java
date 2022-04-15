@@ -13,23 +13,23 @@ import java.util.UUID;
 @Slf4j
 public class AccountDao {
     public void createAccount(Connection con, Account account) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("insert into account values(?, ?, ?)")) {
+        try (PreparedStatement ps = con.prepareStatement("insert into account(id, create_date, customer) values(?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(account.getId()));
-            ps.setString(2, account.getCustomer());
-            ps.setObject(3, account.getCreateDate());
+            ps.setDate(2, java.sql.Date.valueOf(account.getCreateDate()));
+            ps.setString(3, account.getCustomer());
             ps.executeUpdate();
         }
     }
 
     public Optional<Account> findById(Connection con, UUID accountId) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("select from account where id = ?")) {
+        try (PreparedStatement ps = con.prepareStatement("select id, create_date, customer from account where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(accountId));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(Account.builder()
                             .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .customer(rs.getString(2))
-                            .createDate(((Date) rs.getObject(3)).toLocalDate())
+                            .createDate(rs.getDate(2).toLocalDate())
+                            .customer(rs.getString(3))
                             .build());
                 else
                     return Optional.empty();

@@ -17,9 +17,9 @@ import java.util.*;
 @Service
 @Slf4j
 public class RegisterEntryDao {
-
+    // id, loan_id, row_num, date, description, debit, credit
     public Optional<RegisterEntry> findById(Connection con, UUID loanId) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("select from account where id = ?")) {
+        try (PreparedStatement ps = con.prepareStatement("select id, loan_id, row_num, date, description, debit, credit from register_entry where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
@@ -27,7 +27,7 @@ public class RegisterEntryDao {
                             .id(UUIDToBytes.toUUID(rs.getBytes(1)))
                             .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
                             .rowNum(rs.getInt(3))
-                            .date(((Date) rs.getObject(4)).toLocalDate())
+                            .date(rs.getDate(4).toLocalDate())
                             .description(rs.getString(5))
                             .debit(rs.getBigDecimal(6))
                             .credit(rs.getBigDecimal(7))
@@ -39,7 +39,7 @@ public class RegisterEntryDao {
     }
 
     public Iterator<RegisterEntry> findByLoanIdAndDateBetweenOrderByRowNum(Connection con, UUID loanId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("select from register_entry where loan_id = ? and date > ? and date <= ? order by row_num")) {
+        try (PreparedStatement ps = con.prepareStatement("select id, loan_id, row_num, date, description, debit, credit from register_entry where loan_id = ? and date > ? and date <= ? order by row_num")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             ps.setObject(2, startDate);
             ps.setObject(3, endDate);
@@ -61,7 +61,7 @@ public class RegisterEntryDao {
                                     .id(UUIDToBytes.toUUID(rs.getBytes(1)))
                                     .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
                                     .rowNum(rs.getInt(3))
-                                    .date(((Date) rs.getObject(4)).toLocalDate())
+                                    .date(rs.getDate(4).toLocalDate())
                                     .description(rs.getString(5))
                                     .debit(rs.getBigDecimal(6))
                                     .credit(rs.getBigDecimal(7))
@@ -80,11 +80,11 @@ public class RegisterEntryDao {
     }
 
     public void insert(Connection con, RegisterEntry registerEntry) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("insert into register_entry values(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement ps = con.prepareStatement("insert into register_entry(id, loan_id, row_num, date, description, debit, credit) values(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(registerEntry.getId()));
             ps.setBytes(2, UUIDToBytes.uuidToBytes(registerEntry.getLoanId()));
             ps.setInt(3, registerEntry.getRowNum());
-            ps.setObject(4, registerEntry.getDate());
+            ps.setDate(4, java.sql.Date.valueOf(registerEntry.getDate()));
             ps.setString(5, registerEntry.getDescription());
             ps.setBigDecimal(6, registerEntry.getDebit());
             ps.setBigDecimal(7, registerEntry.getCredit());

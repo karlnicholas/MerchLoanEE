@@ -1,11 +1,12 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate;
 
 import com.github.karlnicholas.merchloan.businessdate.businessdate.service.BusinessDateService;
+import com.github.karlnicholas.merchloan.sqlutil.SqlInitialization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -14,7 +15,9 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
+import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -29,9 +32,14 @@ public class BusinessDateApplication {
 
     @Autowired
     private BusinessDateService businessDateService;
+    @Autowired
+    private DataSource dataSource;
 
-    @EventListener(ContextRefreshedEvent.class)
-    public void initialize() throws SQLException {
+    @EventListener(ApplicationReadyEvent.class)
+    public void initialize() throws SQLException, IOException {
+        try(Connection con = dataSource.getConnection()) {
+            SqlInitialization.initialize(con, BusinessDateApplication.class.getResourceAsStream("/sql/schema.sql"));
+        }
         businessDateService.initializeBusinessDate();
     }
 

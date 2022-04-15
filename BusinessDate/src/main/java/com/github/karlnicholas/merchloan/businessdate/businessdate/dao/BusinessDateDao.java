@@ -17,7 +17,7 @@ public class BusinessDateDao {
                 if (rs.next())
                     return Optional.of(BusinessDate.builder()
                             .id(rs.getLong(1))
-                            .businessDate(((Date) rs.getObject(2)).toLocalDate())
+                            .businessDate(rs.getDate(2).toLocalDate())
                             .build());
                 else
                     return Optional.empty();
@@ -27,7 +27,7 @@ public class BusinessDateDao {
 
     public void updateDate(Connection con, BusinessDate businessDate) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("update business_date set business_date = where id = ?")) {
-            ps.setObject(1, businessDate.getBusinessDate());
+            ps.setDate(1, java.sql.Date.valueOf(businessDate.getBusinessDate()));
             ps.setLong(2, businessDate.getId());
             ps.executeUpdate();
         }

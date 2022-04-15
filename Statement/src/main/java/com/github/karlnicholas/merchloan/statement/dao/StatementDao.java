@@ -15,13 +15,8 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class StatementDao {
+//    id, loan_id, statement_date, starting_balance, ending_balance, statement
 
-    //    private UUID id;
-//    private UUID loanId;
-//    private LocalDate statementDate;
-//    private BigDecimal startingBalance;
-//    private BigDecimal endingBalance;
-//    private String statement;
     public void insert(Connection con, Statement statement) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("insert into statement(id, loan_id, statement_date, starting_balance, ending_balance, status_message, statement) values(?, ?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(statement.getId()));
