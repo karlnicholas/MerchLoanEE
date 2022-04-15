@@ -25,7 +25,7 @@ public class LoanDao {
             ps.setInt(6, loan.getMonths());
             ps.setBigDecimal(7, loan.getInterestRate());
             ps.setBigDecimal(8, loan.getMonthlyPayments());
-            ps.setString(9, loan.getLoanState().name());
+            ps.setInt(9, loan.getLoanState().ordinal());
             ps.executeUpdate();
         }
     }
@@ -44,7 +44,7 @@ public class LoanDao {
                             .months(rs.getInt(6))
                             .interestRate(rs.getBigDecimal(7))
                             .monthlyPayments(rs.getBigDecimal(8))
-                            .loanState(Loan.LOAN_STATE.valueOf(rs.getString(9)))
+                            .loanState(Loan.LOAN_STATE.values()[rs.getInt(9)])
                             .build());
                 else
                     return Optional.empty();
@@ -77,7 +77,7 @@ public class LoanDao {
                                     .months(rs.getInt(6))
                                     .interestRate(rs.getBigDecimal(7))
                                     .monthlyPayments(rs.getBigDecimal(8))
-                                    .loanState(Loan.LOAN_STATE.valueOf(rs.getString(9)))
+                                    .loanState(Loan.LOAN_STATE.values()[rs.getInt(9)])
                                     .build();
                         } catch (SQLException e) {
                             throw new RuntimeException(e);

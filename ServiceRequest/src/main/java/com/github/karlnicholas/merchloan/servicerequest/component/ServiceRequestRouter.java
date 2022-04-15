@@ -26,7 +26,7 @@ public class ServiceRequestRouter {
         routingMap.put(StatementRequest.class.getName(), serviceRequestService::statementStatementRequest);
     }
 
-    public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
+    public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
         return routingMap.get(clazz).route(serviceRequestMessage, retry, existingId);
     }
 }

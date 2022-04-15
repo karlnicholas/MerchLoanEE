@@ -15,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class BusinessDateApplication {
     private BusinessDateService businessDateService;
 
     @EventListener(ContextRefreshedEvent.class)
-    public void initialize() {
+    public void initialize() throws SQLException {
         businessDateService.initializeBusinessDate();
     }
 

@@ -5,14 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
+import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.message.MQProducers;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
-import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,34 +23,32 @@ import java.util.UUID;
 @Slf4j
 public class ServiceRequestService {
     private final MQProducers mqProducers;
-    private final ServiceRequestRepository serviceRequestRepository;
+    private final ServiceRequestDao serviceRequestDao;
     private final ObjectMapper objectMapper;
     private final RedisComponent redisComponent;
+    private final DataSource dataSource;
 
-    public ServiceRequestService(MQProducers mqProducers, ServiceRequestRepository serviceRequestRepository, ObjectMapper objectMapper, RedisComponent redisComponent) {
+    public ServiceRequestService(MQProducers mqProducers, ServiceRequestDao serviceRequestDao, ObjectMapper objectMapper, RedisComponent redisComponent, DataSource dataSource) {
         this.mqProducers = mqProducers;
-        this.serviceRequestRepository = serviceRequestRepository;
+        this.serviceRequestDao = serviceRequestDao;
         this.objectMapper = objectMapper;
         this.redisComponent = redisComponent;
+        this.dataSource = dataSource;
     }
 
-    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws JsonProcessingException {
+    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
         AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(accountRequest);
-        try {
-            mqProducers.accountCreateAccount(CreateAccount.builder()
-                    .id(id)
-                    .customer(accountRequest.getCustomer())
-                    .createDate(redisComponent.getBusinessDate())
-                    .retry(retry)
-                    .build());
-        } catch (Exception e) {
-            log.error("Send account create message failed: {}", e.getMessage());
-        }
+        mqProducers.accountCreateAccount(CreateAccount.builder()
+                .id(id)
+                .customer(accountRequest.getCustomer())
+                .createDate(redisComponent.getBusinessDate())
+                .retry(retry)
+                .build());
         return id;
     }
 
-    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
+    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
         FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(fundingRequest);
         mqProducers.accountFundLoan(
@@ -64,7 +64,7 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
+    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
         CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(creditRequest);
         mqProducers.accountValidateCredit(
@@ -80,25 +80,29 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
-        StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
-        UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
-        mqProducers.statementStatement(
-                StatementHeader.builder()
-                        .id(id)
-                        .loanId(statementRequest.getLoanId())
-                        .interestChargeId(UUID.randomUUID())
-                        .feeChargeId(UUID.randomUUID())
-                        .statementDate(statementRequest.getStatementDate())
-                        .startDate(statementRequest.getStartDate())
-                        .endDate(statementRequest.getEndDate())
-                        .retry(retry)
-                        .build()
-        );
-        return id;
+    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId)  {
+        try {
+            StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
+            UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
+            mqProducers.statementStatement(
+                    StatementHeader.builder()
+                            .id(id)
+                            .loanId(statementRequest.getLoanId())
+                            .interestChargeId(UUID.randomUUID())
+                            .feeChargeId(UUID.randomUUID())
+                            .statementDate(statementRequest.getStatementDate())
+                            .startDate(statementRequest.getStartDate())
+                            .endDate(statementRequest.getEndDate())
+                            .retry(retry)
+                            .build()
+            );
+            return id;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
+    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
         CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(closeRequest);
         mqProducers.accountCloseLoan(
@@ -116,7 +120,7 @@ public class ServiceRequestService {
         return id;
     }
 
-    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws IOException {
+    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
         DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
         UUID id = retry == Boolean.TRUE ? existingId : persistRequest(debitRequest);
         mqProducers.accountValidateDebit(
@@ -132,44 +136,50 @@ public class ServiceRequestService {
         return id;
     }
 
-    private UUID persistRequest(ServiceRequestMessage requestMessage) throws JsonProcessingException {
+    private UUID persistRequest(ServiceRequestMessage requestMessage) throws Exception {
         UUID id = UUID.randomUUID();
         persistRequestWithId(requestMessage, id);
         return id;
     }
 
-    private void persistRequestWithId(ServiceRequestMessage requestMessage, UUID id) throws JsonProcessingException {
-        boolean retry;
-        do {
-            retry = false;
-            try {
-                serviceRequestRepository.save(
-                        ServiceRequest.builder()
-                                .id(id)
-                                .request(objectMapper.writeValueAsString(requestMessage))
-                                .localDateTime(LocalDateTime.now())
-                                .requestType(requestMessage.getClass().getName())
-                                .status(ServiceRequestMessage.STATUS.PENDING)
-                                .retryCount(0)
-                                .build()
-                );
-            } catch (DuplicateKeyException dke) {
-                id = UUID.randomUUID();
-                retry = true;
-            }
-        } while (retry);
+    private void persistRequestWithId(ServiceRequestMessage requestMessage, UUID id) throws JsonProcessingException, SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            boolean retry;
+            do {
+                retry = false;
+                try {
+                    serviceRequestDao.insert(con,
+                            ServiceRequest.builder()
+                                    .id(id)
+                                    .request(objectMapper.writeValueAsString(requestMessage))
+                                    .localDateTime(LocalDateTime.now())
+                                    .requestType(requestMessage.getClass().getName())
+                                    .status(ServiceRequestMessage.STATUS.PENDING)
+                                    .retryCount(0)
+                                    .build()
+                    );
+                } catch (DuplicateKeyException dke) {
+                    id = UUID.randomUUID();
+                    retry = true;
+                }
+            } while (retry);
+        }
 
     }
 
     public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) {
-        Optional<ServiceRequest> srQ = serviceRequestRepository.findById(serviceRequestResponse.getId());
-        if (srQ.isPresent()) {
-            ServiceRequest sr = srQ.get();
-            sr.setStatus(serviceRequestResponse.getStatus());
-            sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
-            serviceRequestRepository.save(sr);
-        } else {
-            log.error("void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) not found: {}", serviceRequestResponse);
+        try (Connection con = dataSource.getConnection()) {
+            Optional<ServiceRequest> srQ = serviceRequestDao.findById(con, serviceRequestResponse.getId());
+            if (srQ.isPresent()) {
+                ServiceRequest sr = srQ.get();
+                sr.setStatus(serviceRequestResponse.getStatus());
+                sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
+                    serviceRequestDao.update(con, sr);
+            } else {
+                log.error("void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) not found: {}", serviceRequestResponse);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -109,7 +110,7 @@ public class MQConsumers {
         serviceRequestService.completeServiceRequest(serviceRequest);
     }
 
-    public void receivedServiceRequestBillloanMessage(String consumerTag, Delivery delivery) throws IOException {
+    public void receivedServiceRequestBillloanMessage(String consumerTag, Delivery delivery) {
         BillingCycle billingCycle = (BillingCycle) SerializationUtils.deserialize(delivery.getBody());
         log.debug("Billloan Received {}", billingCycle);
         serviceRequestService.statementStatementRequest(StatementRequest.builder()

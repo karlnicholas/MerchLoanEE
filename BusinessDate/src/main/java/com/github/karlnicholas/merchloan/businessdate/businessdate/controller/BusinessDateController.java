@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 @RestController
@@ -21,7 +22,7 @@ public class BusinessDateController {
     }
 
     @PostMapping(value = "businessdate", consumes = MediaType.TEXT_PLAIN_VALUE)
-    public void postBusinessDate(@RequestBody String businessDate) throws IOException, InterruptedException {
+    public void postBusinessDate(@RequestBody String businessDate) throws IOException, InterruptedException, SQLException {
         BusinessDate priorBusinessDate = businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
     }
 }

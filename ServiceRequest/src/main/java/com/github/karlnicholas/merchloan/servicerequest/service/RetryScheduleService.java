@@ -1,34 +1,44 @@
 package com.github.karlnicholas.merchloan.servicerequest.service;
 
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
-import com.github.karlnicholas.merchloan.servicerequest.repository.ServiceRequestRepository;
+import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
+import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Iterator;
+
 @Service
 public class RetryScheduleService {
-    private final ServiceRequestRepository serviceRequestRepository;
+    private final ServiceRequestDao serviceRequestDao;
     private final RetryService retryService;
+    private final DataSource dataSource;
 
-    public RetryScheduleService(ServiceRequestRepository serviceRequestRepository, RetryService retryService) {
-        this.serviceRequestRepository = serviceRequestRepository;
+    public RetryScheduleService(ServiceRequestDao serviceRequestDao, RetryService retryService, DataSource dataSource) {
+        this.serviceRequestDao = serviceRequestDao;
         this.retryService = retryService;
+        this.dataSource = dataSource;
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 10000)
-    public void retryService() {
-        serviceRequestRepository.findByStatus(ServiceRequestMessage.STATUS.ERROR)
-                .forEach(sr -> {
-                    sr.setRetryCount(sr.getRetryCount() + 1);
-                    if (sr.getRetryCount() > 3) {
-                        sr.setStatus(ServiceRequestMessage.STATUS.FAILURE);
-                        sr.setStatusMessage("Exceeded Retry Count");
-                    }
-                    serviceRequestRepository.save(sr);
-                    if (sr.getRetryCount() <= 3) {
-                        retryService.retryServiceRequest(sr, sr.getRequestType());
-                    }
-                });
+    public void retryService() throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            Iterator<ServiceRequest> srIt = serviceRequestDao.findByStatus(con, ServiceRequestMessage.STATUS.ERROR);
+            while ( srIt.hasNext()) {
+                ServiceRequest sr = srIt.next();
+                sr.setRetryCount(sr.getRetryCount() + 1);
+                if (sr.getRetryCount() > 3) {
+                    sr.setStatus(ServiceRequestMessage.STATUS.FAILURE);
+                    sr.setStatusMessage("Exceeded Retry Count");
+                }
+                serviceRequestDao.update(con, sr);
+                if (sr.getRetryCount() <= 3) {
+                    retryService.retryServiceRequest(sr, sr.getRequestType());
+                }
+            }
+        }
     }
-
 }
