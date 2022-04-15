@@ -16,6 +16,7 @@ import org.springframework.util.SerializationUtils;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -84,15 +85,19 @@ public class MQConsumers {
     public void receivedQueryMostRecentStatementMessage(String consumerTag, Delivery delivery) throws IOException {
         UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
         log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
-        MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
-                        .id(statement.getId())
-                        .loanId(loanId)
-                        .statementDate(statement.getStatementDate())
-                        .endingBalance(statement.getEndingBalance())
-                        .startingBalance(statement.getStartingBalance())
-                        .build())
-                .orElse(MostRecentStatement.builder().loanId(loanId).build());
-        reply(delivery, mostRecentStatement);
+        try {
+            MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
+                            .id(statement.getId())
+                            .loanId(loanId)
+                            .statementDate(statement.getStatementDate())
+                            .endingBalance(statement.getEndingBalance())
+                            .startingBalance(statement.getStartingBalance())
+                            .build())
+                    .orElse(MostRecentStatement.builder().loanId(loanId).build());
+            reply(delivery, mostRecentStatement);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void receivedQueryStatementsMessage(String consumerTag, Delivery delivery) throws IOException {

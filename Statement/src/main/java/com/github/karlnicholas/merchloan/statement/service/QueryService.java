@@ -1,30 +1,48 @@
 package com.github.karlnicholas.merchloan.statement.service;
 
+import com.github.karlnicholas.merchloan.statement.dao.StatementDao;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
-import com.github.karlnicholas.merchloan.statement.repository.StatementRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
 
 @Service
 public class QueryService {
-    private final StatementRepository statementRepository;
+    private final StatementDao statementDao;
+    private final DataSource dataSource;
 
-    public QueryService(StatementRepository statementRepository) {
-        this.statementRepository = statementRepository;
+    public QueryService(StatementDao statementDao, DataSource dataSource) {
+        this.statementDao = statementDao;
+        this.dataSource = dataSource;
     }
 
     public Optional<Statement> findById(UUID id) {
-        return statementRepository.findById(id);
+        try (Connection con = dataSource.getConnection()) {
+            return statementDao.findById(con, id);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public List<Statement> findByLoanId(UUID loanId){
-        return statementRepository.findByLoanId(loanId);
+    public List<Statement> findByLoanId(UUID loanId) {
+        try (Connection con = dataSource.getConnection()) {
+            Iterator<Statement> sIt = statementDao.findByLoanId(con, loanId);
+            List<Statement> statements = new ArrayList<>();
+            while (sIt.hasNext()) {
+                statements.add(sIt.next());
+            }
+            return statements;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Optional<Statement> findMostRecentStatement(UUID loanId) {
-        return statementRepository.findFirstByLoanIdOrderByStatementDateDesc(loanId);
+    public Optional<Statement> findMostRecentStatement(UUID loanId) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            return statementDao.findFirstByLoanIdOrderByStatementDateDesc(con, loanId);
+        }
     }
 }
