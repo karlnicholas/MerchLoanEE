@@ -17,9 +17,9 @@ import java.util.UUID;
 public class LoanStateDao {
     //     loan_id, start_date, current_row_num, balance
     public void insert(Connection con, LoanState loanState) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("insert into loan_state(loan_id, start_date, balance, row_num) values(?, ?, ?, ?)")) {
+        try (PreparedStatement ps = con.prepareStatement("insert into loan_state(loan_id, start_date, balance, current_row_num) values(?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanState.getLoanId()));
-            ps.setObject(2, loanState.getStartDate());
+            ps.setDate(2, java.sql.Date.valueOf(loanState.getStartDate()));
             ps.setBigDecimal(3, loanState.getBalance());
             ps.setInt(4, loanState.getCurrentRowNum());
             ps.executeUpdate();
@@ -27,8 +27,8 @@ public class LoanStateDao {
     }
 
     public void update(Connection con, LoanState loanState) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("insert into loan_state values(?, ?, ?) where loanId = ?")) {
-            ps.setObject(1, loanState.getStartDate());
+        try (PreparedStatement ps = con.prepareStatement("update loan_state set start_date = ?, balance = ?, current_row_num = ? where loanId = ?")) {
+            ps.setDate(1, java.sql.Date.valueOf(loanState.getStartDate()));
             ps.setBigDecimal(2, loanState.getBalance());
             ps.setInt(3, loanState.getCurrentRowNum());
             ps.setBytes(4, UUIDToBytes.uuidToBytes(loanState.getLoanId()));
@@ -37,7 +37,7 @@ public class LoanStateDao {
     }
 
     public Optional<LoanState> findByLoanId(Connection con, UUID loanId) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("select loan_id, start_date, balance, row_num from loan_state where loanId = ?")) {
+        try (PreparedStatement ps = con.prepareStatement("select loan_id, start_date, balance, current_row_num from loan_state where loanId = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())

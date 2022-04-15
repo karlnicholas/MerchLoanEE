@@ -80,7 +80,7 @@ public class RegisterEntryDao {
     }
 
     public void insert(Connection con, RegisterEntry registerEntry) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("insert into register_entry(id, loan_id, row_num, date, description, debit, credit) values(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement ps = con.prepareStatement("insert into register_entry(id, loan_id, row_num, date, description, debit, credit) values(?, ?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(registerEntry.getId()));
             ps.setBytes(2, UUIDToBytes.uuidToBytes(registerEntry.getLoanId()));
             ps.setInt(3, registerEntry.getRowNum());

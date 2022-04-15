@@ -7,9 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -48,37 +46,23 @@ public class ServiceRequestDao {
         }
     }
 
-    public Iterator<ServiceRequest> findByStatus(Connection con, ServiceRequestMessage.STATUS status) throws SQLException {
+    public List<ServiceRequest> findByStatus(Connection con, ServiceRequestMessage.STATUS status) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, request, request_type, local_date_time, status, status_message, retry_count from service_request where status = ?")) {
             ps.setInt(1, status.ordinal());
-            try (ResultSet rs = ps.executeQuery()) {
-                return new Iterator<ServiceRequest>() {
-                    @Override
-                    public boolean hasNext() {
-                        try {
-                            return rs.next();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    @Override
-                    public ServiceRequest next() {
-                        try {
-                            return ServiceRequest.builder()
-                                    .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                                    .request(rs.getString(2))
-                                    .requestType(rs.getString(3))
-                                    .localDateTime(rs.getTimestamp(4).toLocalDateTime())
-                                    .status(ServiceRequestMessage.STATUS.values()[rs.getInt(5)])
-                                    .statusMessage(rs.getString(6))
-                                    .retryCount(rs.getInt(7))
-                                    .build();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                };
+            try ( ResultSet rs = ps.executeQuery() ) {
+                List<ServiceRequest> serviceRequests = new ArrayList<>();
+                while (rs.next()) {
+                    serviceRequests.add(ServiceRequest.builder()
+                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .request(rs.getString(2))
+                            .requestType(rs.getString(3))
+                            .localDateTime(rs.getTimestamp(4).toLocalDateTime())
+                            .status(ServiceRequestMessage.STATUS.values()[rs.getInt(5)])
+                            .statusMessage(rs.getString(6))
+                            .retryCount(rs.getInt(7))
+                            .build());
+                }
+                return serviceRequests;
             }
         }
     }
