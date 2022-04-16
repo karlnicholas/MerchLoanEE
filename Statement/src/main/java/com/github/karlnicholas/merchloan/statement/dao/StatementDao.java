@@ -18,7 +18,7 @@ public class StatementDao {
 //    id, loan_id, statement_date, starting_balance, ending_balance, statement
 
     public void insert(Connection con, Statement statement) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("insert into statement(id, loan_id, statement_date, starting_balance, ending_balance, status_message, statement) values(?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement ps = con.prepareStatement("insert into statement(id, loan_id, statement_date, starting_balance, ending_balance, statement) values(?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(statement.getId()));
             ps.setBytes(2, UUIDToBytes.uuidToBytes(statement.getLoanId()));
             ps.setObject(3, statement.getStatementDate());

@@ -34,10 +34,10 @@ public class RegisterEntryDao {
     }
 // id, credit, date, debit, description , loan_id , row_num
     public List<RegisterEntry> findByLoanIdAndDateBetweenOrderByRowNum(Connection con, UUID loanId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("select id, loan_id, row_num, date, description, debit, credit from register_entry where loan_id = ? and date > ? and date <= ? order by row_num")) {
+        try (PreparedStatement ps = con.prepareStatement("select id, loan_id, row_num, date, description, debit, credit from register_entry where loan_id = ? and date between ? and ? order by row_num")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
-            ps.setObject(2, startDate);
-            ps.setObject(3, endDate);
+            ps.setDate(2, java.sql.Date.valueOf(startDate));
+            ps.setDate(3, java.sql.Date.valueOf(endDate));
             try (ResultSet rs = ps.executeQuery()) {
                 List<RegisterEntry> registerEntries = new ArrayList<>();
                 while (rs.next()) {

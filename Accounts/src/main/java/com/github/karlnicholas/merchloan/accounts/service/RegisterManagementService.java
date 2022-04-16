@@ -14,8 +14,10 @@ import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -128,15 +130,15 @@ public class RegisterManagementService {
 
     public void setStatementHeaderRegisterEntryies(StatementHeader statementHeader) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            List<RegisterEntry> entries = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
-            entries.forEach(e -> statementHeader.getRegisterEntries().add(
-                    RegisterEntryMessage.builder()
+            statementHeader.setRegisterEntries(registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate())
+                    .stream().map(e->RegisterEntryMessage.builder()
                             .rowNum(e.getRowNum())
                             .date(e.getDate())
                             .credit(e.getCredit())
                             .debit(e.getDebit())
                             .description(e.getDescription())
-                            .build()));
+                            .build())
+                    .collect(Collectors.toList()));
         }
     }
 
