@@ -7,7 +7,6 @@ import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -16,9 +15,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @Service
 @Slf4j
@@ -109,11 +105,9 @@ public class AccountManagementService {
 
     public List<BillingCycle> loansToCycle(LocalDate businessDate) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            Iterator<Loan> lIt = loanDao.findByLoanState(con, Loan.LOAN_STATE.OPEN);
+            List<Loan> loans = loanDao.findByLoanState(con, Loan.LOAN_STATE.OPEN);
             ArrayList<BillingCycle> loansToCycle = new ArrayList<>();
-            while (lIt.hasNext()) {
-                Loan loan = lIt.next();
-                List<LocalDate> statementDates = loan.getStatementDates();
+            loans.forEach(loan->{                List<LocalDate> statementDates = loan.getStatementDates();
                 int i = Collections.binarySearch(statementDates, businessDate);
                 if (i >= 0) {
                     loansToCycle.add(BillingCycle.builder()
@@ -124,7 +118,7 @@ public class AccountManagementService {
                             .endDate(businessDate)
                             .build());
                 }
-            }
+            });
             return loansToCycle;
         }
     }

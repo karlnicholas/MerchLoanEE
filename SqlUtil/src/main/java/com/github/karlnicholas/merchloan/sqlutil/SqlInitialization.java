@@ -8,9 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class SqlInitialization {
-    public static void initialize(Connection con, InputStream inputStream) throws SQLException, IOException {
+    public static int initialize(Connection con, InputStream inputStream) throws SQLException, IOException {
         try (PreparedStatement ps = con.prepareStatement(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8))) {
-            ps.executeUpdate();
+            return ps.executeUpdate();
         }
     }
 }

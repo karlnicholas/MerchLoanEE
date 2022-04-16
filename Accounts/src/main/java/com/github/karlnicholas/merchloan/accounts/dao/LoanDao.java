@@ -52,38 +52,25 @@ public class LoanDao {
         }
     }
 
-    public Iterator<Loan> findByLoanState(Connection con, Loan.LOAN_STATE state) throws SQLException {
+    public List<Loan> findByLoanState(Connection con, Loan.LOAN_STATE state) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state from loan where loan_state = ?")) {
-            ps.setString(1, state.name());
+            ps.setInt(1, state.ordinal());
             try (ResultSet rs = ps.executeQuery()) {
-                return new Iterator() {
-                    @Override
-                    public boolean hasNext() {
-                        try {
-                            return rs.next();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    @Override
-                    public Object next() {
-                        try {
-                            return Loan.builder()
-                                    .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                                    .accountId(UUIDToBytes.toUUID(rs.getBytes(2)))
-                                    .startDate(((Date) rs.getObject(3)).toLocalDate())
-                                    .statementDates(StatementDatesConverter.convertToEntityAttribute(rs.getString(4)))
-                                    .funding(rs.getBigDecimal(5))
-                                    .months(rs.getInt(6))
-                                    .interestRate(rs.getBigDecimal(7))
-                                    .monthlyPayments(rs.getBigDecimal(8))
-                                    .loanState(Loan.LOAN_STATE.values()[rs.getInt(9)])
-                                    .build();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                };
+                List<Loan> loans = new ArrayList<>();
+                while (rs.next()) {
+                    loans.add(Loan.builder()
+                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .accountId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .startDate(((Date) rs.getObject(3)).toLocalDate())
+                            .statementDates(StatementDatesConverter.convertToEntityAttribute(rs.getString(4)))
+                            .funding(rs.getBigDecimal(5))
+                            .months(rs.getInt(6))
+                            .interestRate(rs.getBigDecimal(7))
+                            .monthlyPayments(rs.getBigDecimal(8))
+                            .loanState(Loan.LOAN_STATE.values()[rs.getInt(9)])
+                            .build());
+                }
+                return loans;
             }
         }
     }

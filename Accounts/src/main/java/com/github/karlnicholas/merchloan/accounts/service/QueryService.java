@@ -94,23 +94,19 @@ public class QueryService {
             // generate a simulated new statement for current period
             StatementHeader statementHeader = StatementHeader.builder().build();
             statementHeader.setLoanId(loanId);
-            List<RegisterEntry> registerEntries = new ArrayList<>();
+            List<RegisterEntry> registerEntries;
             if (mostRecentStatement.getStatementDate() == null) {
                 statementHeader.setEndDate(loan.getStatementDates().get(0));
                 statementHeader.setStartDate(loan.getStartDate());
-                Iterator<RegisterEntry> reIt = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
-                while(reIt.hasNext()) {
-                    registerEntries.add(reIt.next());
-                }
+                registerEntries = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
             } else {
                 int index = loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate());
                 if (index + 1 < loan.getStatementDates().size()) {
                     statementHeader.setEndDate(loan.getStatementDates().get(index + 1));
                     statementHeader.setStartDate(loan.getStatementDates().get(index).plusDays(1));
-                    Iterator<RegisterEntry> reIt = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
-                    while(reIt.hasNext()) {
-                        registerEntries.add(reIt.next());
-                    }
+                    registerEntries = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
+                } else {
+                    registerEntries = new ArrayList<>();
                 }
             }
             //        List<RegisterEntry> registerEntries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
@@ -159,11 +155,7 @@ public class QueryService {
 
     public List<RegisterEntry> queryRegisterByLoanId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            List<RegisterEntry> registerEntries = new ArrayList<>();
-            Iterator<RegisterEntry> reIt = registerEntryDao.findByLoanIdOrderByRowNum(con, id);
-            while (reIt.hasNext()) {
-                registerEntries.add(reIt.next());
-            }
+            List<RegisterEntry> registerEntries = registerEntryDao.findByLoanIdOrderByRowNum(con, id);
             return registerEntries;
         }
     }

@@ -57,9 +57,14 @@ public class BusinessDateService {
 
     public void initializeBusinessDate() throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            BusinessDate businessDate = businessDateDao.findById(con, 1L).orElse(BusinessDate.builder().id(1L).businessDate(LocalDate.now()).build());
-            businessDateDao.updateDate(con, businessDate);
-            redisComponent.updateBusinessDate(businessDate.getBusinessDate());
+            Optional<BusinessDate> businessDate = businessDateDao.findById(con, 1L);
+            BusinessDate currentBd = BusinessDate.builder().id(1L).businessDate(LocalDate.now()).build();
+            if ( businessDate.isPresent()) {
+                businessDateDao.updateDate(con, currentBd);
+            } else {
+                businessDateDao.insert(con, currentBd);
+            }
+            redisComponent.updateBusinessDate(currentBd.getBusinessDate());
         }
     }
 

@@ -32,4 +32,12 @@ public class BusinessDateDao {
             ps.executeUpdate();
         }
     }
+
+    public void insert(Connection con, BusinessDate businessDate) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("insert into business_date(id, business_date) values(?, ?)")) {
+            ps.setLong(1, businessDate.getId());
+            ps.setDate(2, java.sql.Date.valueOf(businessDate.getBusinessDate()));
+            ps.executeUpdate();
+        }
+    }
 }

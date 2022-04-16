@@ -16,7 +16,7 @@ import com.zaxxer.hikari.HikariDataSource;
 @Configuration
 @ConditionalOnClass(DataSource.class)
 public class DataSourceAutoconfiguration {
-	@Value("${database-url:jdbc:h2:mem:}")
+	@Value("${database-url:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1}")
     private String databaseUrl;
 
 	@Value("${maximumPoolSize:10}")
