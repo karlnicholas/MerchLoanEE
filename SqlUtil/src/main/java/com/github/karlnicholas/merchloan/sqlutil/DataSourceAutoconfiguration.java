@@ -19,7 +19,7 @@ public class DataSourceAutoconfiguration {
 	@Value("${database-url:jdbc:h2:mem:test;DB_CLOSE_DELAY=-1}")
     private String databaseUrl;
 
-	@Value("${maximumPoolSize:10}")
+	@Value("${maximumPoolSize:100}")
 	private String maximumPoolSize;
 	@Value("${minimumIdle:2}")
 	private String minimumIdle;
