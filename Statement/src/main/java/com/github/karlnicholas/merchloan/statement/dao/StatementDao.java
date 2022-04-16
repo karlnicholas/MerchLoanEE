@@ -7,10 +7,9 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -48,36 +47,22 @@ public class StatementDao {
         }
     }
 
-    public Iterator<Statement> findByLoanId(Connection con, UUID loanId) throws SQLException {
+    public List<Statement> findByLoanId(Connection con, UUID loanId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, statement_date, starting_balance, ending_balance, statement from statement where loan_id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
-                return new Iterator<Statement>() {
-                    @Override
-                    public boolean hasNext() {
-                        try {
-                            return rs.next();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    @Override
-                    public Statement next() {
-                        try {
-                            return Statement.builder()
-                                    .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                                    .loanId(UUIDToBytes.toUUID(rs.getBytes(1)))
-                                    .statementDate(((Date) rs.getObject(3)).toLocalDate())
-                                    .startingBalance(rs.getBigDecimal(4))
-                                    .endingBalance(rs.getBigDecimal(5))
-                                    .statement(new String(rs.getBytes(6), StandardCharsets.UTF_8))
-                                    .build();
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                };
+                List<Statement> statements = new ArrayList<>();
+                while (rs.next()) {
+                    statements.add(Statement.builder()
+                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .loanId(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .statementDate(((Date) rs.getObject(3)).toLocalDate())
+                            .startingBalance(rs.getBigDecimal(4))
+                            .endingBalance(rs.getBigDecimal(5))
+                            .statement(new String(rs.getBytes(6), StandardCharsets.UTF_8))
+                            .build());
+                }
+                return statements;
             }
         }
     }

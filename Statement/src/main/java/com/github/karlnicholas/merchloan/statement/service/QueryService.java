@@ -29,12 +29,7 @@ public class QueryService {
 
     public List<Statement> findByLoanId(UUID loanId) {
         try (Connection con = dataSource.getConnection()) {
-            Iterator<Statement> sIt = statementDao.findByLoanId(con, loanId);
-            List<Statement> statements = new ArrayList<>();
-            while (sIt.hasNext()) {
-                statements.add(sIt.next());
-            }
-            return statements;
+            return statementDao.findByLoanId(con, loanId);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
