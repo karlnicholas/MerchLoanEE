@@ -50,16 +50,16 @@ public class StatementService {
     public Statement saveStatement(StatementHeader statementHeader, BigDecimal startingBalance, BigDecimal endingBalance) throws JsonProcessingException, SQLException {
         try (Connection con = dataSource.getConnection()) {
             List<RegisterEntryDto> registerEntries = new ArrayList<>();
-            for( int i = 1; i <= statementHeader.getRegisterEntries().size(); i++) {
-                RegisterEntryMessage rem = statementHeader.getRegisterEntries().get(i-1);
-                RegisterEntryDto.builder()
+            for (int i = 1; i <= statementHeader.getRegisterEntries().size(); i++) {
+                RegisterEntryMessage rem = statementHeader.getRegisterEntries().get(i - 1);
+                registerEntries.add(RegisterEntryDto.builder()
                         .rowNum(i)
                         .date(rem.getDate())
                         .description(rem.getDescription())
                         .credit(rem.getCredit())
                         .debit(rem.getDebit())
                         .balance(rem.getBalance())
-                        .build();
+                        .build());
             }
             StatementDto statementDto = StatementDto.builder()
                     .id(statementHeader.getId())
@@ -69,7 +69,8 @@ public class StatementService {
                     .statementDate(statementHeader.getStatementDate())
                     .endDate(statementHeader.getEndDate())
                     .startDate(statementHeader.getStartDate())
-                    .registerEntries(registerEntries).build();
+                    .registerEntries(registerEntries)
+                    .build();
             Statement statement = Statement.builder()
                     .id(statementHeader.getId())
                     .loanId(statementHeader.getLoanId())

@@ -57,7 +57,7 @@ public class RegisterEntryDao {
         }
     }
 
-    public List<RegisterEntry> findByLoanIdOrderByRowNum(Connection con, UUID loanId) throws SQLException {
+    public List<RegisterEntry> findByLoanIdOrderByTimestamp(Connection con, UUID loanId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where loan_id = ? order by time_stamp")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {

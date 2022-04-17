@@ -155,7 +155,7 @@ public class QueryService {
 
     public List<RegisterEntry> queryRegisterByLoanId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            List<RegisterEntry> registerEntries = registerEntryDao.findByLoanIdOrderByRowNum(con, id);
+            List<RegisterEntry> registerEntries = registerEntryDao.findByLoanIdOrderByTimestamp(con, id);
             return registerEntries;
         }
     }
