@@ -73,11 +73,6 @@ services:
       - "15672:15672"
     networks:
       - merchloan-internal
-    healthcheck:
-      test: [ "CMD", "rabbitmqctl", "status"]
-      interval: 5s
-      timeout: 20s
-      retries: 5
 networks:
 # The presence of these objects is sufficient to define them
   merchloan-internal: {}
