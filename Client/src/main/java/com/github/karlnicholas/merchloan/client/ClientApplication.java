@@ -80,7 +80,7 @@ public class ClientApplication {
                         if ( bdRetry % 10 == 0 )
                             log.info("Business date not ready {} {}", currentDate, bdRetry);
                         bdRetry++;
-                        Thread.sleep(500);
+                        Thread.sleep(250);
                         continue;
                     }
                     bdRetry = 0;

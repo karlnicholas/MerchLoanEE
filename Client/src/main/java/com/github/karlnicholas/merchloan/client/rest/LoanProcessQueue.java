@@ -20,7 +20,7 @@ public class LoanProcessQueue {
     private final List<Future<?>> tasks;
 
     public LoanProcessQueue() {
-        executorService = Executors.newFixedThreadPool(100);
+        executorService = Executors.newFixedThreadPool(200);
         tasks = new ArrayList<>();
     }
 
