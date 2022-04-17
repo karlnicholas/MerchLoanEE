@@ -5,6 +5,7 @@ import com.github.karlnicholas.merchloan.client.config.HttpConnectionPoolConfig;
 import com.github.karlnicholas.merchloan.client.process.LoanCycle;
 import com.github.karlnicholas.merchloan.client.rest.LoanProcessQueue;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -91,9 +92,12 @@ public class ClientApplication {
                     }
                     if ( currentDate.getDayOfMonth() == 1 ) {
                         log.info("{}", currentDate);
+                        PoolingHttpClientConnectionManager pcm = httpConnectionPoolConfig.getPoolingHttpClientConnectionManager();
+                        pcm.getRoutes()
+                                .forEach(r->log.info("route stats {} {}", r, pcm.getStats(r)));
                     }
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(250);
+                    Thread.sleep(500);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
                 int[] first = new int[1];
@@ -105,7 +109,10 @@ public class ClientApplication {
                         first[0] = 1;
                     }
                 });
-                log.info("pool stats {} ", httpConnectionPoolConfig.getPoolingHttpClientConnectionManager().getTotalStats());
+                PoolingHttpClientConnectionManager pcm = httpConnectionPoolConfig.getPoolingHttpClientConnectionManager();
+                pcm.getRoutes()
+                        .forEach(r->log.info("route stats {} {}", r, pcm.getStats(r)));
+
             } catch (InterruptedException e) {
                 log.error("Simulation thread interrupted", e);
                 Thread.currentThread().interrupt();
