@@ -4,13 +4,12 @@ import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.StatementDatesConverter;
 import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
 import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
 
-import java.math.BigDecimal;
 import java.sql.*;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class LoanDao {

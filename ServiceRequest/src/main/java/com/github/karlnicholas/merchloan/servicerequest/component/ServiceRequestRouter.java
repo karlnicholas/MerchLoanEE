@@ -1,12 +1,10 @@
 package com.github.karlnicholas.merchloan.servicerequest.component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

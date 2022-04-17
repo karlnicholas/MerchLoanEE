@@ -23,27 +23,28 @@ import java.util.Optional;
 @Slf4j
 public class BusinessDateComponent {
     private final PoolingHttpClientConnectionManager connManager;
+    private final CloseableHttpClient httpclient;
 
     public BusinessDateComponent(PoolingHttpClientConnectionManager connManager) {
         this.connManager = connManager;
+        httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
     private Optional<Integer> postBusinessDate(LocalDate businessDate) {
-        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
-            String date = businessDate.format(DateTimeFormatter.ISO_DATE);
-            StringEntity strEntity = new StringEntity(date, ContentType.TEXT_PLAIN);
-            HttpPost httpPost = new HttpPost("http://localhost:8100/api/businessdate");
-            httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
+        String date = businessDate.format(DateTimeFormatter.ISO_DATE);
+        StringEntity strEntity = new StringEntity(date, ContentType.TEXT_PLAIN);
+        HttpPost httpPost = new HttpPost("http://localhost:8100/api/businessdate");
+        httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 //            httpPost.setHeader("Content-type", ContentType.TEXT_PLAIN.getMimeType());
-            httpPost.setEntity(strEntity);
+        httpPost.setEntity(strEntity);
 
-            try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    return Optional.of(response.getStatusLine().getStatusCode());
-                }
-            } catch (ParseException | IOException e) {
-                log.error("accountRequest", e);
+        try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                return Optional.of(response.getStatusLine().getStatusCode());
             }
+        } catch (ParseException | IOException e) {
+            log.error("accountRequest", e);
+        }
 //        } catch (IOException e) {
 //            log.error("accountRequest", e);
 //        }
@@ -57,14 +58,14 @@ public class BusinessDateComponent {
 
     private Optional<Boolean> checkStillProcessing() {
         CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
-            HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/checkrequests");
-            httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
+        HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/checkrequests");
+        httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 
-            try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-                return Optional.of(Boolean.valueOf(EntityUtils.toString(response.getEntity())));
-            } catch (ParseException | IOException e) {
-                log.error("accountRequest", e);
-            }
+        try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
+            return Optional.of(Boolean.valueOf(EntityUtils.toString(response.getEntity())));
+        } catch (ParseException | IOException e) {
+            log.error("accountRequest", e);
+        }
 //        } catch (IOException e) {
 //            log.error("accountRequest", e);
 //        }
@@ -80,7 +81,7 @@ public class BusinessDateComponent {
         do {
             try {
                 Optional<Boolean> stillProcessingResp = checkStillProcessing();
-                if ( stillProcessingResp.isEmpty() || stillProcessingResp.get().booleanValue() == true) {
+                if (stillProcessingResp.isEmpty() || stillProcessingResp.get().booleanValue() == true) {
                     return false;
                 }
                 loop = false;
@@ -91,11 +92,11 @@ public class BusinessDateComponent {
                 }
             }
             requestCount++;
-            if ( requestCount > 3 ) {
+            if (requestCount > 3) {
                 loop = false;
             }
         } while (loop);
-        if ( requestCount >= 3) {
+        if (requestCount >= 3) {
             return false;
         }
         // Open Account
@@ -110,7 +111,7 @@ public class BusinessDateComponent {
                 }
             }
             requestCount++;
-            if ( requestCount > 3 ) {
+            if (requestCount > 3) {
                 loop = false;
             }
         } while (loop);

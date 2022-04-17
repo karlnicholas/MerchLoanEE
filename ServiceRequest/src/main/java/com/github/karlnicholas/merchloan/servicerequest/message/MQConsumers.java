@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 

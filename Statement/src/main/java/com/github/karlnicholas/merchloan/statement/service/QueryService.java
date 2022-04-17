@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class QueryService {

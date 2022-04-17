@@ -25,25 +25,26 @@ import java.util.UUID;
 public class LoanStateComponent {
     private final ObjectMapper objectMapper;
     private final PoolingHttpClientConnectionManager connManager;
+    private final CloseableHttpClient httpclient;
 
     public LoanStateComponent(PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.connManager = connManager;
+        httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
     private Optional<LoanDto> loanStatus(UUID loanId) {
-        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
-            HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/loan/" + loanId.toString());
-            httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
-            try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    HttpEntity entity = response.getEntity();
-                    return Optional.of(objectMapper.readValue(EntityUtils.toString(entity), LoanDto.class));
-                }
-            } catch (ParseException | IOException e) {
-                log.error("accountRequest", e);
+        HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/loan/" + loanId.toString());
+        httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
+        try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                HttpEntity entity = response.getEntity();
+                return Optional.of(objectMapper.readValue(EntityUtils.toString(entity), LoanDto.class));
             }
+        } catch (ParseException | IOException e) {
+            log.error("accountRequest", e);
+        }
 //        } catch (IOException e) {
 //            log.error("accountRequest", e);
 //        }
