@@ -1,0 +1,79 @@
+services:
+  businessdate:
+    image: businessdate
+    container_name: businessdate
+    environment:
+      rabbitmq.host: rabbitmq
+      redis.host: redis
+    ports:
+      - "8100:8100"
+    networks:
+      - merchloan-internal
+      - merchloan-rest
+    depends_on:
+      - redis
+      - rabbitmq
+  servicerequest:
+    image: servicerequest
+    container_name: servicerequest
+    environment:
+      rabbitmq.host: rabbitmq
+      redis.host: "redis"
+    ports:
+      - "8080:8080"
+    networks:
+      - merchloan-internal
+      - merchloan-rest
+    depends_on:
+      - redis
+      - rabbitmq
+  query:
+    image: query
+    container_name: query
+    environment:
+      rabbitmq.host: rabbitmq
+    ports:
+      - "8090:8090"
+    networks:
+      - merchloan-internal
+      - merchloan-rest
+    depends_on:
+      - rabbitmq
+  statement:
+    image: statement
+    container_name: statement
+    environment:
+      rabbitmq.host: rabbitmq
+    networks:
+      - merchloan-internal
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+  accounts:
+    image: accounts
+    container_name: accounts
+    environment:
+      rabbitmq.host: rabbitmq
+    networks:
+      - merchloan-internal
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+  redis:
+    image: redis
+    hostname: redis
+    container_name: redis
+    networks:
+      - merchloan-internal
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "15672:15672"
+    networks:
+      - merchloan-internal
+networks:
+# The presence of these objects is sufficient to define them
+  merchloan-internal: {}
+  merchloan-rest: {}

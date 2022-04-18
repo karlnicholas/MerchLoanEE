@@ -11,11 +11,6 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = "classpath:rabbitmq-config.properties")
 @Data
 public class MQQueueNames {
-    private String host;
-    private String port;
-    private String virtualHost;
-    private String password;
-    private String username;
     private String exchange;
 
     private String accountCreateaccountQueue;

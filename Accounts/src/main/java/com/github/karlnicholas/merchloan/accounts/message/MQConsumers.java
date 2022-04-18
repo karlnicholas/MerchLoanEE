@@ -150,11 +150,11 @@ public class MQConsumers {
             log.debug("receivedBillingCycleChargeMessage {}", billingCycleCharge);
             RegisterEntry re = registerManagementService.billingCycleCharge(billingCycleCharge);
             RegisterEntryMessage registerEntryMessage = RegisterEntryMessage.builder()
-                    .rowNum(re.getRowNum())
                     .date(re.getDate())
                     .credit(re.getCredit())
                     .debit(re.getDebit())
                     .description(re.getDescription())
+                    .timeStamp(re.getTimeStamp())
                     .build();
             reply(delivery, registerEntryMessage);
         } catch (Exception ex) {

@@ -5,6 +5,7 @@ import lombok.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Builder
 @AllArgsConstructor
@@ -13,10 +14,10 @@ import java.time.LocalDate;
 @Setter
 @ToString
 public class RegisterEntryMessage implements Serializable {
-    private Integer rowNum;
     private LocalDate date;
     private String description;
     private BigDecimal debit;
     private BigDecimal credit;
     private BigDecimal balance;
+    private LocalDateTime timeStamp;
 }

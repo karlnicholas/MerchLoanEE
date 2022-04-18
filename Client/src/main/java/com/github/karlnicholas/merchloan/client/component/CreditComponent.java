@@ -28,30 +28,31 @@ import java.util.UUID;
 public class CreditComponent {
     private final ObjectMapper objectMapper;
     private final PoolingHttpClientConnectionManager connManager;
+    private final CloseableHttpClient httpclient;
 
     public CreditComponent(PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.connManager = connManager;
+        httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
     private Optional<UUID> creditRequest(UUID loanId, BigDecimal amount, String description) throws JsonProcessingException {
-        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
-            String strJson = objectMapper.writeValueAsString(new CreditRequest(loanId, amount, description));
-            StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
-            HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/creditRequest");
-            httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
+        String strJson = objectMapper.writeValueAsString(new CreditRequest(loanId, amount, description));
+        StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
+        HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/creditRequest");
+        httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 //            httpPost.setHeader("Content-type", "application/json");
-            httpPost.setEntity(strEntity);
+        httpPost.setEntity(strEntity);
 
-            try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    HttpEntity entity = response.getEntity();
-                    return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
-                }
-            } catch (ParseException | IOException e) {
-                log.error("accountRequest", e);
+        try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                HttpEntity entity = response.getEntity();
+                return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
             }
+        } catch (ParseException | IOException e) {
+            log.error("accountRequest", e);
+        }
 //        } catch (IOException e) {
 //            log.error("accountRequest", e);
 //        }
@@ -81,7 +82,7 @@ public class CreditComponent {
                 }
             }
             requestCount++;
-            if( requestCount > 3) {
+            if (requestCount > 3) {
                 loop = false;
             }
         } while (loop);

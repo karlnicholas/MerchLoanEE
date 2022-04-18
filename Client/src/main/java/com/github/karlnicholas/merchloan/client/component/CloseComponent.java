@@ -28,30 +28,31 @@ import java.util.UUID;
 public class CloseComponent {
     private final ObjectMapper objectMapper;
     private final PoolingHttpClientConnectionManager connManager;
+    private final CloseableHttpClient httpclient;
 
     public CloseComponent(PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.connManager = connManager;
+        httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
     private Optional<UUID> closeRequest(UUID loanId, BigDecimal amount, String description) throws JsonProcessingException {
-        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
-            String strJson = objectMapper.writeValueAsString(new CloseRequest(loanId, amount, description));
-            StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
-            HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/closeRequest");
-            httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
+        String strJson = objectMapper.writeValueAsString(new CloseRequest(loanId, amount, description));
+        StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
+        HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/closeRequest");
+        httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 //            httpPost.setHeader("Content-type", "application/json");
-            httpPost.setEntity(strEntity);
+        httpPost.setEntity(strEntity);
 
-            try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
-                if ( response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    HttpEntity entity = response.getEntity();
-                    return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
-                }
-            } catch (ParseException | IOException e) {
-                log.error("accountRequest", e);
+        try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                HttpEntity entity = response.getEntity();
+                return Optional.of(UUID.fromString(EntityUtils.toString(entity)));
             }
+        } catch (ParseException | IOException e) {
+            log.error("accountRequest", e);
+        }
 //        } catch (IOException e) {
 //            log.error("accountRequest", e);
 //        }
@@ -71,7 +72,7 @@ public class CloseComponent {
             try {
                 Optional<UUID> closeId = closeRequest(loanId, amount, description);
                 loop = closeId.isEmpty();
-                if ( !loop ) {
+                if (!loop) {
                     return Optional.of(closeId.get());
                 }
             } catch (Exception ex) {

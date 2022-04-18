@@ -3,15 +3,12 @@ package com.github.karlnicholas.merchloan.servicerequest.service;
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
-import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 
 @Service

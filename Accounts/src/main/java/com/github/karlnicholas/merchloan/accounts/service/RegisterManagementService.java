@@ -1,8 +1,6 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
-import com.github.karlnicholas.merchloan.accounts.dao.LoanStateDao;
 import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
-import com.github.karlnicholas.merchloan.accounts.model.LoanState;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
@@ -11,11 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,31 +19,21 @@ import java.util.stream.Collectors;
 @Transactional
 public class RegisterManagementService {
     private final DataSource dataSource;
-    private final LoanStateDao loanStateDao;
     private final RegisterEntryDao registerEntryDao;
 
-    public RegisterManagementService(DataSource dataSource, LoanStateDao loanStateDao, RegisterEntryDao registerEntryDao) {
+    public RegisterManagementService(DataSource dataSource, RegisterEntryDao registerEntryDao) {
         this.dataSource = dataSource;
-        this.loanStateDao = loanStateDao;
         this.registerEntryDao = registerEntryDao;
     }
 
     public void fundLoan(DebitLoan fundLoan, ServiceRequestResponse requestResponse) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            loanStateDao.insert(con,
-                    LoanState.builder()
-                            .loanId(fundLoan.getLoanId())
-                            .startDate(fundLoan.getDate())
-                            .balance(fundLoan.getAmount())
-                            .currentRowNum(1)
-                            .build());
             registerEntryDao.insert(con, RegisterEntry.builder()
                     .id(fundLoan.getId())
                     .loanId(fundLoan.getLoanId())
                     .date(fundLoan.getDate())
                     .debit(fundLoan.getAmount())
                     .description(fundLoan.getDescription())
-                    .rowNum(1)
                     .build());
             requestResponse.setSuccess("Funding transaction entered");
         } catch (DuplicateKeyException dke) {
@@ -70,17 +55,7 @@ public class RegisterManagementService {
                     .debit(debitLoan.getAmount())
                     .description(debitLoan.getDescription())
                     .build();
-//            loanStateDao.readWriteTablesLock(con);
-            Optional<LoanState> loanStateOpt = loanStateDao.findByLoanIdForUpdate(con, debitLoan.getLoanId());
-            if (loanStateOpt.isPresent()) {
-                LoanState loanState = loanStateOpt.get();
-                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
-                loanState.setBalance(loanState.getBalance().add(debitEntry.getDebit()));
-                debitEntry.setRowNum(loanState.getCurrentRowNum());
-                registerEntryDao.insert(con, debitEntry);
-                loanStateDao.updateWithCommit(con, loanState);
-            }
-//            loanStateDao.tablesUnlock(con);
+            registerEntryDao.insert(con, debitEntry);
             requestResponse.setSuccess("Debit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
@@ -101,23 +76,8 @@ public class RegisterManagementService {
                     .credit(creditLoan.getAmount())
                     .description(creditLoan.getDescription())
                     .build();
-            Optional<LoanState> loanStateOpt = loanStateDao.findByLoanIdForUpdate(con, creditLoan.getLoanId());
-            if (loanStateOpt.isPresent()) {
-                LoanState loanState = loanStateOpt.get();
-                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
-                BigDecimal newBalance = loanState.getBalance().subtract(creditEntry.getCredit());
-//                if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-//                    requestResponse.setFailure("Credit results in negative balance: " + newBalance);
-//                } else {
-                loanState.setBalance(newBalance);
-                creditEntry.setRowNum(loanState.getCurrentRowNum());
-                registerEntryDao.insert(con, creditEntry);
-                loanStateDao.updateWithCommit(con, loanState);
-                requestResponse.setSuccess("Credit transaction entered");
-//                }
-            } else {
-                requestResponse.setFailure("LoanId not found: " + creditLoan.getLoanId());
-            }
+            registerEntryDao.insert(con, creditEntry);
+            requestResponse.setSuccess("Credit transaction entered");
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
             if (creditLoan.getRetry().booleanValue()) {
@@ -130,13 +90,13 @@ public class RegisterManagementService {
 
     public void setStatementHeaderRegisterEntryies(StatementHeader statementHeader) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            statementHeader.setRegisterEntries(registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate())
-                    .stream().map(e->RegisterEntryMessage.builder()
-                            .rowNum(e.getRowNum())
+            statementHeader.setRegisterEntries(registerEntryDao.findByLoanIdAndDateBetweenOrderByTimestamp(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate())
+                    .stream().map(e -> RegisterEntryMessage.builder()
                             .date(e.getDate())
                             .credit(e.getCredit())
                             .debit(e.getDebit())
                             .description(e.getDescription())
+                            .timeStamp(e.getTimeStamp())
                             .build())
                     .collect(Collectors.toList()));
         }
@@ -158,20 +118,7 @@ public class RegisterManagementService {
                     .credit(billingCycleCharge.getCredit())
                     .description(billingCycleCharge.getDescription())
                     .build();
-            Optional<LoanState> loanStateOpt = loanStateDao.findByLoanIdForUpdate(con, billingCycleCharge.getLoanId());
-            if (loanStateOpt.isPresent()) {
-                LoanState loanState = loanStateOpt.get();
-                loanState.setCurrentRowNum(loanState.getCurrentRowNum() + 1);
-                if (registerEntry.getDebit() != null) {
-                    loanState.setBalance(loanState.getBalance().add(registerEntry.getDebit()));
-                } else {
-                    loanState.setBalance(loanState.getBalance().subtract(registerEntry.getCredit()));
-                }
-                registerEntry.setRowNum(loanState.getCurrentRowNum());
-                billingCycleCharge.setRowNum(loanState.getCurrentRowNum());
-                registerEntryDao.insert(con, registerEntry);
-                loanStateDao.updateWithCommit(con, loanState);
-            }
+            registerEntryDao.insert(con, registerEntry);
             return registerEntry;
         } catch (DuplicateKeyException dke) {
             log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());

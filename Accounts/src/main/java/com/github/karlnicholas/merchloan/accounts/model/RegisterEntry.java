@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -25,9 +26,9 @@ public class RegisterEntry {
     private UUID id;
 //    @Column(columnDefinition = "BINARY(16)")
     private UUID loanId;
-    private Integer rowNum;
     private LocalDate date;
     private String description;
     private BigDecimal debit;
     private BigDecimal credit;
+    private LocalDateTime timeStamp;
 }

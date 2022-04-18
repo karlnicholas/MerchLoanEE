@@ -20,7 +20,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -98,13 +101,13 @@ public class QueryService {
             if (mostRecentStatement.getStatementDate() == null) {
                 statementHeader.setEndDate(loan.getStatementDates().get(0));
                 statementHeader.setStartDate(loan.getStartDate());
-                registerEntries = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
+                registerEntries = registerEntryDao.findByLoanIdAndDateBetweenOrderByTimestamp(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
             } else {
                 int index = loan.getStatementDates().indexOf(mostRecentStatement.getStatementDate());
                 if (index + 1 < loan.getStatementDates().size()) {
                     statementHeader.setEndDate(loan.getStatementDates().get(index + 1));
                     statementHeader.setStartDate(loan.getStatementDates().get(index).plusDays(1));
-                    registerEntries = registerEntryDao.findByLoanIdAndDateBetweenOrderByRowNum(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
+                    registerEntries = registerEntryDao.findByLoanIdAndDateBetweenOrderByTimestamp(con, statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
                 } else {
                     registerEntries = new ArrayList<>();
                 }
@@ -155,7 +158,7 @@ public class QueryService {
 
     public List<RegisterEntry> queryRegisterByLoanId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            List<RegisterEntry> registerEntries = registerEntryDao.findByLoanIdOrderByRowNum(con, id);
+            List<RegisterEntry> registerEntries = registerEntryDao.findByLoanIdOrderByTimestamp(con, id);
             return registerEntries;
         }
     }
