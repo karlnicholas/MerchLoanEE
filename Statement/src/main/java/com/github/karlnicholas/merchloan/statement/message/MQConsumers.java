@@ -121,6 +121,7 @@ public class MQConsumers {
                 .statementDate(statementHeader.getStatementDate())
                 .loanId(statementHeader.getLoanId())
                 .build();
+        boolean loanClosed = false;
         try {
             log.debug("receivedStatementMessage {}", statementHeader);
             statementHeader = (StatementHeader) mqProducers.accountQueryStatementHeader(statementHeader);
@@ -179,10 +180,11 @@ public class MQConsumers {
                     // so, done with interest and fee calculations here?
                     statementService.saveStatement(statementHeader, startingBalance, endingBalance);
                     if (endingBalance.compareTo(BigDecimal.ZERO) <= 0) {
-                        requestResponse.setSuccess("Loan Closed");
+                        requestResponse.setSuccess();
                         mqProducers.accountLoanClosed(statementHeader);
+                        loanClosed = true;
                     } else {
-                        requestResponse.setSuccess("Statement created");
+                        requestResponse.setSuccess();
                     }
                 } else {
                     requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
@@ -191,11 +193,10 @@ public class MQConsumers {
                 requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
             }
         } catch (Exception ex) {
-            log.error("void receivedServiceRequestMessage(ServiceRequestResponse serviceRequest) exception {}", ex.getMessage());
+            log.error("receivedStatementMessage {}", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
-            //TODO: Sloppy
-            if (!requestResponse.getStatusMessage().equalsIgnoreCase("Loan Closed")) {
+            if (loanClosed) {
                 mqProducers.serviceRequestStatementComplete(requestResponse);
             }
         }
@@ -228,7 +229,7 @@ public class MQConsumers {
             statementHeader.setRegisterEntries(null);
             mqProducers.accountLoanClosed(statementHeader);
         } catch (Exception ex) {
-            log.error("void receivedCloseStatementMessage(StatementHeader statementHeader) exception {}", ex.getMessage());
+            log.error("receivedCloseStatementMessage{}", ex.getMessage());
             try {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(statementHeader.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
                 mqProducers.serviceRequestServiceRequest(requestResponse);

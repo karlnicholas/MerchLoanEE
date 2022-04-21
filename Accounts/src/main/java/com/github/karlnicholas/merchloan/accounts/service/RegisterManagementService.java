@@ -4,7 +4,6 @@ import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,14 +34,16 @@ public class RegisterManagementService {
                     .debit(fundLoan.getAmount())
                     .description(fundLoan.getDescription())
                     .build());
-            requestResponse.setSuccess("Funding transaction entered");
-        } catch (DuplicateKeyException dke) {
-            log.warn("ServiceRequestResponse createLoan(CreateLoan createLoan) duplicate key: {}", dke.getMessage());
-            if (fundLoan.getRetry().booleanValue()) {
-                requestResponse.setSuccess("Funding transaction entered");
-            } else {
-                requestResponse.setFailure(dke.getMessage());
+            requestResponse.setSuccess();
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 2601 && fundLoan.getRetry() == Boolean.TRUE) {
+                requestResponse.setSuccess();
             }
+            log.error("fundLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("fundLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
     }
 
@@ -56,14 +57,16 @@ public class RegisterManagementService {
                     .description(debitLoan.getDescription())
                     .build();
             registerEntryDao.insert(con, debitEntry);
-            requestResponse.setSuccess("Debit transaction entered");
-        } catch (DuplicateKeyException dke) {
-            log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            if (debitLoan.getRetry().booleanValue()) {
-                requestResponse.setSuccess("Debit transaction entered");
-            } else {
-                requestResponse.setFailure(dke.getMessage());
+            requestResponse.setSuccess();
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 2601 && debitLoan.getRetry() == Boolean.TRUE) {
+                requestResponse.setSuccess();
             }
+            log.error("debitLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("debitLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
     }
 
@@ -77,14 +80,16 @@ public class RegisterManagementService {
                     .description(creditLoan.getDescription())
                     .build();
             registerEntryDao.insert(con, creditEntry);
-            requestResponse.setSuccess("Credit transaction entered");
-        } catch (DuplicateKeyException dke) {
-            log.warn("ServiceRequestResponse creditLoan(CreditLoan creditLoan) duplicate key: {}", dke.getMessage());
-            if (creditLoan.getRetry().booleanValue()) {
-                requestResponse.setSuccess("Credit transaction entered");
-            } else {
-                requestResponse.setFailure(dke.getMessage());
+            requestResponse.setSuccess();
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 2601 && creditLoan.getRetry() == Boolean.TRUE) {
+                requestResponse.setSuccess();
             }
+            log.error("creditLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("creditLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
     }
 
@@ -104,7 +109,7 @@ public class RegisterManagementService {
 
     public RegisterEntry billingCycleCharge(BillingCycleCharge billingCycleCharge) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            if (billingCycleCharge.getRetry().booleanValue()) {
+            if (billingCycleCharge.getRetry() == Boolean.TRUE) {
                 Optional<RegisterEntry> reOpt = registerEntryDao.findById(con, billingCycleCharge.getId());
                 if (reOpt.isPresent()) {
                     return reOpt.get();
@@ -120,9 +125,6 @@ public class RegisterManagementService {
                     .build();
             registerEntryDao.insert(con, registerEntry);
             return registerEntry;
-        } catch (DuplicateKeyException dke) {
-            log.warn("ServiceRequestResponse debitLoan(DebitLoan debitLoan) duplicate key: {}", dke.getMessage());
-            throw dke;
         }
     }
 }

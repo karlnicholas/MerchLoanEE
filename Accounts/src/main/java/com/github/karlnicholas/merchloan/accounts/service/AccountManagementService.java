@@ -30,18 +30,27 @@ public class AccountManagementService {
         this.loanDao = loanDao;
     }
 
-    public void createAccount(CreateAccount createAccount, ServiceRequestResponse requestResponse) throws SQLException {
+    public void createAccount(CreateAccount createAccount, ServiceRequestResponse requestResponse) {
         try (Connection con = dataSource.getConnection()) {
             accountDao.createAccount(con, Account.builder()
                     .id(createAccount.getId())
                     .customer(createAccount.getCustomer())
                     .createDate(createAccount.getCreateDate())
                     .build());
+            requestResponse.setSuccess();
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 2601 && createAccount.getRetry() == Boolean.TRUE) {
+                requestResponse.setSuccess();
+            }
+            log.error("createAccount {}", ex);
+            requestResponse.setFailure(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("createAccount {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
-        requestResponse.setSuccess("Account created");
     }
 
-    public void fundAccount(FundLoan fundLoan, ServiceRequestResponse requestResponse) throws SQLException {
+    public void fundAccount(FundLoan fundLoan, ServiceRequestResponse requestResponse) {
         try (Connection con = dataSource.getConnection()) {
             Optional<Account> accountQ = accountDao.findById(con, fundLoan.getAccountId());
             if (accountQ.isPresent()) {
@@ -66,10 +75,19 @@ public class AccountManagementService {
             } else {
                 requestResponse.setFailure("Account not found for " + fundLoan.getAccountId());
             }
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 2601 && fundLoan.getRetry() == Boolean.TRUE) {
+                requestResponse.setSuccess();
+            }
+            log.error("fundAccount {}", ex);
+            requestResponse.setFailure(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("fundAccount {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
     }
 
-    public void validateLoan(UUID loanId, ServiceRequestResponse requestResponse) throws SQLException {
+    public void validateLoan(UUID loanId, ServiceRequestResponse requestResponse) {
         try (Connection con = dataSource.getConnection()) {
             Optional<Loan> loanQ = loanDao.findById(con, loanId);
             if (loanQ.isPresent()) {
@@ -77,37 +95,50 @@ public class AccountManagementService {
             } else {
                 requestResponse.setFailure("Loan not found for " + loanId);
             }
+        } catch (Exception ex) {
+            log.error("validateLoan {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
     }
 
-    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) throws SQLException {
+    public ServiceRequestResponse statementHeader(StatementHeader statementHeader) {
+        ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
+                .id(statementHeader.getId())
+                .build();
         try (Connection con = dataSource.getConnection()) {
-            ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
-                    .id(statementHeader.getId())
-                    .build();
             Optional<Loan> loanOpt = loanDao.findById(con, statementHeader.getLoanId());
             if (loanOpt.isPresent()) {
                 Optional<Account> accountQ = accountDao.findById(con, loanOpt.get().getAccountId());
                 if (accountQ.isPresent()) {
 
                     statementHeader.setCustomer(accountQ.get().getCustomer());
-                statementHeader.setAccountId(loanOpt.get().getAccountId());
-                requestResponse.setSuccess();
+                    statementHeader.setAccountId(loanOpt.get().getAccountId());
+                    requestResponse.setSuccess();
                 } else {
                     requestResponse.setFailure("Account not found for loanId: " + statementHeader.getLoanId());
                 }
             } else {
                 requestResponse.setFailure("Loan not found for loanId: " + statementHeader.getLoanId());
             }
-            return requestResponse;
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 2601 && statementHeader.getRetry() == Boolean.TRUE) {
+                requestResponse.setSuccess();
+            }
+            log.error("statementHeader {}", ex);
+            requestResponse.setFailure(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("statementHeader {}", ex);
+            requestResponse.setFailure(ex.getMessage());
         }
+        return requestResponse;
     }
 
-    public List<BillingCycle> loansToCycle(LocalDate businessDate) throws SQLException {
+    public List<BillingCycle> loansToCycle(LocalDate businessDate) {
         try (Connection con = dataSource.getConnection()) {
             List<Loan> loans = loanDao.findByLoanState(con, Loan.LOAN_STATE.OPEN);
             ArrayList<BillingCycle> loansToCycle = new ArrayList<>();
-            loans.forEach(loan->{                List<LocalDate> statementDates = loan.getStatementDates();
+            loans.forEach(loan -> {
+                List<LocalDate> statementDates = loan.getStatementDates();
                 int i = Collections.binarySearch(statementDates, businessDate);
                 if (i >= 0) {
                     loansToCycle.add(BillingCycle.builder()
@@ -120,12 +151,17 @@ public class AccountManagementService {
                 }
             });
             return loansToCycle;
+        } catch (Exception ex) {
+            log.error("loansToCycle {}", ex);
+            return Collections.emptyList();
         }
     }
 
-    public void closeLoan(UUID loanId) throws SQLException {
+    public void closeLoan(UUID loanId) {
         try (Connection con = dataSource.getConnection()) {
             loanDao.updateState(con, loanId, Loan.LOAN_STATE.CLOSED);
+        } catch (Exception ex) {
+            log.error("closeLoan {}", ex);
         }
     }
 }
