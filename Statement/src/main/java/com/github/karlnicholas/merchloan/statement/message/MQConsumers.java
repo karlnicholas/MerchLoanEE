@@ -196,7 +196,7 @@ public class MQConsumers {
             log.error("receivedStatementMessage {}", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
-            if (loanClosed) {
+            if (!loanClosed) {
                 mqProducers.serviceRequestStatementComplete(requestResponse);
             }
         }
