@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 @Component
@@ -40,7 +41,7 @@ public class MQProducers {
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws IOException, InterruptedException {
         log.debug("accountBillingCycleCharge: {}", billingCycleCharge);
-        String responseKey = billingCycleCharge.getId().toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getStatementReplyQueue()).build();
         statementSendChannel.basicPublish(MQQueueNames.getExchange(), MQQueueNames.getAccountBillingCycleChargeQueue(), props, SerializationUtils.serialize(billingCycleCharge));
@@ -49,7 +50,7 @@ public class MQProducers {
 
     public Object accountQueryStatementHeader(StatementHeader statementHeader) throws IOException, InterruptedException {
         log.debug("accountQueryStatementHeader: {}", statementHeader);
-        String responseKey = statementHeader.getId().toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getStatementReplyQueue()).build();
         statementSendChannel.basicPublish(MQQueueNames.getExchange(), MQQueueNames.getAccountQueryStatementHeaderQueue(), props, SerializationUtils.serialize(statementHeader));

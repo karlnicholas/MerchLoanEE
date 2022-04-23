@@ -52,7 +52,7 @@ public class MQProducers {
 
     public Object queryMostRecentStatement(UUID loanId) throws IOException, InterruptedException {
         log.debug("queryMostRecentStatement: {}", loanId);
-        String responseKey = loanId.toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getAccountReplyQueue()).build();
         accountSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));

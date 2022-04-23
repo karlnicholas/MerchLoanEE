@@ -30,13 +30,12 @@ public class MQProducers {
 
         queryReplyQueue.queueDeclare(MQQueueNames.getQueryReplyQueue(), false, true, true, null);
         queryReplyQueue.queueBind(MQQueueNames.getQueryReplyQueue(), MQQueueNames.getExchange(), MQQueueNames.getQueryReplyQueue());
-        queryReplyQueue.basicConsume(MQQueueNames.getQueryReplyQueue(), true, replyWaitingHandler::handleReplies, consumerTag -> {
-        });
+        queryReplyQueue.basicConsume(MQQueueNames.getQueryReplyQueue(), true, replyWaitingHandler::handleReplies, consumerTag -> {});
     }
 
     public Object queryServiceRequest(UUID id) {
         log.debug("queryServiceRequest: {}", id);
-        String responseKey = id.toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getQueryReplyQueue()).build();
         try {
@@ -50,7 +49,7 @@ public class MQProducers {
 
     public Object queryAccount(UUID id) {
         log.debug("queryAccount: {}", id);
-        String responseKey = id.toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getQueryReplyQueue()).build();
         try {
@@ -65,7 +64,7 @@ public class MQProducers {
 
     public Object queryLoan(UUID id) {
         log.debug("queryLoan: {}", id);
-        String responseKey = id.toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getQueryReplyQueue()).build();
         try {
@@ -79,7 +78,7 @@ public class MQProducers {
 
     public Object queryStatement(UUID id) {
         log.debug("queryStatement: {}", id);
-        String responseKey = id.toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getQueryReplyQueue()).build();
         try {
@@ -93,7 +92,7 @@ public class MQProducers {
 
     public Object queryStatements(UUID id) {
         log.debug("queryStatements: {}", id);
-        String responseKey = id.toString();
+        String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getQueryReplyQueue()).build();
         try {
