@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.message;
 
 import com.github.karlnicholas.merchloan.jms.ReplyWaiting;
+import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.rabbitmq.client.*;
@@ -40,13 +41,13 @@ public class MQProducers {
     public Object servicerequestCheckRequest() throws IOException, InterruptedException {
         log.debug("servicerequestCheckRequest:");
         String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, ReplyWaiting.builder().nonoTime(System.nanoTime()).reply(null).build());
+        repliesWaiting.put(responseKey, ReplyWaiting.builder().nanoTime(System.nanoTime()).reply(null).build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getBusinessDateReplyQueue()).build();
         businessDateSendChannel.basicPublish(MQQueueNames.getExchange(), MQQueueNames.getServiceRequestCheckRequestQueue(), props, SerializationUtils.serialize(new byte[0]));
         synchronized (repliesWaiting) {
             while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey).checkReply().isEmpty()) {
-                repliesWaiting.wait(ReplyWaiting.responseTimeout);
-                if ( System.nanoTime() - repliesWaiting.get(responseKey).getNonoTime() > ReplyWaiting.timeoutMax) {
+                repliesWaiting.wait(ReplyWaitingHandler.responseTimeout);
+                if ( System.nanoTime() - repliesWaiting.get(responseKey).getNanoTime() > ReplyWaitingHandler.timeoutMax) {
                     log.error("servicerequestCheckRequest reply timeout");
                     break;
                 }
@@ -58,13 +59,13 @@ public class MQProducers {
     public Object acccountQueryLoansToCycle(LocalDate businessDate) throws IOException, InterruptedException {
         log.debug("acccountQueryLoansToCycle: {}", businessDate);
         String responseKey = UUID.randomUUID().toString();
-        repliesWaiting.put(responseKey, ReplyWaiting.builder().nonoTime(System.nanoTime()).reply(null).build());
+        repliesWaiting.put(responseKey, ReplyWaiting.builder().nanoTime(System.nanoTime()).reply(null).build());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(MQQueueNames.getBusinessDateReplyQueue()).build();
         businessDateSendChannel.basicPublish(MQQueueNames.getExchange(), MQQueueNames.getAccountQueryLoansToCycleQueue(), props, SerializationUtils.serialize(businessDate));
         synchronized (repliesWaiting) {
             while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey).checkReply().isEmpty()) {
-                repliesWaiting.wait(ReplyWaiting.responseTimeout);
-                if ( System.nanoTime() - repliesWaiting.get(responseKey).getNonoTime() > ReplyWaiting.timeoutMax) {
+                repliesWaiting.wait(ReplyWaitingHandler.responseTimeout);
+                if ( System.nanoTime() - repliesWaiting.get(responseKey).getNanoTime() > ReplyWaitingHandler.timeoutMax) {
                     log.error("servicerequestCheckRequest reply timeout");
                     break;
                 }

@@ -3,26 +3,28 @@ package com.github.karlnicholas.merchloan.jms;
 import com.rabbitmq.client.Delivery;
 import org.springframework.util.SerializationUtils;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class ReplyWaitingHandler {
-    private final Map<String, ReplyWaiting> repliesWaiting;
+    public static final int responseTimeout = 3000;
+    public static final long timeoutMax = 9_000_000_000L;
+    private final ConcurrentMap<String, ReplyWaiting> repliesWaiting;
 
     public ReplyWaitingHandler() {
-        repliesWaiting = new TreeMap<>();
+        repliesWaiting = new ConcurrentHashMap<>();
     }
 
     public void put(String responseKey) {
-        repliesWaiting.put(responseKey, ReplyWaiting.builder().nonoTime(System.nanoTime()).reply(null).build());
+        repliesWaiting.put(responseKey, ReplyWaiting.builder().nanoTime(System.nanoTime()).reply(null).build());
     }
 
     public Object getReply(String responseKey) throws InterruptedException {
         synchronized (repliesWaiting) {
             while (repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey).checkReply().isEmpty()) {
-                repliesWaiting.wait(ReplyWaiting.responseTimeout);
-                if (System.nanoTime() - repliesWaiting.get(responseKey).getNonoTime() > ReplyWaiting.timeoutMax) {
-                    throw new IllegalStateException("getReply timeout");
+                repliesWaiting.wait(responseTimeout);
+                if (System.nanoTime() - repliesWaiting.get(responseKey).getNanoTime() > timeoutMax) {
+                    break;
                 }
             }
             return repliesWaiting.remove(responseKey).getReply();
