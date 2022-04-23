@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Slf4j
@@ -31,12 +32,17 @@ public class QueryService {
         }
     }
 
-    public Boolean checkRequest() {
+    public Boolean checkRequest() throws SQLException {
 //        log.debug("checkRequest {}", serviceRequestRepository.findAll().stream().map(sr->System.lineSeparator() + "\t" + sr.getLocalDateTime() + ":" + sr.getStatus() + ":" + sr.getRequestType().replace("com.github.karlnicholas.merchloan.apimessage.message.", "")).collect(Collectors.toList()));
         try (Connection con = dataSource.getConnection()) {
+//            try {
+//                Thread.sleep(4000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+            if (ThreadLocalRandom.current().nextDouble() > 0.99)
+                throw new RuntimeException("JUNK");
             return serviceRequestDao.existsByStatusEquals(con, ServiceRequestMessage.STATUS.PENDING);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.github.karlnicholas.merchloan.client.component;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -62,7 +63,8 @@ public class BusinessDateComponent {
         httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-            return Optional.of(Boolean.valueOf(EntityUtils.toString(response.getEntity())));
+            String s = EntityUtils.toString(response.getEntity());
+            return s.length() > 0 ? Optional.of(Boolean.valueOf(s)) : Optional.empty();
         } catch (ParseException | IOException e) {
             log.error("accountRequest", e);
         }

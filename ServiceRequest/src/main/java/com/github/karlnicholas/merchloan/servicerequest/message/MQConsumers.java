@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,58 +41,71 @@ public class MQConsumers {
         servicerequestChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         servicerequestChannel.queueDeclare(MQQueueNames.getServicerequestQueue(), false, true, true, null);
         servicerequestChannel.queueBind(MQQueueNames.getServicerequestQueue(), MQQueueNames.getExchange(), MQQueueNames.getServicerequestQueue());
-        servicerequestChannel.basicConsume(MQQueueNames.getServicerequestQueue(), true, this::receivedServiceRequestMessage, consumerTag -> { });
+        servicerequestChannel.basicConsume(MQQueueNames.getServicerequestQueue(), true, this::receivedServiceRequestMessage, consumerTag -> {
+        });
 
         Channel servicerequestQueryIdChannel = connection.createChannel();
         servicerequestQueryIdChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         servicerequestQueryIdChannel.queueDeclare(MQQueueNames.getServicerequestQueryIdQueue(), false, true, true, null);
         servicerequestQueryIdChannel.queueBind(MQQueueNames.getServicerequestQueryIdQueue(), MQQueueNames.getExchange(), MQQueueNames.getServicerequestQueryIdQueue());
-        servicerequestQueryIdChannel.basicConsume(MQQueueNames.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage, consumerTag -> { });
+        servicerequestQueryIdChannel.basicConsume(MQQueueNames.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage, consumerTag -> {
+        });
 
         Channel serviceRequestCheckRequestChannel = connection.createChannel();
         serviceRequestCheckRequestChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         serviceRequestCheckRequestChannel.queueDeclare(MQQueueNames.getServiceRequestCheckRequestQueue(), false, true, true, null);
         serviceRequestCheckRequestChannel.queueBind(MQQueueNames.getServiceRequestCheckRequestQueue(), MQQueueNames.getExchange(), MQQueueNames.getServiceRequestCheckRequestQueue());
-        serviceRequestCheckRequestChannel.basicConsume(MQQueueNames.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage, consumerTag -> { });
+        serviceRequestCheckRequestChannel.basicConsume(MQQueueNames.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage, consumerTag -> {
+        });
 
         Channel serviceRequestBillLoanChannel = connection.createChannel();
         serviceRequestBillLoanChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         serviceRequestBillLoanChannel.queueDeclare(MQQueueNames.getServiceRequestBillLoanQueue(), false, true, true, null);
         serviceRequestBillLoanChannel.queueBind(MQQueueNames.getServiceRequestBillLoanQueue(), MQQueueNames.getExchange(), MQQueueNames.getServiceRequestBillLoanQueue());
-        serviceRequestBillLoanChannel.basicConsume(MQQueueNames.getServiceRequestBillLoanQueue(), true, this::receivedServiceRequestBillloanMessage, consumerTag -> { });
+        serviceRequestBillLoanChannel.basicConsume(MQQueueNames.getServiceRequestBillLoanQueue(), true, this::receivedServiceRequestBillloanMessage, consumerTag -> {
+        });
 
         Channel serviceRequestStatementCompleteQueue = connection.createChannel();
         serviceRequestStatementCompleteQueue.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         serviceRequestStatementCompleteQueue.queueDeclare(MQQueueNames.getServiceRequestStatementCompleteQueue(), false, true, true, null);
         serviceRequestStatementCompleteQueue.queueBind(MQQueueNames.getServiceRequestStatementCompleteQueue(), MQQueueNames.getExchange(), MQQueueNames.getServiceRequestStatementCompleteQueue());
-        serviceRequestStatementCompleteQueue.basicConsume(MQQueueNames.getServiceRequestStatementCompleteQueue(), true, this::receivedServiceStatementCompleteMessage, consumerTag -> { });
+        serviceRequestStatementCompleteQueue.basicConsume(MQQueueNames.getServiceRequestStatementCompleteQueue(), true, this::receivedServiceStatementCompleteMessage, consumerTag -> {
+        });
 
         responseChannel = connection.createChannel();
     }
 
     public void receivedServiceRequestQueryIdMessage(String consumerTag, Delivery delivery) throws IOException {
-        UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("ServiceRequestQueryId Received {}", id);
-        Optional<ServiceRequest> requestOpt = queryService.getServiceRequest(id);
-        String response;
-        if (requestOpt.isPresent()) {
-            ServiceRequest request = requestOpt.get();
-            response = objectMapper.writeValueAsString(RequestStatusDto.builder()
-                    .id(request.getId())
-                    .localDateTime(request.getLocalDateTime())
-                    .status(request.getStatus().name())
-                    .statusMessage(request.getStatusMessage())
-                    .build());
-        } else {
-            response = "ERROR: id not found: " + id;
+        try {
+            UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
+            log.debug("ServiceRequestQueryId Received {}", id);
+            Optional<ServiceRequest> requestOpt = queryService.getServiceRequest(id);
+            String response;
+            if (requestOpt.isPresent()) {
+                ServiceRequest request = requestOpt.get();
+                response = objectMapper.writeValueAsString(RequestStatusDto.builder()
+                        .id(request.getId())
+                        .localDateTime(request.getLocalDateTime())
+                        .status(request.getStatus().name())
+                        .statusMessage(request.getStatusMessage())
+                        .build());
+            } else {
+                response = "ERROR: id not found: " + id;
+            }
+            reply(delivery, response);
+        } catch (Exception e) {
+            log.error("receivedCheckRequestMessage", e);
         }
-        reply(delivery, response);
     }
 
 
     public void receivedCheckRequestMessage(String consumerTag, Delivery delivery) throws IOException {
         log.debug("CheckRequest Received");
-        reply(delivery, queryService.checkRequest());
+        try {
+            reply(delivery, queryService.checkRequest());
+        } catch (Exception e) {
+            log.error("receivedCheckRequestMessage", e);
+        }
     }
 
     private void reply(Delivery delivery, Object data) throws IOException {

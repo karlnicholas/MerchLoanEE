@@ -11,6 +11,7 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = "classpath:rabbitmq-config.properties")
 @Data
 public class MQQueueNames {
+
     private String exchange;
 
     private String accountCreateaccountQueue;
