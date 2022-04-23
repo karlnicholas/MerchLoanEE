@@ -1,5 +1,7 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
+import com.github.karlnicholas.merchloan.jms.ReplyWaiting;
+import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
@@ -10,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -20,14 +24,12 @@ import java.util.concurrent.TimeoutException;
 public class MQProducers {
     private final MQQueueNames mqQueueNames;
     private final Channel accountSendChannel;
-    private final ConcurrentMap<String, Object> repliesWaiting;
-    private static final int responseTimeout = 10000;
-    private static final String emptyString = "";
+    private final ReplyWaitingHandler replyWaitingHandler;
 
     @Autowired
     public MQProducers(Connection connection, MQQueueNames mqQueueNames) throws IOException, TimeoutException {
         this.mqQueueNames = mqQueueNames;
-        repliesWaiting = new ConcurrentHashMap<>();
+        replyWaitingHandler = new ReplyWaitingHandler();
 
         accountSendChannel = connection.createChannel();
 
@@ -36,7 +38,8 @@ public class MQProducers {
 
         accountReplyChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
         accountReplyChannel.queueBind(mqQueueNames.getAccountReplyQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountReplyQueue());
-        accountReplyChannel.basicConsume(mqQueueNames.getAccountReplyQueue(), true, this::handleReplyQueue, consumerTag->{});
+        accountReplyChannel.basicConsume(mqQueueNames.getAccountReplyQueue(), true, replyWaitingHandler::handleReplies, consumerTag -> {
+        });
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws IOException {
@@ -52,22 +55,10 @@ public class MQProducers {
     public Object queryMostRecentStatement(UUID loanId) throws IOException, InterruptedException {
         log.debug("queryMostRecentStatement: {}", loanId);
         String responseKey = loanId.toString();
-        repliesWaiting.put(responseKey, emptyString);
+        replyWaitingHandler.put(responseKey);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getAccountReplyQueue()).build();
         accountSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));
-        synchronized (repliesWaiting) {
-            while ( repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey) == emptyString ) {
-                repliesWaiting.wait(responseTimeout);
-            }
-            return repliesWaiting.remove(responseKey);
-        }
+        return replyWaitingHandler.getReply(responseKey);
     }
 
-    private void handleReplyQueue(String consumerTag, Delivery delivery) {
-        synchronized (repliesWaiting) {
-            String corrId = delivery.getProperties().getCorrelationId();
-            repliesWaiting.put(corrId, SerializationUtils.deserialize(delivery.getBody()));
-            repliesWaiting.notifyAll();
-        }
-    }
 }
