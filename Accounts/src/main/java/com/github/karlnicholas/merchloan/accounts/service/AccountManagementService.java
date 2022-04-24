@@ -43,10 +43,10 @@ public class AccountManagementService {
                 requestResponse.setSuccess();
             }
             log.error("createAccount {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("createAccount {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
     }
 
@@ -73,17 +73,17 @@ public class AccountManagementService {
                                 .build());
                 requestResponse.setSuccess();
             } else {
-                requestResponse.setFailure("Account not found for " + fundLoan.getAccountId());
+                requestResponse.setError("Account not found for " + fundLoan.getAccountId());
             }
         } catch (SQLException ex) {
             if (ex.getErrorCode() == 2601 && fundLoan.getRetry() == Boolean.TRUE) {
                 requestResponse.setSuccess();
             }
             log.error("fundAccount {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("fundAccount {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
     }
 
@@ -93,11 +93,11 @@ public class AccountManagementService {
             if (loanQ.isPresent()) {
                 requestResponse.setSuccess();
             } else {
-                requestResponse.setFailure("Loan not found for " + loanId);
+                requestResponse.setError("Loan not found for " + loanId);
             }
         } catch (Exception ex) {
             log.error("validateLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
     }
 
@@ -115,20 +115,20 @@ public class AccountManagementService {
                     statementHeader.setAccountId(loanOpt.get().getAccountId());
                     requestResponse.setSuccess();
                 } else {
-                    requestResponse.setFailure("Account not found for loanId: " + statementHeader.getLoanId());
+                    requestResponse.setError("Account not found for loanId: " + statementHeader.getLoanId());
                 }
             } else {
-                requestResponse.setFailure("Loan not found for loanId: " + statementHeader.getLoanId());
+                requestResponse.setError("Loan not found for loanId: " + statementHeader.getLoanId());
             }
         } catch (SQLException ex) {
             if (ex.getErrorCode() == 2601 && statementHeader.getRetry() == Boolean.TRUE) {
                 requestResponse.setSuccess();
             }
             log.error("statementHeader {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("statementHeader {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
         return requestResponse;
     }

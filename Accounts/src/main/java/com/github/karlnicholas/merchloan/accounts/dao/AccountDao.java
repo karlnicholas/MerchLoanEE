@@ -11,11 +11,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Slf4j
 public class AccountDao {
     public void createAccount(Connection con, Account account) throws SQLException {
+        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("insert into account(id, create_date, customer) values(?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(account.getId()));
             ps.setDate(2, java.sql.Date.valueOf(account.getCreateDate()));
@@ -25,6 +28,8 @@ public class AccountDao {
     }
 
     public Optional<Account> findById(Connection con, UUID accountId) throws SQLException {
+        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, create_date, customer from account where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(accountId));
             try (ResultSet rs = ps.executeQuery()) {

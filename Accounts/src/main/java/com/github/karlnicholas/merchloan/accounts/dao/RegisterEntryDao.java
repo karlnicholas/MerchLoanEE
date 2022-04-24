@@ -14,12 +14,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Slf4j
 public class RegisterEntryDao {
     // id, loan_id, row_num, date, description, debit, credit
     public Optional<RegisterEntry> findById(Connection con, UUID loanId) throws SQLException {
+        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where id = ?")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
@@ -41,6 +44,8 @@ public class RegisterEntryDao {
 
     // id, credit, date, debit, description , loan_id , row_num
     public List<RegisterEntry> findByLoanIdAndDateBetweenOrderByTimestamp(Connection con, UUID loanId, LocalDate startDate, LocalDate endDate) throws SQLException {
+        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where loan_id = ? and date between ? and ? order by time_stamp")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             ps.setDate(2, java.sql.Date.valueOf(startDate));
@@ -64,6 +69,8 @@ public class RegisterEntryDao {
     }
 
     public List<RegisterEntry> findByLoanIdOrderByTimestamp(Connection con, UUID loanId) throws SQLException {
+        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where loan_id = ? order by time_stamp")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
@@ -85,6 +92,8 @@ public class RegisterEntryDao {
     }
 
     public void insert(Connection con, RegisterEntry registerEntry) throws SQLException {
+        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("insert into register_entry(id, loan_id, date, description, debit, credit) values(?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, UUIDToBytes.uuidToBytes(registerEntry.getId()));
             ps.setBytes(2, UUIDToBytes.uuidToBytes(registerEntry.getLoanId()));

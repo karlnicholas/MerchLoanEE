@@ -34,7 +34,7 @@ public class QueryService {
     public Boolean checkRequest() throws SQLException {
 //        log.debug("checkRequest {}", serviceRequestRepository.findAll().stream().map(sr->System.lineSeparator() + "\t" + sr.getLocalDateTime() + ":" + sr.getStatus() + ":" + sr.getRequestType().replace("com.github.karlnicholas.merchloan.apimessage.message.", "")).collect(Collectors.toList()));
         try (Connection con = dataSource.getConnection()) {
-            return serviceRequestDao.existsByStatusEquals(con, ServiceRequestMessage.STATUS.PENDING);
+            return serviceRequestDao.existsStillProcessing(con);
         }
     }
 }

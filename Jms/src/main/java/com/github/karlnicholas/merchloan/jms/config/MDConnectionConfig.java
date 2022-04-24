@@ -27,18 +27,30 @@ public class MDConnectionConfig {
     @Bean
     public ConnectionFactory getConnectionFactory() {
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(host);
         factory.setPassword(password);
         factory.setUsername(username);
-        factory.setPort(port);
         factory.setVirtualHost(virtualHost);
-        log.info("MDConnectionConfig {} {} {} {} {}", host, port, password, username, virtualHost);
+        factory.setHost(host);
+        factory.setPort(port);
         return factory;
     }
 
     @Bean
-    public Connection getConnection(ConnectionFactory connectionFactory) throws IOException, TimeoutException {
-        return connectionFactory.newConnection();
+    public Connection getConnection(ConnectionFactory connectionFactory) throws IOException, TimeoutException, InterruptedException {
+        int retryCount = 0;
+        while (retryCount < 3) {
+            try {
+                return connectionFactory.newConnection();
+            } catch (java.net.ConnectException e) {
+                Thread.sleep(5000);
+                // apply retry logic
+                retryCount++;
+                if (retryCount >= 3) {
+                    throw e;
+                }
+            }
+        }
+        return null;
     }
 //    @Bean
 //    public MessageConverter jsonMessageConverter() {

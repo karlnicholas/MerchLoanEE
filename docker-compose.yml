@@ -46,7 +46,6 @@ services:
       rabbitmq.host: rabbitmq
     networks:
       - merchloan-internal
-    restart: on-failure
     depends_on:
       - rabbitmq
   accounts:
@@ -56,7 +55,6 @@ services:
       rabbitmq.host: rabbitmq
     networks:
       - merchloan-internal
-    restart: on-failure
     depends_on:
       - rabbitmq
   redis:

@@ -40,10 +40,10 @@ public class RegisterManagementService {
                 requestResponse.setSuccess();
             }
             log.error("fundLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("fundLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
     }
 
@@ -63,10 +63,10 @@ public class RegisterManagementService {
                 requestResponse.setSuccess();
             }
             log.error("debitLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("debitLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
     }
 
@@ -86,10 +86,10 @@ public class RegisterManagementService {
                 requestResponse.setSuccess();
             }
             log.error("creditLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("creditLoan {}", ex);
-            requestResponse.setFailure(ex.getMessage());
+            requestResponse.setError(ex.getMessage());
         }
     }
 
