@@ -11,7 +11,10 @@ import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
@@ -24,57 +27,28 @@ import java.util.UUID;
 @Slf4j
 public class MQConsumers {
     private final ServiceRequestService serviceRequestService;
-    private final MQQueueNames MQQueueNames;
+    private final MQQueueNames mqQueueNames;
     private final Channel responseChannel;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public MQConsumers(Connection connection, MQQueueNames MQQueueNames, QueryService queryService, ServiceRequestService serviceRequestService) throws IOException {
+    public MQConsumers(Connection connection, MQQueueNames mqQueueNames, QueryService queryService, ServiceRequestService serviceRequestService) throws IOException {
         this.serviceRequestService = serviceRequestService;
-        this.MQQueueNames = MQQueueNames;
+        this.mqQueueNames = mqQueueNames;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        Channel servicerequestChannel = connection.createChannel();
-        servicerequestChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        servicerequestChannel.queueDeclare(MQQueueNames.getServicerequestQueue(), false, true, true, null);
-        servicerequestChannel.queueBind(MQQueueNames.getServicerequestQueue(), MQQueueNames.getExchange(), MQQueueNames.getServicerequestQueue());
-        servicerequestChannel.basicConsume(MQQueueNames.getServicerequestQueue(), true, this::receivedServiceRequestMessage, consumerTag -> {
-        });
-
-        Channel servicerequestQueryIdChannel = connection.createChannel();
-        servicerequestQueryIdChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        servicerequestQueryIdChannel.queueDeclare(MQQueueNames.getServicerequestQueryIdQueue(), false, true, true, null);
-        servicerequestQueryIdChannel.queueBind(MQQueueNames.getServicerequestQueryIdQueue(), MQQueueNames.getExchange(), MQQueueNames.getServicerequestQueryIdQueue());
-        servicerequestQueryIdChannel.basicConsume(MQQueueNames.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage, consumerTag -> {
-        });
-
-        Channel serviceRequestCheckRequestChannel = connection.createChannel();
-        serviceRequestCheckRequestChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        serviceRequestCheckRequestChannel.queueDeclare(MQQueueNames.getServiceRequestCheckRequestQueue(), false, true, true, null);
-        serviceRequestCheckRequestChannel.queueBind(MQQueueNames.getServiceRequestCheckRequestQueue(), MQQueueNames.getExchange(), MQQueueNames.getServiceRequestCheckRequestQueue());
-        serviceRequestCheckRequestChannel.basicConsume(MQQueueNames.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage, consumerTag -> {
-        });
-
-        Channel serviceRequestBillLoanChannel = connection.createChannel();
-        serviceRequestBillLoanChannel.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        serviceRequestBillLoanChannel.queueDeclare(MQQueueNames.getServiceRequestBillLoanQueue(), false, true, true, null);
-        serviceRequestBillLoanChannel.queueBind(MQQueueNames.getServiceRequestBillLoanQueue(), MQQueueNames.getExchange(), MQQueueNames.getServiceRequestBillLoanQueue());
-        serviceRequestBillLoanChannel.basicConsume(MQQueueNames.getServiceRequestBillLoanQueue(), true, this::receivedServiceRequestBillloanMessage, consumerTag -> {
-        });
-
-        Channel serviceRequestStatementCompleteQueue = connection.createChannel();
-        serviceRequestStatementCompleteQueue.exchangeDeclare(MQQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        serviceRequestStatementCompleteQueue.queueDeclare(MQQueueNames.getServiceRequestStatementCompleteQueue(), false, true, true, null);
-        serviceRequestStatementCompleteQueue.queueBind(MQQueueNames.getServiceRequestStatementCompleteQueue(), MQQueueNames.getExchange(), MQQueueNames.getServiceRequestStatementCompleteQueue());
-        serviceRequestStatementCompleteQueue.basicConsume(MQQueueNames.getServiceRequestStatementCompleteQueue(), true, this::receivedServiceStatementCompleteMessage, consumerTag -> {
-        });
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueue(), this::receivedServiceRequestMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueryIdQueue(), this::receivedServiceRequestQueryIdMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServiceRequestCheckRequestQueue(), this::receivedCheckRequestMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServiceRequestBillLoanQueue(), this::receivedServiceRequestBillloanMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServiceRequestStatementCompleteQueue(), this::receivedServiceStatementCompleteMessage);
 
         responseChannel = connection.createChannel();
     }
 
-    public void receivedServiceRequestQueryIdMessage(String consumerTag, Delivery delivery) throws IOException {
+    public void receivedServiceRequestQueryIdMessage(String consumerTag, Delivery delivery) {
         try {
             UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
             log.debug("ServiceRequestQueryId Received {}", id);
@@ -98,7 +72,7 @@ public class MQConsumers {
     }
 
 
-    public void receivedCheckRequestMessage(String consumerTag, Delivery delivery) throws IOException {
+    public void receivedCheckRequestMessage(String consumerTag, Delivery delivery) {
         log.debug("CheckRequest Received");
         try {
             reply(delivery, queryService.checkRequest());
@@ -112,7 +86,7 @@ public class MQConsumers {
                 .Builder()
                 .correlationId(delivery.getProperties().getCorrelationId())
                 .build();
-        responseChannel.basicPublish(MQQueueNames.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
+        responseChannel.basicPublish(mqQueueNames.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
 
     }
 

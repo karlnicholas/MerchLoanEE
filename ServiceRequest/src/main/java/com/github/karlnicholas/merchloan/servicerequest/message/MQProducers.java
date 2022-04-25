@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 @Service
 @Slf4j
@@ -19,7 +18,7 @@ public class MQProducers {
     private final Channel serviceRequestSenderChannel;
 
     @Autowired
-    public MQProducers(Connection connection, MQQueueNames MQQueueNames) throws IOException, TimeoutException {
+    public MQProducers(Connection connection, MQQueueNames MQQueueNames) throws IOException {
         this.MQQueueNames = MQQueueNames;
         serviceRequestSenderChannel = connection.createChannel();
     }

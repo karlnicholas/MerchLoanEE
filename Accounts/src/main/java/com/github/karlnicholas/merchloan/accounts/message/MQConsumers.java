@@ -10,7 +10,10 @@ import com.github.karlnicholas.merchloan.accounts.service.RegisterManagementServ
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
@@ -41,82 +44,17 @@ public class MQConsumers {
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.mqQueueNames = mqQueueNames;
 
-//                .with(rabbitMqProperties.getAccountCreateaccountRoutingKey())
-        Channel accountCreateaccountChannel = connection.createChannel();
-        accountCreateaccountChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountCreateaccountChannel.queueDeclare(mqQueueNames.getAccountCreateaccountQueue(), false, true, true, null);
-        accountCreateaccountChannel.queueBind(mqQueueNames.getAccountCreateaccountQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountCreateaccountQueue());
-        accountCreateaccountChannel.basicConsume(mqQueueNames.getAccountCreateaccountQueue(), true, this::receivedCreateAccountMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountFundingRoutingKey())
-        Channel accountFundingChannel = connection.createChannel();
-        accountFundingChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountFundingChannel.queueDeclare(mqQueueNames.getAccountFundingQueue(), false, true, true, null);
-        accountFundingChannel.queueBind(mqQueueNames.getAccountFundingQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountFundingQueue());
-        accountFundingChannel.basicConsume(mqQueueNames.getAccountFundingQueue(), true, this::receivedFundingMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountValidateCreditRoutingkey())
-        Channel accountValidateCreditChannel = connection.createChannel();
-        accountValidateCreditChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountValidateCreditChannel.queueDeclare(mqQueueNames.getAccountValidateCreditQueue(), false, true, true, null);
-        accountValidateCreditChannel.queueBind(mqQueueNames.getAccountValidateCreditQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountValidateCreditQueue());
-        accountValidateCreditChannel.basicConsume(mqQueueNames.getAccountValidateCreditQueue(), true, this::receivedValidateCreditMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountValidateDebitRoutingkey())
-        Channel accountValidateDebitChannel = connection.createChannel();
-        accountValidateDebitChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountValidateDebitChannel.queueDeclare(mqQueueNames.getAccountValidateDebitQueue(), false, true, true, null);
-        accountValidateDebitChannel.queueBind(mqQueueNames.getAccountValidateDebitQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountValidateDebitQueue());
-        accountValidateDebitChannel.basicConsume(mqQueueNames.getAccountValidateDebitQueue(), true, this::receivedValidateDebitMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountCloseLoanRoutingkey())
-        Channel accountCloseLoanChannel = connection.createChannel();
-        accountCloseLoanChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountCloseLoanChannel.queueDeclare(mqQueueNames.getAccountCloseLoanQueue(), false, true, true, null);
-        accountCloseLoanChannel.queueBind(mqQueueNames.getAccountCloseLoanQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountCloseLoanQueue());
-        accountCloseLoanChannel.basicConsume(mqQueueNames.getAccountCloseLoanQueue(), true, this::receivedCloseLoanMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountLoanClosedRoutingkey())
-        Channel accountLoanClosedChannel = connection.createChannel();
-        accountLoanClosedChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountLoanClosedChannel.queueDeclare(mqQueueNames.getAccountLoanClosedQueue(), false, true, true, null);
-        accountLoanClosedChannel.queueBind(mqQueueNames.getAccountLoanClosedQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountLoanClosedQueue());
-        accountLoanClosedChannel.basicConsume(mqQueueNames.getAccountLoanClosedQueue(), true, this::receivedLoanClosedMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountQueryStatementHeaderRoutingKey())
-        Channel accountQueryStatementHeaderChannel = connection.createChannel();
-        accountQueryStatementHeaderChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountQueryStatementHeaderChannel.queueDeclare(mqQueueNames.getAccountQueryStatementHeaderQueue(), false, true, true, null);
-        accountQueryStatementHeaderChannel.queueBind(mqQueueNames.getAccountQueryStatementHeaderQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountQueryStatementHeaderQueue());
-        accountQueryStatementHeaderChannel.basicConsume(mqQueueNames.getAccountQueryStatementHeaderQueue(), true, this::receivedStatementHeaderMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountBillingCycleChargeRoutingKey())
-        Channel accountBillingCycleChargeChannel = connection.createChannel();
-        accountBillingCycleChargeChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountBillingCycleChargeChannel.queueDeclare(mqQueueNames.getAccountBillingCycleChargeQueue(), false, true, true, null);
-        accountBillingCycleChargeChannel.queueBind(mqQueueNames.getAccountBillingCycleChargeQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountBillingCycleChargeQueue());
-        accountBillingCycleChargeChannel.basicConsume(mqQueueNames.getAccountBillingCycleChargeQueue(), true, this::receivedBillingCycleChargeMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountQueryLoansToCycleRoutingkey())
-        Channel accountQueryLoansToCycleChannel = connection.createChannel();
-        accountQueryLoansToCycleChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountQueryLoansToCycleChannel.queueDeclare(mqQueueNames.getAccountQueryLoansToCycleQueue(), false, true, true, null);
-        accountQueryLoansToCycleChannel.queueBind(mqQueueNames.getAccountQueryLoansToCycleQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoansToCycleQueue());
-        accountQueryLoansToCycleChannel.basicConsume(mqQueueNames.getAccountQueryLoansToCycleQueue(), true, this::receivedLoansToCyceMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountQueryAccountIdRoutingKey())
-        Channel accountQueryAccountIdChannel = connection.createChannel();
-        accountQueryAccountIdChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountQueryAccountIdChannel.queueDeclare(mqQueueNames.getAccountQueryAccountIdQueue(), false, true, true, null);
-        accountQueryAccountIdChannel.queueBind(mqQueueNames.getAccountQueryAccountIdQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountQueryAccountIdQueue());
-        accountQueryAccountIdChannel.basicConsume(mqQueueNames.getAccountQueryAccountIdQueue(), true, this::receivedQueryAccountIdMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getAccountQueryLoanIdRoutingKey())
-        Channel accountQueryLoanIdQueue = connection.createChannel();
-        accountQueryLoanIdQueue.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountQueryLoanIdQueue.queueDeclare(mqQueueNames.getAccountQueryLoanIdQueue(), false, true, true, null);
-        accountQueryLoanIdQueue.queueBind(mqQueueNames.getAccountQueryLoanIdQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoanIdQueue());
-        accountQueryLoanIdQueue.basicConsume(mqQueueNames.getAccountQueryLoanIdQueue(), true, this::receivedQueryLoanIdMessage, consumerTag -> {});
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountCreateaccountQueue(), this::receivedCreateAccountMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountFundingQueue(), this::receivedFundingMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountValidateCreditQueue(), this::receivedValidateCreditMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountValidateDebitQueue(), this::receivedValidateDebitMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountCloseLoanQueue(), this::receivedCloseLoanMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountLoanClosedQueue(), this::receivedLoanClosedMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryStatementHeaderQueue(), this::receivedStatementHeaderMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountBillingCycleChargeQueue(), this::receivedBillingCycleChargeMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoansToCycleQueue(), this::receivedLoansToCyceMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryAccountIdQueue(), this::receivedQueryAccountIdMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoanIdQueue(), this::receivedQueryLoanIdMessage);
 
         responseChannel = connection.createChannel();
     }

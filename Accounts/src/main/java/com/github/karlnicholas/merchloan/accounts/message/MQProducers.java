@@ -5,7 +5,6 @@ import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
 @Service
 @Slf4j
@@ -25,19 +23,13 @@ public class MQProducers {
     private final ReplyWaitingHandler replyWaitingHandler;
 
     @Autowired
-    public MQProducers(Connection connection, MQQueueNames mqQueueNames) throws IOException, TimeoutException {
+    public MQProducers(Connection connection, MQQueueNames mqQueueNames) throws IOException {
         this.mqQueueNames = mqQueueNames;
         replyWaitingHandler = new ReplyWaitingHandler();
 
         accountSendChannel = connection.createChannel();
 
-        Channel accountReplyChannel = connection.createChannel();
-        accountReplyChannel.queueDeclare(mqQueueNames.getAccountReplyQueue(), false, true, true, null);
-
-        accountReplyChannel.exchangeDeclare(mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        accountReplyChannel.queueBind(mqQueueNames.getAccountReplyQueue(), mqQueueNames.getExchange(), mqQueueNames.getAccountReplyQueue());
-        accountReplyChannel.basicConsume(mqQueueNames.getAccountReplyQueue(), true, replyWaitingHandler::handleReplies, consumerTag -> {
-        });
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountReplyQueue(), replyWaitingHandler::handleReplies);
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws IOException {

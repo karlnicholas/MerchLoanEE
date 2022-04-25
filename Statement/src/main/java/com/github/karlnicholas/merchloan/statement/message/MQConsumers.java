@@ -8,7 +8,10 @@ import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
@@ -37,40 +40,14 @@ public class MQConsumers {
         this.mqProducers = mqProducers;
         this.mqQueueNames = mqQueueNames;
         this.queryService = queryService;
-        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+        objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-//                .with(rabbitMqProperties.getStatementStatementRoutingkey())
-        Channel statementStatementChannel = connection.createChannel();
-        statementStatementChannel.exchangeDeclare(this.mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        statementStatementChannel.queueDeclare(this.mqQueueNames.getStatementStatementQueue(), false, true, true, null);
-        statementStatementChannel.queueBind(this.mqQueueNames.getStatementStatementQueue(), this.mqQueueNames.getExchange(), this.mqQueueNames.getStatementStatementQueue());
-        statementStatementChannel.basicConsume(this.mqQueueNames.getStatementStatementQueue(), true, this::receivedStatementMessage, consumerTag -> {});
-
-//                .with(rabbitMqProperties.getStatementCloseStatementRoutingkey())
-        Channel statementCloseStatementChannel = connection.createChannel();
-        statementCloseStatementChannel.exchangeDeclare(this.mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        statementCloseStatementChannel.queueDeclare(this.mqQueueNames.getStatementCloseStatementQueue(), false, true, true, null);
-        statementCloseStatementChannel.queueBind(this.mqQueueNames.getStatementCloseStatementQueue(), this.mqQueueNames.getExchange(), this.mqQueueNames.getStatementCloseStatementQueue());
-        statementCloseStatementChannel.basicConsume(this.mqQueueNames.getStatementCloseStatementQueue(), true, this::receivedCloseStatementMessage, consumerTag -> {});
-//                .with(rabbitMqProperties.getStatementQueryStatementRoutingkey())
-        Channel statementQueryStatementChannel = connection.createChannel();
-        statementQueryStatementChannel.exchangeDeclare(this.mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        statementQueryStatementChannel.queueDeclare(this.mqQueueNames.getStatementQueryStatementQueue(), false, true, true, null);
-        statementQueryStatementChannel.queueBind(this.mqQueueNames.getStatementQueryStatementQueue(), this.mqQueueNames.getExchange(), this.mqQueueNames.getStatementQueryStatementQueue());
-        statementQueryStatementChannel.basicConsume(this.mqQueueNames.getStatementQueryStatementQueue(), true, this::receivedQueryStatementMessage, consumerTag -> {});
-//                .with(rabbitMqProperties.getStatementQueryStatementsRoutingkey())
-        Channel statementQueryStatementsChannel = connection.createChannel();
-        statementQueryStatementsChannel.exchangeDeclare(this.mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        statementQueryStatementsChannel.queueDeclare(this.mqQueueNames.getStatementQueryStatementsQueue(), false, true, true, null);
-        statementQueryStatementsChannel.queueBind(this.mqQueueNames.getStatementQueryStatementsQueue(), this.mqQueueNames.getExchange(), this.mqQueueNames.getStatementQueryStatementsQueue());
-        statementQueryStatementsChannel.basicConsume(this.mqQueueNames.getStatementQueryStatementsQueue(), true, this::receivedQueryStatementsMessage, consumerTag -> {});
-//                .with(rabbitMqProperties.getStatementQueryMostRecentStatementRoutingkey())
-        Channel statementQueryMostRecentStatementChannel = connection.createChannel();
-        statementQueryMostRecentStatementChannel.exchangeDeclare(this.mqQueueNames.getExchange(), BuiltinExchangeType.DIRECT, false, true, null);
-        statementQueryMostRecentStatementChannel.queueDeclare(this.mqQueueNames.getStatementQueryMostRecentStatementQueue(), false, true, true, null);
-        statementQueryMostRecentStatementChannel.queueBind(this.mqQueueNames.getStatementQueryMostRecentStatementQueue(), this.mqQueueNames.getExchange(), this.mqQueueNames.getStatementQueryMostRecentStatementQueue());
-        statementQueryMostRecentStatementChannel.basicConsume(this.mqQueueNames.getStatementQueryMostRecentStatementQueue(), true, this::receivedQueryMostRecentStatementMessage, consumerTag -> {log.error("CANCEL????");});
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementStatementQueue(), this::receivedStatementMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementCloseStatementQueue(), this::receivedCloseStatementMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementQueryStatementQueue(), this::receivedQueryStatementMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementQueryStatementsQueue(), this::receivedQueryStatementsMessage);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementQueryMostRecentStatementQueue(), this::receivedQueryMostRecentStatementMessage);
 
         responseChannel = connection.createChannel();
     }
