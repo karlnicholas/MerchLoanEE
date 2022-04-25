@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.StatementRequest;
 import com.github.karlnicholas.merchloan.dto.RequestStatusDto;
-import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
+import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
@@ -27,23 +27,23 @@ import java.util.UUID;
 @Slf4j
 public class MQConsumers {
     private final ServiceRequestService serviceRequestService;
-    private final MQQueueNames mqQueueNames;
+    private final MQConsumerUtils mqConsumerUtils;
     private final Channel responseChannel;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public MQConsumers(Connection connection, MQQueueNames mqQueueNames, QueryService queryService, ServiceRequestService serviceRequestService) throws IOException {
+    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws IOException {
         this.serviceRequestService = serviceRequestService;
-        this.mqQueueNames = mqQueueNames;
+        this.mqConsumerUtils = mqConsumerUtils;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueue(), this::receivedServiceRequestMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueryIdQueue(), this::receivedServiceRequestQueryIdMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServiceRequestCheckRequestQueue(), this::receivedCheckRequestMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServiceRequestBillLoanQueue(), this::receivedServiceRequestBillloanMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getServiceRequestStatementCompleteQueue(), this::receivedServiceStatementCompleteMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueue(), this::receivedServiceRequestMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueryIdQueue(), this::receivedServiceRequestQueryIdMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestCheckRequestQueue(), this::receivedCheckRequestMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestBillLoanQueue(), this::receivedServiceRequestBillloanMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestStatementCompleteQueue(), this::receivedServiceStatementCompleteMessage);
 
         responseChannel = connection.createChannel();
     }
@@ -86,7 +86,7 @@ public class MQConsumers {
                 .Builder()
                 .correlationId(delivery.getProperties().getCorrelationId())
                 .build();
-        responseChannel.basicPublish(mqQueueNames.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
+        responseChannel.basicPublish(mqConsumerUtils.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
 
     }
 

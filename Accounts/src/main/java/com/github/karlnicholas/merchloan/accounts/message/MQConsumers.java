@@ -8,7 +8,7 @@ import com.github.karlnicholas.merchloan.accounts.service.AccountManagementServi
 import com.github.karlnicholas.merchloan.accounts.service.QueryService;
 import com.github.karlnicholas.merchloan.accounts.service.RegisterManagementService;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
-import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
+import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -31,30 +31,30 @@ public class MQConsumers {
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
     private final MQProducers rabbitMqSender;
-    private final MQQueueNames mqQueueNames;
+    private final MQConsumerUtils mqConsumerUtils;
     private final Channel responseChannel;
 
 
-    public MQConsumers(Connection connection, MQProducers rabbitMqSender, MQQueueNames mqQueueNames, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws IOException {
+    public MQConsumers(Connection connection, MQProducers rabbitMqSender, MQConsumerUtils mqConsumerUtils, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws IOException {
         this.accountManagementService = accountManagementService;
         this.registerManagementService = registerManagementService;
         this.queryService = queryService;
         this.rabbitMqSender = rabbitMqSender;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        this.mqQueueNames = mqQueueNames;
+        this.mqConsumerUtils = mqConsumerUtils;
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountCreateaccountQueue(), this::receivedCreateAccountMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountFundingQueue(), this::receivedFundingMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountValidateCreditQueue(), this::receivedValidateCreditMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountValidateDebitQueue(), this::receivedValidateDebitMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountCloseLoanQueue(), this::receivedCloseLoanMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountLoanClosedQueue(), this::receivedLoanClosedMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryStatementHeaderQueue(), this::receivedStatementHeaderMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountBillingCycleChargeQueue(), this::receivedBillingCycleChargeMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoansToCycleQueue(), this::receivedLoansToCyceMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryAccountIdQueue(), this::receivedQueryAccountIdMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoanIdQueue(), this::receivedQueryLoanIdMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountCreateaccountQueue(), this::receivedCreateAccountMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountFundingQueue(), this::receivedFundingMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountValidateCreditQueue(), this::receivedValidateCreditMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountValidateDebitQueue(), this::receivedValidateDebitMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountCloseLoanQueue(), this::receivedCloseLoanMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountLoanClosedQueue(), this::receivedLoanClosedMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryStatementHeaderQueue(), this::receivedStatementHeaderMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountBillingCycleChargeQueue(), this::receivedBillingCycleChargeMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoansToCycleQueue(), this::receivedLoansToCyceMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryAccountIdQueue(), this::receivedQueryAccountIdMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoanIdQueue(), this::receivedQueryLoanIdMessage);
 
         responseChannel = connection.createChannel();
     }
@@ -135,7 +135,7 @@ public class MQConsumers {
                 .Builder()
                 .correlationId(delivery.getProperties().getCorrelationId())
                 .build();
-        responseChannel.basicPublish(mqQueueNames.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
+        responseChannel.basicPublish(mqConsumerUtils.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
     }
 
     public void receivedCreateAccountMessage(String consumerTag, Delivery delivery) throws IOException {

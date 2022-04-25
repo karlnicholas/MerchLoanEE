@@ -3,7 +3,7 @@ package com.github.karlnicholas.merchloan.statement.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
-import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
+import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
@@ -19,14 +19,13 @@ import org.springframework.util.SerializationUtils;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
 @Slf4j
 public class MQConsumers {
-    private final MQQueueNames mqQueueNames;
+    private final MQConsumerUtils mqConsumerUtils;
     private final QueryService queryService;
     private Channel responseChannel;
     private final ObjectMapper objectMapper;
@@ -35,19 +34,19 @@ public class MQConsumers {
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
 
-    public MQConsumers(Connection connection, MQQueueNames mqQueueNames, MQProducers mqProducers, StatementService statementService, QueryService queryService) throws IOException {
+    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, MQProducers mqProducers, StatementService statementService, QueryService queryService) throws IOException {
         this.statementService = statementService;
         this.mqProducers = mqProducers;
-        this.mqQueueNames = mqQueueNames;
+        this.mqConsumerUtils = mqConsumerUtils;
         this.queryService = queryService;
         objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementStatementQueue(), this::receivedStatementMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementCloseStatementQueue(), this::receivedCloseStatementMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementQueryStatementQueue(), this::receivedQueryStatementMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementQueryStatementsQueue(), this::receivedQueryStatementsMessage);
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementQueryMostRecentStatementQueue(), this::receivedQueryMostRecentStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementStatementQueue(), this::receivedStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementCloseStatementQueue(), this::receivedCloseStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementQueue(), this::receivedQueryStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementsQueue(), this::receivedQueryStatementsMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryMostRecentStatementQueue(), this::receivedQueryMostRecentStatementMessage);
 
         responseChannel = connection.createChannel();
     }
@@ -96,7 +95,7 @@ public class MQConsumers {
                 .Builder()
                 .correlationId(delivery.getProperties().getCorrelationId())
                 .build();
-        responseChannel.basicPublish(mqQueueNames.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
+        responseChannel.basicPublish(mqConsumerUtils.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
     }
 
     public void receivedStatementMessage(String consumerTag, Delivery delivery) {

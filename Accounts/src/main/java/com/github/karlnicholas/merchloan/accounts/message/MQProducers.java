@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
 import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
-import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
+import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.rabbitmq.client.AMQP;
@@ -18,36 +18,36 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class MQProducers {
-    private final MQQueueNames mqQueueNames;
+    private final MQConsumerUtils mqConsumerUtils;
     private final Channel accountSendChannel;
     private final ReplyWaitingHandler replyWaitingHandler;
 
     @Autowired
-    public MQProducers(Connection connection, MQQueueNames mqQueueNames) throws IOException {
-        this.mqQueueNames = mqQueueNames;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws IOException {
+        this.mqConsumerUtils = mqConsumerUtils;
         replyWaitingHandler = new ReplyWaitingHandler();
 
         accountSendChannel = connection.createChannel();
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountReplyQueue(), replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountReplyQueue(), replyWaitingHandler::handleReplies);
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws IOException {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
-        accountSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueue(), null, SerializationUtils.serialize(serviceRequest));
+        accountSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueue(), null, SerializationUtils.serialize(serviceRequest));
     }
 
     public void statementCloseStatement(StatementHeader statementHeader) throws IOException {
         log.debug("statementCloseStatement: {}", statementHeader);
-        accountSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getStatementCloseStatementQueue(), null, SerializationUtils.serialize(statementHeader));
+        accountSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementCloseStatementQueue(), null, SerializationUtils.serialize(statementHeader));
     }
 
     public Object queryMostRecentStatement(UUID loanId) throws IOException, InterruptedException {
         log.debug("queryMostRecentStatement: {}", loanId);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getAccountReplyQueue()).build();
-        accountSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getAccountReplyQueue()).build();
+        accountSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));
         return replyWaitingHandler.getReply(responseKey);
     }
 

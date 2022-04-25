@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.statement.message;
 
 import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
-import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
+import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
@@ -20,25 +20,25 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQProducers {
-    private final MQQueueNames mqQueueNames;
+    private final MQConsumerUtils mqConsumerUtils;
     private final Channel statementSendChannel;
     private final ReplyWaitingHandler replyWaitingHandler;
 
     @Autowired
-    public MQProducers(Connection connection, MQQueueNames mqQueueNames) throws IOException {
-        this.mqQueueNames = mqQueueNames;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws IOException {
+        this.mqConsumerUtils = mqConsumerUtils;
         replyWaitingHandler = new ReplyWaitingHandler();
         statementSendChannel = connection.createChannel();
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementReplyQueue(), replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementReplyQueue(), replyWaitingHandler::handleReplies);
     }
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws IOException, InterruptedException {
         log.debug("accountBillingCycleCharge: {}", billingCycleCharge);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getStatementReplyQueue()).build();
-        statementSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getAccountBillingCycleChargeQueue(), props, SerializationUtils.serialize(billingCycleCharge));
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getStatementReplyQueue()).build();
+        statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountBillingCycleChargeQueue(), props, SerializationUtils.serialize(billingCycleCharge));
         return replyWaitingHandler.getReply(responseKey);
     }
 
@@ -46,24 +46,24 @@ public class MQProducers {
         log.debug("accountQueryStatementHeader: {}", statementHeader);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getStatementReplyQueue()).build();
-        statementSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getAccountQueryStatementHeaderQueue(), props, SerializationUtils.serialize(statementHeader));
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getStatementReplyQueue()).build();
+        statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryStatementHeaderQueue(), props, SerializationUtils.serialize(statementHeader));
         return replyWaitingHandler.getReply(responseKey);
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws IOException {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
-        statementSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueue(), null, SerializationUtils.serialize(serviceRequest));
+        statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueue(), null, SerializationUtils.serialize(serviceRequest));
     }
 
     public void accountLoanClosed(StatementHeader statementHeader) throws IOException {
         log.debug("accountLoanClosed: {}", statementHeader);
-        statementSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getAccountLoanClosedQueue(), null, SerializationUtils.serialize(statementHeader));
+        statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountLoanClosedQueue(), null, SerializationUtils.serialize(statementHeader));
     }
 
     public void serviceRequestStatementComplete(StatementCompleteResponse requestResponse) throws IOException {
         log.debug("serviceRequestStatementComplete: {}", requestResponse);
-        statementSendChannel.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getServiceRequestStatementCompleteQueue(), null, SerializationUtils.serialize(requestResponse));
+        statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestStatementCompleteQueue(), null, SerializationUtils.serialize(requestResponse));
     }
 
 }

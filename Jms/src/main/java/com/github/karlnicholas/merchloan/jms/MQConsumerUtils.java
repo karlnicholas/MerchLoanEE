@@ -1,4 +1,4 @@
-package com.github.karlnicholas.merchloan.jms.config;
+package com.github.karlnicholas.merchloan.jms;
 
 
 import com.rabbitmq.client.BuiltinExchangeType;
@@ -16,7 +16,7 @@ import java.io.IOException;
 @ConfigurationProperties(prefix = "rabbitmq")
 @PropertySource(value = "classpath:rabbitmq-config.properties")
 @Data
-public class MQQueueNames {
+public class MQConsumerUtils {
 
     public void bindConsumer(Connection connection, String exchange, String queueName, DeliverCallback deliverCallback) throws IOException {
         Channel channel = connection.createChannel();

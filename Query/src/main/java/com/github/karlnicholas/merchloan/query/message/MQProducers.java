@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.query.message;
 
 import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
-import com.github.karlnicholas.merchloan.jms.config.MQQueueNames;
+import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -15,25 +15,25 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class MQProducers {
-    private final MQQueueNames mqQueueNames;
+    private final MQConsumerUtils mqConsumerUtils;
     private final Channel querySendQueue;
     private final ReplyWaitingHandler replyWaitingHandler;
 
-    public MQProducers(Connection connection, MQQueueNames mqQueueNames) throws IOException {
-        this.mqQueueNames = mqQueueNames;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws IOException {
+        this.mqConsumerUtils = mqConsumerUtils;
         replyWaitingHandler = new ReplyWaitingHandler();
         querySendQueue = connection.createChannel();
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getQueryReplyQueue(), replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getQueryReplyQueue(), replyWaitingHandler::handleReplies);
     }
 
     public Object queryServiceRequest(UUID id) {
         log.debug("queryServiceRequest: {}", id);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getQueryReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getQueryReplyQueue()).build();
         try {
-            querySendQueue.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getServicerequestQueryIdQueue(), props, SerializationUtils.serialize(id));
+            querySendQueue.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueryIdQueue(), props, SerializationUtils.serialize(id));
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryServiceRequest", e);
@@ -45,9 +45,9 @@ public class MQProducers {
         log.debug("queryAccount: {}", id);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getQueryReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getQueryReplyQueue()).build();
         try {
-            querySendQueue.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getAccountQueryAccountIdQueue(), props, SerializationUtils.serialize(id));
+            querySendQueue.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryAccountIdQueue(), props, SerializationUtils.serialize(id));
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryAccount", e);
@@ -60,9 +60,9 @@ public class MQProducers {
         log.debug("queryLoan: {}", id);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getQueryReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getQueryReplyQueue()).build();
         try {
-            querySendQueue.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getAccountQueryLoanIdQueue(), props, SerializationUtils.serialize(id));
+            querySendQueue.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoanIdQueue(), props, SerializationUtils.serialize(id));
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryLoan", e);
@@ -74,9 +74,9 @@ public class MQProducers {
         log.debug("queryStatement: {}", id);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getQueryReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getQueryReplyQueue()).build();
         try {
-            querySendQueue.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getStatementQueryStatementQueue(), props, SerializationUtils.serialize(id));
+            querySendQueue.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementQueue(), props, SerializationUtils.serialize(id));
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryStatement", e);
@@ -88,9 +88,9 @@ public class MQProducers {
         log.debug("queryStatements: {}", id);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getQueryReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getQueryReplyQueue()).build();
         try {
-            querySendQueue.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getStatementQueryStatementsQueue(), props, SerializationUtils.serialize(id));
+            querySendQueue.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementsQueue(), props, SerializationUtils.serialize(id));
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryStatements", e);
@@ -102,9 +102,9 @@ public class MQProducers {
         log.debug("queryCheckRequest:");
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqQueueNames.getQueryReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getQueryReplyQueue()).build();
         try {
-            querySendQueue.basicPublish(mqQueueNames.getExchange(), mqQueueNames.getServiceRequestCheckRequestQueue(), props, SerializationUtils.serialize(new byte[0]));
+            querySendQueue.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestCheckRequestQueue(), props, SerializationUtils.serialize(new byte[0]));
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryCheckRequest", e);
