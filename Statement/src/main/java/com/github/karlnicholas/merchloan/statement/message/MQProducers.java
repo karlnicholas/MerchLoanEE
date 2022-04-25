@@ -30,7 +30,7 @@ public class MQProducers {
         replyWaitingHandler = new ReplyWaitingHandler();
         statementSendChannel = connection.createChannel();
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountReplyQueue(), replyWaitingHandler::handleReplies);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getStatementReplyQueue(), replyWaitingHandler::handleReplies);
     }
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws IOException, InterruptedException {

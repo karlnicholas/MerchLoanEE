@@ -24,7 +24,7 @@ public class MQProducers {
         replyWaitingHandler = new ReplyWaitingHandler();
         querySendQueue = connection.createChannel();
 
-        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getAccountReplyQueue(), replyWaitingHandler::handleReplies);
+        mqQueueNames.bindConsumer(connection, mqQueueNames.getExchange(), mqQueueNames.getQueryReplyQueue(), replyWaitingHandler::handleReplies);
     }
 
     public Object queryServiceRequest(UUID id) {
