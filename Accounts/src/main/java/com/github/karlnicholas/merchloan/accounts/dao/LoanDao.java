@@ -10,17 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class LoanDao {
-    private static boolean first = true;
     //id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state
     public void insert(Connection con, Loan loan) throws SQLException {
-        if ( first) {
-            first = false;
-            throw new SQLException("JUNK");
-        }
         try (PreparedStatement ps = con.prepareStatement("insert into loan(id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state) values(?, ?, ?, ?, ?, ?, ?, ?, ?)" )) {
             ps.setBytes(1, SqlUtils.uuidToBytes(loan.getId()));
             ps.setBytes(2, SqlUtils.uuidToBytes(loan.getAccountId()));
@@ -36,8 +30,6 @@ public class LoanDao {
     }
 
     public Optional<Loan> findById(Connection con, UUID loanId) throws SQLException {
-        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
-            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state from loan where id = ?")) {
             ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
@@ -60,8 +52,6 @@ public class LoanDao {
     }
 
     public List<Loan> findByLoanState(Connection con, Loan.LOAN_STATE state) throws SQLException {
-        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
-            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state from loan where loan_state = ?")) {
             ps.setInt(1, state.ordinal());
             try (ResultSet rs = ps.executeQuery()) {
@@ -85,8 +75,6 @@ public class LoanDao {
     }
 
     public void updateState(Connection con, UUID loanId, Loan.LOAN_STATE state) throws SQLException {
-        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
-            throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("update loan set loan_state = ? where id = ?" )) {
             ps.setInt(1, state.ordinal());
             ps.setBytes(2, SqlUtils.uuidToBytes(loanId));

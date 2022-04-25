@@ -23,7 +23,6 @@ public class AccountManagementService {
     private final DataSource dataSource;
     private final AccountDao accountDao;
     private final LoanDao loanDao;
-    private static boolean first = true;
 
     @Autowired
     public AccountManagementService(DataSource dataSource, AccountDao accountDao, LoanDao loanDao) {
@@ -75,10 +74,6 @@ public class AccountManagementService {
                                 .loanState(Loan.LOAN_STATE.OPEN)
                                 .build());
                 requestResponse.setSuccess();
-                if ( first) {
-                    first = false;
-                    throw new Exception("JUNK");
-                }
             } else {
                 requestResponse.setError("Account not found for " + fundLoan.getAccountId());
             }

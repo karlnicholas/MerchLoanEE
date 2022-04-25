@@ -1,6 +1,5 @@
 package com.github.karlnicholas.merchloan.servicerequest.service;
 
-import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,5 @@
 package com.github.karlnicholas.merchloan.sqlutil;
 
-import org.yaml.snakeyaml.constructor.DuplicateKeyException;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
