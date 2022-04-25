@@ -34,7 +34,7 @@ public class ReplyWaitingHandler {
         }
     }
 
-    public synchronized void handleReplies(String consumerTag, Delivery delivery) {
+    public void handleReplies(String consumerTag, Delivery delivery) {
         synchronized (repliesWaiting) {
             String corrId = delivery.getProperties().getCorrelationId();
             repliesWaiting.get(corrId).setReply(SerializationUtils.deserialize(delivery.getBody()));

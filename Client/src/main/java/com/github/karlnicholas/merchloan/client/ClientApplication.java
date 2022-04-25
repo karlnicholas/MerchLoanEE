@@ -69,7 +69,7 @@ public class ClientApplication {
                 while ( currentDate.isBefore(endDate)) {
                     if ( loanProcessQueue.checkWorking() ) {
                         log.info("RestQueue still working {}", currentDate);
-                        Thread.sleep(500);
+                        Thread.sleep(250);
                         continue;
                     }
                     if ( !businessDateComponent.updateBusinessDate(currentDate) ) {
@@ -97,7 +97,7 @@ public class ClientApplication {
                                 .forEach(r->log.info("route stats {} {}", r, pcm.getStats(r)));
                     }
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(250);
+                    Thread.sleep(500);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
                 int[] first = new int[1];

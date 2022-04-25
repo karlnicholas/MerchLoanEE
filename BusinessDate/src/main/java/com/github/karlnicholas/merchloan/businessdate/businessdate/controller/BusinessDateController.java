@@ -23,6 +23,6 @@ public class BusinessDateController {
 
     @PostMapping(value = "businessdate", consumes = MediaType.TEXT_PLAIN_VALUE)
     public void postBusinessDate(@RequestBody String businessDate) throws IOException, InterruptedException, SQLException {
-        BusinessDate priorBusinessDate = businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
+        businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
     }
 }
