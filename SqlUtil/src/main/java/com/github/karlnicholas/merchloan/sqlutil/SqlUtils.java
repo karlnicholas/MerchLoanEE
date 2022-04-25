@@ -1,11 +1,14 @@
 package com.github.karlnicholas.merchloan.sqlutil;
 
+import org.yaml.snakeyaml.constructor.DuplicateKeyException;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
 import java.util.UUID;
 
-public class UUIDToBytes {
+public class SqlUtils {
+    public static final int DUPLICATE_ERROR = 23505;
     public static byte[] uuidToBytes(final UUID uuid) {
         if (Objects.isNull(uuid)) {
             return null;

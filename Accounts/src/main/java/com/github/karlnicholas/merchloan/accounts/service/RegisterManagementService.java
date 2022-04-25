@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.accounts.service;
 import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,11 +37,12 @@ public class RegisterManagementService {
                     .build());
             requestResponse.setSuccess();
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == 2601 && fundLoan.getRetry() == Boolean.TRUE) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && fundLoan.getRetry()) {
                 requestResponse.setSuccess();
+            } else {
+                requestResponse.setError(ex.getMessage());
             }
             log.error("fundLoan {}", ex);
-            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("fundLoan {}", ex);
             requestResponse.setError(ex.getMessage());
@@ -59,11 +61,12 @@ public class RegisterManagementService {
             registerEntryDao.insert(con, debitEntry);
             requestResponse.setSuccess();
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == 2601 && debitLoan.getRetry() == Boolean.TRUE) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && debitLoan.getRetry()) {
                 requestResponse.setSuccess();
+            } else {
+                requestResponse.setError(ex.getMessage());
             }
             log.error("debitLoan {}", ex);
-            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("debitLoan {}", ex);
             requestResponse.setError(ex.getMessage());
@@ -82,11 +85,12 @@ public class RegisterManagementService {
             registerEntryDao.insert(con, creditEntry);
             requestResponse.setSuccess();
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == 2601 && creditLoan.getRetry() == Boolean.TRUE) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && creditLoan.getRetry()) {
                 requestResponse.setSuccess();
+            } else {
+                requestResponse.setError(ex.getMessage());
             }
             log.error("creditLoan {}", ex);
-            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("creditLoan {}", ex);
             requestResponse.setError(ex.getMessage());
@@ -109,7 +113,7 @@ public class RegisterManagementService {
 
     public RegisterEntry billingCycleCharge(BillingCycleCharge billingCycleCharge) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            if (billingCycleCharge.getRetry() == Boolean.TRUE) {
+            if (billingCycleCharge.getRetry()) {
                 Optional<RegisterEntry> reOpt = registerEntryDao.findById(con, billingCycleCharge.getId());
                 if (reOpt.isPresent()) {
                     return reOpt.get();

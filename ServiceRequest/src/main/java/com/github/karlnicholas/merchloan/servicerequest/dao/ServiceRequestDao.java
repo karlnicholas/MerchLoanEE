@@ -2,7 +2,7 @@ package com.github.karlnicholas.merchloan.servicerequest.dao;
 
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
-import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +19,11 @@ public class ServiceRequestDao {
 
     public Optional<ServiceRequest> findById(Connection con, UUID id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, request, request_type, local_date_time, status, status_message, retry_count from service_request where id = ?")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(id));
+            ps.setBytes(1, SqlUtils.uuidToBytes(id));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(ServiceRequest.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
                             .request(rs.getString(2))
                             .requestType(rs.getString(3))
                             .localDateTime(rs.getTimestamp(4).toLocalDateTime())
@@ -56,7 +56,7 @@ public class ServiceRequestDao {
                 List<ServiceRequest> serviceRequests = new ArrayList<>();
                 while (rs.next()) {
                     serviceRequests.add(ServiceRequest.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
                             .request(rs.getString(2))
                             .requestType(rs.getString(3))
                             .localDateTime(rs.getTimestamp(4).toLocalDateTime())
@@ -75,14 +75,14 @@ public class ServiceRequestDao {
             ps.setInt(1, serviceRequest.getStatus().ordinal());
             ps.setString(2, serviceRequest.getStatusMessage());
             ps.setInt(3, serviceRequest.getRetryCount());
-            ps.setBytes(4, UUIDToBytes.uuidToBytes(serviceRequest.getId()));
+            ps.setBytes(4, SqlUtils.uuidToBytes(serviceRequest.getId()));
             ps.executeUpdate();
         }
     }
 
     public void insert(Connection con, ServiceRequest serviceRequest) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("insert into service_request(id, request, request_type, local_date_time, status, status_message, retry_count) values(?, ?, ?, ?, ?, ?, ?)")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(serviceRequest.getId()));
+            ps.setBytes(1, SqlUtils.uuidToBytes(serviceRequest.getId()));
             ps.setString(2, serviceRequest.getRequest());
             ps.setString(3, serviceRequest.getRequestType());
             ps.setTimestamp(4, Timestamp.valueOf(serviceRequest.getLocalDateTime()));

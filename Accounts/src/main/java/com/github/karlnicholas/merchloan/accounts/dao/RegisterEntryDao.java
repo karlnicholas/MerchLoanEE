@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.accounts.dao;
 
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
-import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +24,12 @@ public class RegisterEntryDao {
         if (ThreadLocalRandom.current().nextDouble() > 0.999 )
             throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where id = ?")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(RegisterEntry.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(2)))
                             .date(rs.getDate(3).toLocalDate())
                             .description(rs.getString(4))
                             .debit(rs.getBigDecimal(5))
@@ -47,15 +47,15 @@ public class RegisterEntryDao {
         if (ThreadLocalRandom.current().nextDouble() > 0.999 )
             throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where loan_id = ? and date between ? and ? order by time_stamp")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             ps.setDate(2, java.sql.Date.valueOf(startDate));
             ps.setDate(3, java.sql.Date.valueOf(endDate));
             try (ResultSet rs = ps.executeQuery()) {
                 List<RegisterEntry> registerEntries = new ArrayList<>();
                 while (rs.next()) {
                     registerEntries.add(RegisterEntry.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(2)))
                             .date(rs.getDate(3).toLocalDate())
                             .description(rs.getString(4))
                             .debit(rs.getBigDecimal(5))
@@ -72,13 +72,13 @@ public class RegisterEntryDao {
         if (ThreadLocalRandom.current().nextDouble() > 0.999 )
             throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, date, description, debit, credit, time_stamp from register_entry where loan_id = ? order by time_stamp")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 List<RegisterEntry> registerEntries = new ArrayList<>();
                 while (rs.next()) {
                     registerEntries.add(RegisterEntry.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(2)))
                             .date(rs.getDate(3).toLocalDate())
                             .description(rs.getString(4))
                             .debit(rs.getBigDecimal(5))
@@ -95,8 +95,8 @@ public class RegisterEntryDao {
         if (ThreadLocalRandom.current().nextDouble() > 0.999 )
             throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("insert into register_entry(id, loan_id, date, description, debit, credit) values(?, ?, ?, ?, ?, ?)")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(registerEntry.getId()));
-            ps.setBytes(2, UUIDToBytes.uuidToBytes(registerEntry.getLoanId()));
+            ps.setBytes(1, SqlUtils.uuidToBytes(registerEntry.getId()));
+            ps.setBytes(2, SqlUtils.uuidToBytes(registerEntry.getLoanId()));
             ps.setDate(3, java.sql.Date.valueOf(registerEntry.getDate()));
             ps.setString(4, registerEntry.getDescription());
             ps.setBigDecimal(5, registerEntry.getDebit());

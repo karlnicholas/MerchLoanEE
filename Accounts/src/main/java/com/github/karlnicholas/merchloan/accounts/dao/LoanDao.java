@@ -2,7 +2,7 @@ package com.github.karlnicholas.merchloan.accounts.dao;
 
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.StatementDatesConverter;
-import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
@@ -14,13 +14,16 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class LoanDao {
+    private static boolean first = true;
     //id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state
     public void insert(Connection con, Loan loan) throws SQLException {
-        if (ThreadLocalRandom.current().nextDouble() > 0.999 )
+        if ( first) {
+            first = false;
             throw new SQLException("JUNK");
+        }
         try (PreparedStatement ps = con.prepareStatement("insert into loan(id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state) values(?, ?, ?, ?, ?, ?, ?, ?, ?)" )) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loan.getId()));
-            ps.setBytes(2, UUIDToBytes.uuidToBytes(loan.getAccountId()));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loan.getId()));
+            ps.setBytes(2, SqlUtils.uuidToBytes(loan.getAccountId()));
             ps.setDate(3, java.sql.Date.valueOf(loan.getStartDate()));
             ps.setString(4, StatementDatesConverter.convertToDatabaseColumn(loan.getStatementDates()));
             ps.setBigDecimal(5, loan.getFunding());
@@ -36,12 +39,12 @@ public class LoanDao {
         if (ThreadLocalRandom.current().nextDouble() > 0.999 )
             throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("select id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state from loan where id = ?")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(Loan.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .accountId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .accountId(SqlUtils.toUUID(rs.getBytes(2)))
                             .startDate(((Date) rs.getObject(3)).toLocalDate())
                             .statementDates(StatementDatesConverter.convertToEntityAttribute(rs.getString(4)))
                             .funding(rs.getBigDecimal(5))
@@ -65,8 +68,8 @@ public class LoanDao {
                 List<Loan> loans = new ArrayList<>();
                 while (rs.next()) {
                     loans.add(Loan.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .accountId(UUIDToBytes.toUUID(rs.getBytes(2)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .accountId(SqlUtils.toUUID(rs.getBytes(2)))
                             .startDate(((Date) rs.getObject(3)).toLocalDate())
                             .statementDates(StatementDatesConverter.convertToEntityAttribute(rs.getString(4)))
                             .funding(rs.getBigDecimal(5))
@@ -86,7 +89,7 @@ public class LoanDao {
             throw new SQLException("JUNK");
         try (PreparedStatement ps = con.prepareStatement("update loan set loan_state = ? where id = ?" )) {
             ps.setInt(1, state.ordinal());
-            ps.setBytes(2, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(2, SqlUtils.uuidToBytes(loanId));
             ps.executeUpdate();
         }
     }

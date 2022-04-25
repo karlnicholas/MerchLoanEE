@@ -1,6 +1,6 @@
 package com.github.karlnicholas.merchloan.statement.dao;
 
-import com.github.karlnicholas.merchloan.sqlutil.UUIDToBytes;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,8 +20,8 @@ public class StatementDao {
 
     public void insert(Connection con, Statement statement) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("insert into statement(id, loan_id, statement_date, starting_balance, ending_balance, statement) values(?, ?, ?, ?, ?, ?)")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(statement.getId()));
-            ps.setBytes(2, UUIDToBytes.uuidToBytes(statement.getLoanId()));
+            ps.setBytes(1, SqlUtils.uuidToBytes(statement.getId()));
+            ps.setBytes(2, SqlUtils.uuidToBytes(statement.getLoanId()));
             ps.setObject(3, statement.getStatementDate());
             ps.setBigDecimal(4, statement.getStartingBalance());
             ps.setBigDecimal(5, statement.getEndingBalance());
@@ -32,12 +32,12 @@ public class StatementDao {
 
     public Optional<Statement> findById(Connection con, UUID id) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, statement_date, starting_balance, ending_balance, statement from statement where id = ?")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(id));
+            ps.setBytes(1, SqlUtils.uuidToBytes(id));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(Statement.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(1)))
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
@@ -51,13 +51,13 @@ public class StatementDao {
 
     public List<Statement> findByLoanId(Connection con, UUID loanId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, statement_date, starting_balance, ending_balance, statement from statement where loan_id = ?")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 List<Statement> statements = new ArrayList<>();
                 while (rs.next()) {
                     statements.add(Statement.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(1)))
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
@@ -71,13 +71,13 @@ public class StatementDao {
 
     public Optional<Statement> findByLoanIdAndStatementDate(Connection con, UUID loanId, LocalDate statementDate) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, statement_date, starting_balance, ending_balance, statement from statement where loan_id = ? and statement_date = ?")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             ps.setObject(2, statementDate);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(Statement.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(1)))
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
@@ -91,12 +91,12 @@ public class StatementDao {
 
     public Optional<Statement> findFirstByLoanIdOrderByStatementDateDesc(Connection con, UUID loanId) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, loan_id, statement_date, starting_balance, ending_balance, statement from statement where loan_id = ? order by statement_date desc limit 1")) {
-            ps.setBytes(1, UUIDToBytes.uuidToBytes(loanId));
+            ps.setBytes(1, SqlUtils.uuidToBytes(loanId));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return Optional.of(Statement.builder()
-                            .id(UUIDToBytes.toUUID(rs.getBytes(1)))
-                            .loanId(UUIDToBytes.toUUID(rs.getBytes(1)))
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .loanId(SqlUtils.toUUID(rs.getBytes(1)))
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))

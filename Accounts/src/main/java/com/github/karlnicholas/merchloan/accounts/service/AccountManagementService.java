@@ -5,6 +5,7 @@ import com.github.karlnicholas.merchloan.accounts.dao.LoanDao;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class AccountManagementService {
     private final DataSource dataSource;
     private final AccountDao accountDao;
     private final LoanDao loanDao;
+    private static boolean first = true;
 
     @Autowired
     public AccountManagementService(DataSource dataSource, AccountDao accountDao, LoanDao loanDao) {
@@ -39,11 +41,12 @@ public class AccountManagementService {
                     .build());
             requestResponse.setSuccess();
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == 2601 && createAccount.getRetry() == Boolean.TRUE) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && createAccount.getRetry()) {
                 requestResponse.setSuccess();
+            } else {
+                requestResponse.setError(ex.getMessage());
             }
             log.error("createAccount {}", ex);
-            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("createAccount {}", ex);
             requestResponse.setError(ex.getMessage());
@@ -72,15 +75,20 @@ public class AccountManagementService {
                                 .loanState(Loan.LOAN_STATE.OPEN)
                                 .build());
                 requestResponse.setSuccess();
+                if ( first) {
+                    first = false;
+                    throw new Exception("JUNK");
+                }
             } else {
                 requestResponse.setError("Account not found for " + fundLoan.getAccountId());
             }
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == 2601 && fundLoan.getRetry() == Boolean.TRUE) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && fundLoan.getRetry()) {
                 requestResponse.setSuccess();
+            } else {
+                requestResponse.setError(ex.getMessage());
             }
             log.error("fundAccount {}", ex);
-            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("fundAccount {}", ex);
             requestResponse.setError(ex.getMessage());
@@ -121,11 +129,12 @@ public class AccountManagementService {
                 requestResponse.setError("Loan not found for loanId: " + statementHeader.getLoanId());
             }
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == 2601 && statementHeader.getRetry() == Boolean.TRUE) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && statementHeader.getRetry()) {
                 requestResponse.setSuccess();
+            } else {
+                requestResponse.setError(ex.getMessage());
             }
             log.error("statementHeader {}", ex);
-            requestResponse.setError(ex.getMessage());
         } catch (Exception ex) {
             log.error("statementHeader {}", ex);
             requestResponse.setError(ex.getMessage());
