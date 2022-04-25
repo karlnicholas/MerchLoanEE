@@ -281,7 +281,7 @@ public class MQConsumers {
             }
         } catch (Exception ex) {
             log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
-            serviceRequestResponse.setFailure("receivedCloseLoanMessage exception " + ex.getMessage());
+            serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
         } finally {
             rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
         }
@@ -296,7 +296,7 @@ public class MQConsumers {
             serviceRequestResponse.setSuccess();
         } catch (Exception ex) {
             log.error("receivedLoanClosedMessage exception {}", ex.getMessage());
-            serviceRequestResponse.setFailure(ex.getMessage());
+            serviceRequestResponse.setError("receivedLoanClosedMessage excepion: " + ex.getMessage());
         } finally {
             rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
         }

@@ -52,17 +52,21 @@ public class MQConsumers {
         responseChannel = connection.createChannel();
     }
 
-    public void receivedQueryStatementMessage(String consumerTag, Delivery delivery) throws IOException {
-        UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("receivedQueryStatementMessage {}", loanId);
-        String result = queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
-        reply(delivery, result);
+    public void receivedQueryStatementMessage(String consumerTag, Delivery delivery) {
+        try {
+            UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
+            log.debug("receivedQueryStatementMessage {}", loanId);
+            String result = queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
+            reply(delivery, result);
+        } catch (Exception ex) {
+            log.error("receivedQueryStatementMessage exception {}", ex.getMessage());
+        }
     }
 
     public void receivedQueryMostRecentStatementMessage(String consumerTag, Delivery delivery) throws IOException {
-        UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
         try {
+            UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
+            log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
             MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
                             .id(statement.getId())
                             .loanId(loanId)
@@ -72,15 +76,19 @@ public class MQConsumers {
                             .build())
                     .orElse(MostRecentStatement.builder().loanId(loanId).build());
             reply(delivery, mostRecentStatement);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (Exception ex) {
+            log.error("receivedQueryMostRecentStatementMessage exception {}", ex.getMessage());
         }
     }
 
-    public void receivedQueryStatementsMessage(String consumerTag, Delivery delivery) throws IOException {
-        UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("receivedQueryStatementsMessage Received {}", id);
-        reply(delivery, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
+    public void receivedQueryStatementsMessage(String consumerTag, Delivery delivery) {
+        try {
+            UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
+            log.debug("receivedQueryStatementsMessage Received {}", id);
+            reply(delivery, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
+        } catch (Exception ex) {
+            log.error("receivedQueryStatementsMessage exception {}", ex.getMessage());
+        }
     }
 
     private void reply(Delivery delivery, Object data) throws IOException {
@@ -91,7 +99,7 @@ public class MQConsumers {
         responseChannel.basicPublish(mqQueueNames.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
     }
 
-    public void receivedStatementMessage(String consumerTag, Delivery delivery) throws IOException {
+    public void receivedStatementMessage(String consumerTag, Delivery delivery) {
         StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
         StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
                 .id(statementHeader.getId())
@@ -174,7 +182,11 @@ public class MQConsumers {
             requestResponse.setError(ex.getMessage());
         } finally {
             if (!loanClosed) {
-                mqProducers.serviceRequestStatementComplete(requestResponse);
+                try {
+                    mqProducers.serviceRequestStatementComplete(requestResponse);
+                } catch (IOException innerEx) {
+                    log.error("ERROR SENDING ERROR", innerEx);
+                }
             }
         }
     }
@@ -211,7 +223,7 @@ public class MQConsumers {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(statementHeader.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
                 mqProducers.serviceRequestServiceRequest(requestResponse);
             } catch (Exception innerEx) {
-                log.error("ERROR SENDING ERROR", ex);
+                log.error("ERROR SENDING ERROR", innerEx);
             }
         }
     }

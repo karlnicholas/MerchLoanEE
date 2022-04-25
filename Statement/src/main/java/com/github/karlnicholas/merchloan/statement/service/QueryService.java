@@ -21,19 +21,15 @@ public class QueryService {
         this.dataSource = dataSource;
     }
 
-    public Optional<Statement> findById(UUID id) {
+    public Optional<Statement> findById(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             return statementDao.findById(con, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 
-    public List<Statement> findByLoanId(UUID loanId) {
+    public List<Statement> findByLoanId(UUID loanId) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             return statementDao.findByLoanId(con, loanId);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 
