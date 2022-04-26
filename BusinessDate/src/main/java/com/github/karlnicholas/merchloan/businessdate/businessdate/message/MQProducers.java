@@ -21,20 +21,21 @@ public class MQProducers {
     private final MQConsumerUtils mqConsumerUtils;
     private final Channel businessDateSendChannel;
     private final ReplyWaitingHandler replyWaitingHandler;
+    private final String businessDateReplyQueue;
     @Autowired
     public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws IOException {
         this.mqConsumerUtils = mqConsumerUtils;
         replyWaitingHandler = new ReplyWaitingHandler();
-
+        businessDateReplyQueue = "businessdate-reply-"+UUID.randomUUID();
         businessDateSendChannel = connection.createChannel();
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getBusinessDateReplyQueue(), replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), businessDateReplyQueue, replyWaitingHandler::handleReplies);
     }
 
     public Object servicerequestCheckRequest() throws IOException, InterruptedException {
         log.debug("servicerequestCheckRequest:");
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getBusinessDateReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(businessDateReplyQueue).build();
         businessDateSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestCheckRequestQueue(), props, SerializationUtils.serialize(new byte[0]));
         return replyWaitingHandler.getReply(responseKey);
     }
@@ -43,7 +44,7 @@ public class MQProducers {
         log.debug("acccountQueryLoansToCycle: {}", businessDate);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getBusinessDateReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(businessDateReplyQueue).build();
         businessDateSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoansToCycleQueue(), props, SerializationUtils.serialize(businessDate));
         return replyWaitingHandler.getReply(responseKey);
     }

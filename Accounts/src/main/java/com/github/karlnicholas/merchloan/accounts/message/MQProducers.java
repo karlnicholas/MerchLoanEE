@@ -21,15 +21,16 @@ public class MQProducers {
     private final MQConsumerUtils mqConsumerUtils;
     private final Channel accountSendChannel;
     private final ReplyWaitingHandler replyWaitingHandler;
+    private final String accountsReplyQueue;
 
     @Autowired
     public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws IOException {
         this.mqConsumerUtils = mqConsumerUtils;
         replyWaitingHandler = new ReplyWaitingHandler();
-
+        accountsReplyQueue = "accounts-reply-"+UUID.randomUUID();
         accountSendChannel = connection.createChannel();
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountReplyQueue(), replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), accountsReplyQueue, replyWaitingHandler::handleReplies);
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws IOException {
@@ -46,7 +47,7 @@ public class MQProducers {
         log.debug("queryMostRecentStatement: {}", loanId);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getAccountReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(accountsReplyQueue).build();
         accountSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryMostRecentStatementQueue(), props, SerializationUtils.serialize(loanId));
         return replyWaitingHandler.getReply(responseKey);
     }

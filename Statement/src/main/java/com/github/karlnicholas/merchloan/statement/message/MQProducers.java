@@ -23,21 +23,22 @@ public class MQProducers {
     private final MQConsumerUtils mqConsumerUtils;
     private final Channel statementSendChannel;
     private final ReplyWaitingHandler replyWaitingHandler;
+    private final String statementReplyQueue;
 
     @Autowired
     public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws IOException {
         this.mqConsumerUtils = mqConsumerUtils;
+        statementReplyQueue = "statement-reply-"+UUID.randomUUID();
         replyWaitingHandler = new ReplyWaitingHandler();
         statementSendChannel = connection.createChannel();
-
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementReplyQueue(), replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), statementReplyQueue, replyWaitingHandler::handleReplies);
     }
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws IOException, InterruptedException {
         log.debug("accountBillingCycleCharge: {}", billingCycleCharge);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getStatementReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(statementReplyQueue).build();
         statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountBillingCycleChargeQueue(), props, SerializationUtils.serialize(billingCycleCharge));
         return replyWaitingHandler.getReply(responseKey);
     }
@@ -46,7 +47,7 @@ public class MQProducers {
         log.debug("accountQueryStatementHeader: {}", statementHeader);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(mqConsumerUtils.getStatementReplyQueue()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().correlationId(responseKey).replyTo(statementReplyQueue).build();
         statementSendChannel.basicPublish(mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryStatementHeaderQueue(), props, SerializationUtils.serialize(statementHeader));
         return replyWaitingHandler.getReply(responseKey);
     }
