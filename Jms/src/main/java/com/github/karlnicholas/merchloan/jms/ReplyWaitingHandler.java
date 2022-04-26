@@ -30,8 +30,8 @@ public class ReplyWaitingHandler {
                     break;
                 }
             }
-            return repliesWaiting.remove(responseKey).getReply();
         }
+        return repliesWaiting.remove(responseKey).getReply();
     }
 
     public void handleReplies(String consumerTag, Delivery delivery) {
