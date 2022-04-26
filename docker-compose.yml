@@ -1,7 +1,6 @@
 services:
   businessdate:
     image: businessdate
-    container_name: businessdate
     environment:
       rabbitmq.host: rabbitmq
       redis.host: redis
@@ -15,7 +14,6 @@ services:
       - rabbitmq
   servicerequest:
     image: servicerequest
-    container_name: servicerequest
     environment:
       rabbitmq.host: rabbitmq
       redis.host: "redis"
@@ -29,7 +27,6 @@ services:
       - rabbitmq
   query:
     image: query
-    container_name: query
     environment:
       rabbitmq.host: rabbitmq
     ports:
@@ -39,18 +36,24 @@ services:
       - merchloan-rest
     depends_on:
       - rabbitmq
-  statement:
+  statement1:
     image: statement
-    container_name: statement
     environment:
       rabbitmq.host: rabbitmq
     networks:
       - merchloan-internal
     depends_on:
       - rabbitmq
+#  statement2:
+#    image: statement
+#    environment:
+#      rabbitmq.host: rabbitmq
+#    networks:
+#      - merchloan-internal
+#    depends_on:
+#      - rabbitmq
   accounts:
     image: accounts
-    container_name: accounts
     environment:
       rabbitmq.host: rabbitmq
     networks:

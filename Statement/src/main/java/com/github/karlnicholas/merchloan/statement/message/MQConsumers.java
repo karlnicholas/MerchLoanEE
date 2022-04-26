@@ -42,11 +42,11 @@ public class MQConsumers {
         objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementStatementQueue(), this::receivedStatementMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementCloseStatementQueue(), this::receivedCloseStatementMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementQueue(), this::receivedQueryStatementMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementsQueue(), this::receivedQueryStatementsMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryMostRecentStatementQueue(), this::receivedQueryMostRecentStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementStatementQueue(), false, this::receivedStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementCloseStatementQueue(), false, this::receivedCloseStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementQueue(), false, this::receivedQueryStatementMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementsQueue(), false, this::receivedQueryStatementsMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryMostRecentStatementQueue(), false, this::receivedQueryMostRecentStatementMessage);
 
         responseChannel = connection.createChannel();
     }

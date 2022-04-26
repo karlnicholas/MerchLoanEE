@@ -39,11 +39,11 @@ public class MQConsumers {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueue(), this::receivedServiceRequestMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueryIdQueue(), this::receivedServiceRequestQueryIdMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestCheckRequestQueue(), this::receivedCheckRequestMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestBillLoanQueue(), this::receivedServiceRequestBillloanMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestStatementCompleteQueue(), this::receivedServiceStatementCompleteMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueue(), true, this::receivedServiceRequestMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestBillLoanQueue(), true, this::receivedServiceRequestBillloanMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestStatementCompleteQueue(), true, this::receivedServiceStatementCompleteMessage);
 
         responseChannel = connection.createChannel();
     }

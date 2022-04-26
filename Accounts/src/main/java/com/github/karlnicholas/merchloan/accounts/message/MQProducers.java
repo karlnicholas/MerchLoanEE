@@ -30,7 +30,7 @@ public class MQProducers {
         accountsReplyQueue = "accounts-reply-"+UUID.randomUUID();
         accountSendChannel = connection.createChannel();
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), accountsReplyQueue, replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), accountsReplyQueue, true, replyWaitingHandler::handleReplies);
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws IOException {

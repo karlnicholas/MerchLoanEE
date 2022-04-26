@@ -18,10 +18,10 @@ import java.io.IOException;
 @Data
 public class MQConsumerUtils {
 
-    public void bindConsumer(Connection connection, String exchange, String queueName, DeliverCallback deliverCallback) throws IOException {
+    public void bindConsumer(Connection connection, String exchange, String queueName, boolean exclusive, DeliverCallback deliverCallback) throws IOException {
         Channel channel = connection.createChannel();
         channel.exchangeDeclare(exchange, BuiltinExchangeType.DIRECT, false, true, null);
-        channel.queueDeclare(queueName, false, true, true, null);
+        channel.queueDeclare(queueName, false, exclusive, true, null);
         channel.queueBind(queueName, exchange, queueName);
         channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
     }

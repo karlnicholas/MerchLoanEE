@@ -28,7 +28,7 @@ public class MQProducers {
         replyWaitingHandler = new ReplyWaitingHandler();
         businessDateReplyQueue = "businessdate-reply-"+UUID.randomUUID();
         businessDateSendChannel = connection.createChannel();
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), businessDateReplyQueue, replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), businessDateReplyQueue, true, replyWaitingHandler::handleReplies);
     }
 
     public Object servicerequestCheckRequest() throws IOException, InterruptedException {

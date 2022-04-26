@@ -26,7 +26,7 @@ public class MQProducers {
         querySendQueue = connection.createChannel();
         queryReplyQueue = "query-reply-"+UUID.randomUUID();
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), queryReplyQueue, replyWaitingHandler::handleReplies);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), queryReplyQueue, true, replyWaitingHandler::handleReplies);
     }
 
     public Object queryServiceRequest(UUID id) {
