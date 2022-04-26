@@ -39,14 +39,12 @@ public class MQConsumerUtils {
     private String accountQueryAccountIdQueue;
     private String accountQueryLoanIdQueue;
     private String accountBillingCycleChargeQueue;
-    private String accountPublishChannel;
 
     private String servicerequestQueue;
     private String servicerequestQueryIdQueue;
     private String serviceRequestCheckRequestQueue;
     private String serviceRequestBillLoanQueue;
     private String serviceRequestStatementCompleteQueue;
-    private String serviceRequestResponseQueue;
 
     private String statementStatementQueue;
     private String statementCloseStatementQueue;
