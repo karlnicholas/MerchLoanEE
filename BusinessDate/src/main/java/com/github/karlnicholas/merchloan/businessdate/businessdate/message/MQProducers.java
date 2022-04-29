@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.message;
 
-import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
+import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;

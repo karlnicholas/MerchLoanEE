@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.statement.message;
 
-import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
+import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;

@@ -1,6 +1,5 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.controller;
 
-import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.service.BusinessDateService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;

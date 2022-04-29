@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
-import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
+import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.rabbitmq.client.AMQP;
