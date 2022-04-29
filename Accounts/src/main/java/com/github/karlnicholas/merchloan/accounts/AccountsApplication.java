@@ -1,6 +1,5 @@
 package com.github.karlnicholas.merchloan.accounts;
 
-import com.github.karlnicholas.merchloan.sqlutil.SqlInitialization;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -23,10 +22,10 @@ public class AccountsApplication {
     @Autowired
     private DataSource dataSource;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void startupEvent() throws SQLException, IOException {
-        try(Connection con = dataSource.getConnection()) {
-            log.info("SqlInitialization {}", SqlInitialization.initialize(con, AccountsApplication.class.getResourceAsStream("/sql/schema.sql")));
-        }
-    }
+//    @EventListener(ApplicationReadyEvent.class)
+//    public void startupEvent() throws SQLException, IOException {
+//        try(Connection con = dataSource.getConnection()) {
+//            log.info("SqlInitialization {}", SqlInitialization.initialize(con, AccountsApplication.class.getResourceAsStream("/sql/schema.sql")));
+//        }
+//    }
 }

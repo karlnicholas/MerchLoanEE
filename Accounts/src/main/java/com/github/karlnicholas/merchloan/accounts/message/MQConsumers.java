@@ -44,17 +44,17 @@ public class MQConsumers {
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         this.mqConsumerUtils = mqConsumerUtils;
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountCreateaccountQueue(), true, this::receivedCreateAccountMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountFundingQueue(), true, this::receivedFundingMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountValidateCreditQueue(), true, this::receivedValidateCreditMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountValidateDebitQueue(), true, this::receivedValidateDebitMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountCloseLoanQueue(), true, this::receivedCloseLoanMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountLoanClosedQueue(), true, this::receivedLoanClosedMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryStatementHeaderQueue(), true, this::receivedStatementHeaderMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountBillingCycleChargeQueue(), true, this::receivedBillingCycleChargeMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoansToCycleQueue(), true, this::receivedLoansToCyceMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryAccountIdQueue(), true, this::receivedQueryAccountIdMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoanIdQueue(), true, this::receivedQueryLoanIdMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountCreateaccountQueue(), false, this::receivedCreateAccountMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountFundingQueue(), false, this::receivedFundingMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountValidateCreditQueue(), false, this::receivedValidateCreditMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountValidateDebitQueue(), false, this::receivedValidateDebitMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountCloseLoanQueue(), false, this::receivedCloseLoanMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountLoanClosedQueue(), false, this::receivedLoanClosedMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryStatementHeaderQueue(), false, this::receivedStatementHeaderMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountBillingCycleChargeQueue(), false, this::receivedBillingCycleChargeMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoansToCycleQueue(), false, this::receivedLoansToCyceMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryAccountIdQueue(), false, this::receivedQueryAccountIdMessage);
+        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getAccountQueryLoanIdQueue(), false, this::receivedQueryLoanIdMessage);
 
         responseChannel = connection.createChannel();
     }

@@ -20,9 +20,11 @@
         <module>Dto</module>
         <module>Jms</module>
         <module>SqlUtil</module>
-        <module>Accounts</module>
         <module>ServiceRequest</module>
         <module>Query</module>
+        <module>AccountsDb</module>
+        <module>Accounts</module>
+        <module>StatementDb</module>
         <module>Statement</module>
         <module>Redis</module>
         <module>BusinessDate</module>

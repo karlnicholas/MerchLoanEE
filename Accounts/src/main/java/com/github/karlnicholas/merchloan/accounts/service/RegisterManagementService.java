@@ -1,9 +1,9 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
+import com.github.karlnicholas.merchloan.accounts.config.SqlUtils;
 import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
-import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
