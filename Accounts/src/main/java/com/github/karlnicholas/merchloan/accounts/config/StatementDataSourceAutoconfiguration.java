@@ -9,13 +9,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
 
 @Configuration
 @ConditionalOnClass(DataSource.class)
 public class StatementDataSourceAutoconfiguration {
-	@Value("${database-url:jdbc:h2:tcp://localhost:9101/mem:accounts;DB_CLOSE_DELAY=-1}")
-    private String databaseUrl;
+	@Value("${accountsdb.host:localhost}")
+	private String accountsdbHost;
 
 	@Value("${maximumPoolSize:100}")
 	private String maximumPoolSize;
@@ -32,11 +31,10 @@ public class StatementDataSourceAutoconfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DataSource getDataSource() throws SQLException {
+	public DataSource getDataSource() {
 		HikariConfig config = new HikariConfig();
+		String databaseUrl = "jdbc:h2:tcp://" + accountsdbHost + ":9101/mem:accounts;DB_CLOSE_DELAY=-1";
 		config.setJdbcUrl(databaseUrl);
-//		config.setUsername(databaseUser);
-//		config.setPassword(databasePassword);
 
 		config.addDataSourceProperty("maximumPoolSize", maximumPoolSize);
 		config.addDataSourceProperty("minimumIdle", minimumIdle);

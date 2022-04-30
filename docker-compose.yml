@@ -1,4 +1,14 @@
 services:
+  accountsdb:
+    image: accountsdb
+    container_name: accountsdb
+    networks:
+      - merchloan-internal
+  statementdb:
+    image: statementdb
+    container_name: statementdb
+    networks:
+      - merchloan-internal
   businessdate:
     image: businessdate
     environment:
@@ -16,7 +26,7 @@ services:
     image: servicerequest
     environment:
       rabbitmq.host: rabbitmq
-      redis.host: "redis"
+      redis.host: redis
     ports:
       - "8080:8080"
     networks:
@@ -40,25 +50,61 @@ services:
     image: statement
     environment:
       rabbitmq.host: rabbitmq
+      statementdb.host: statementdb
     networks:
       - merchloan-internal
     depends_on:
+      - statementdb
       - rabbitmq
-#  statement2:
-#    image: statement
-#    environment:
-#      rabbitmq.host: rabbitmq
-#    networks:
-#      - merchloan-internal
-#    depends_on:
-#      - rabbitmq
-  accounts:
+  statement2:
+    image: statement
+    environment:
+      rabbitmq.host: rabbitmq
+      statementdb.host: statementdb
+    networks:
+      - merchloan-internal
+    depends_on:
+      - statementdb
+      - rabbitmq
+  statement3:
+    image: statement
+    environment:
+      rabbitmq.host: rabbitmq
+      statementdb.host: statementdb
+    networks:
+      - merchloan-internal
+    depends_on:
+      - statementdb
+      - rabbitmq
+  accounts1:
     image: accounts
     environment:
       rabbitmq.host: rabbitmq
+      accountsdb.host: accountsdb
     networks:
       - merchloan-internal
     depends_on:
+      - accountsdb
+      - rabbitmq
+  accounts2:
+    image: accounts
+    environment:
+      rabbitmq.host: rabbitmq
+      accountsdb.host: accountsdb
+    networks:
+      - merchloan-internal
+    depends_on:
+      - accountsdb
+      - rabbitmq
+  accounts3:
+    image: accounts
+    environment:
+      rabbitmq.host: rabbitmq
+      accountsdb.host: accountsdb
+    networks:
+      - merchloan-internal
+    depends_on:
+      - accountsdb
       - rabbitmq
   redis:
     image: redis

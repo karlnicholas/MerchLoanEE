@@ -97,7 +97,7 @@ public class ClientApplication {
                                 .forEach(r->log.info("route stats {} {}", r, pcm.getStats(r)));
                     }
                     currentDate = currentDate.plusDays(1);
-                    Thread.sleep(500);
+                    Thread.sleep(250);
                 }
                 log.info("DATES FINISHED AT {}", currentDate);
                 int[] first = new int[1];
