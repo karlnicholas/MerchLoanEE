@@ -24,7 +24,7 @@ public class LoanProcessQueue {
         tasks = new ArrayList<>();
     }
 
-    public synchronized Future<Boolean> process(LoanProcessHandler loanProcessHandler, LoanData loanData) throws ExecutionException, InterruptedException {
+    public Future<Boolean> process(LoanProcessHandler loanProcessHandler, LoanData loanData) throws ExecutionException, InterruptedException {
         Future<Boolean> task = executorService.submit(() -> loanProcessHandler.progressState(loanData));
         tasks.add(task);
         return task;
@@ -39,7 +39,7 @@ public class LoanProcessQueue {
         }
     }
 
-    public synchronized boolean checkWorking() {
+    public boolean checkWorking() {
         Iterator<Future<?>> tit = tasks.iterator();
         boolean working = false;
         while (tit.hasNext()) {
