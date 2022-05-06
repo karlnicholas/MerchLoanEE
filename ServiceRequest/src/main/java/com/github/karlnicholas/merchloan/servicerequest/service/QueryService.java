@@ -22,11 +22,9 @@ public class QueryService {
         this.dataSource = dataSource;
     }
 
-    public Optional<ServiceRequest> getServiceRequest(UUID id)  {
+    public Optional<ServiceRequest> getServiceRequest(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             return serviceRequestDao.findById(con, id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 
