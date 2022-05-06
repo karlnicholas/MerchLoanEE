@@ -36,19 +36,7 @@ public class ServiceRequestDao {
             }
         }
     }
-//
-//    public Boolean existsByStatusEquals(Connection con, ServiceRequestMessage.STATUS status) throws SQLException {
-//        try (PreparedStatement ps = con.prepareStatement("select count(*) as count from service_request where status = ?")) {
-//            ps.setInt(1, status.ordinal());
-//            try (ResultSet rs = ps.executeQuery()) {
-//                if (rs.next())
-//                    return rs.getInt(1) > 0;
-//                else
-//                    return Boolean.FALSE;
-//            }
-//        }
-//    }
-//
+
     public List<ServiceRequest> findByStatus(Connection con, ServiceRequestMessage.STATUS status) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select id, request, request_type, local_date_time, status, status_message, retry_count from service_request where status = ?")) {
             ps.setInt(1, status.ordinal());

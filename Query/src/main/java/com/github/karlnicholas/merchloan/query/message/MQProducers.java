@@ -39,7 +39,8 @@ public class MQProducers {
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryServiceRequest", e);
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return null;
         }
     }
 
@@ -68,7 +69,8 @@ public class MQProducers {
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryLoan", e);
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return null;
         }
     }
 
@@ -82,7 +84,8 @@ public class MQProducers {
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryStatement", e);
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return null;
         }
     }
 
@@ -96,7 +99,8 @@ public class MQProducers {
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryStatements", e);
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return null;
         }
     }
 
@@ -110,7 +114,8 @@ public class MQProducers {
             return replyWaitingHandler.getReply(responseKey);
         } catch (IOException | InterruptedException e) {
             log.error("queryCheckRequest", e);
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            return null;
         }
     }
 }

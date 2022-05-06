@@ -27,13 +27,11 @@ import java.util.UUID;
 @Slf4j
 public class LoanComponent {
     private final ObjectMapper objectMapper;
-    private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient httpclient;
 
     public LoanComponent(PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        this.connManager = connManager;
         httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
@@ -42,7 +40,6 @@ public class LoanComponent {
         StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
         HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/fundingRequest");
         httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
-//            httpPost.setHeader("Content-type", "application/json");
         httpPost.setEntity(strEntity);
 
         try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
@@ -53,15 +50,7 @@ public class LoanComponent {
         } catch (ParseException | IOException e) {
             log.error("accountRequest", e);
         }
-//        } catch (IOException e) {
-//            log.error("accountRequest", e);
-//        }
         return Optional.empty();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setAccept(Collections.singletonList(MediaType.TEXT_PLAIN));
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        HttpEntity<FundingRequest> request = new HttpEntity<>(new FundingRequest(accountId, amount, description), headers);
-//        return restTemplate.exchange("http://localhost:8080/api/v1/service/fundingRequest", HttpMethod.POST, request, UUID.class);
     }
 
     public Optional<UUID> fundLoan(UUID accountId, BigDecimal amount, String description) {

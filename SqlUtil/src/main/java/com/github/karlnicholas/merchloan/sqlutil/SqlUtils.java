@@ -7,9 +7,12 @@ import java.util.UUID;
 
 public class SqlUtils {
     public static final int DUPLICATE_ERROR = 23505;
+
+    private SqlUtils() {throw new IllegalStateException("Do not construct utility class");}
+
     public static byte[] uuidToBytes(final UUID uuid) {
         if (Objects.isNull(uuid)) {
-            return null;
+            return new byte[0];
         }
 
         final byte[] uuidAsBytes = new byte[16];

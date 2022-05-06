@@ -20,7 +20,7 @@ public class BusinessDateDao {
                 if (rs.next())
                     return Optional.of(BusinessDate.builder()
                             .id(rs.getLong(1))
-                            .businessDate(rs.getDate(2).toLocalDate())
+                            .date(rs.getDate(2).toLocalDate())
                             .build());
                 else
                     return Optional.empty();
@@ -30,7 +30,7 @@ public class BusinessDateDao {
 
     public void updateDate(Connection con, BusinessDate businessDate) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("update business_date set business_date = ? where id = ?")) {
-            ps.setDate(1, java.sql.Date.valueOf(businessDate.getBusinessDate()));
+            ps.setDate(1, java.sql.Date.valueOf(businessDate.getDate()));
             ps.setLong(2, businessDate.getId());
             ps.executeUpdate();
         }
@@ -39,7 +39,7 @@ public class BusinessDateDao {
     public void insert(Connection con, BusinessDate businessDate) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("insert into business_date(id, business_date) values(?, ?)")) {
             ps.setLong(1, businessDate.getId());
-            ps.setDate(2, java.sql.Date.valueOf(businessDate.getBusinessDate()));
+            ps.setDate(2, java.sql.Date.valueOf(businessDate.getDate()));
             ps.executeUpdate();
         }
     }

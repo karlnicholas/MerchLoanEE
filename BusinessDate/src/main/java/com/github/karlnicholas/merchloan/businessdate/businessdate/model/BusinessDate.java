@@ -11,5 +11,5 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class BusinessDate {
     private Long id;
-    private LocalDate businessDate;
+    private LocalDate date;
 }

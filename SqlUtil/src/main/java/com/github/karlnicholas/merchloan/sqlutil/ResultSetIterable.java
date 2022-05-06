@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.sqlutil;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -18,13 +19,8 @@ public class ResultSetIterable<T> implements Iterable<T> {
 	    this.onNext = onNext;
 	  }
 
-	  private boolean resultSetHasNext(){
-	     try {
+	  private boolean resultSetHasNext() throws SQLException {
 	    	return rs.next();
-	     } catch (SQLException e) {
-	       //you should add proper exception handling here
-	       throw new RuntimeException(e);
-	     }
 	  }
 
 
@@ -49,8 +45,12 @@ public class ResultSetIterable<T> implements Iterable<T> {
 
 	                T result = onNext.apply(rs);
 	                //after each get, we need to update the hasNext info
-	                hasNext = resultSetHasNext();
-	                return result;
+					try {
+						hasNext = resultSetHasNext();
+					} catch (SQLException e) {
+						throw new NoSuchElementException(e.getMessage());
+					}
+					return result;
 	            }
 	        };
 	    } catch (Exception e) {

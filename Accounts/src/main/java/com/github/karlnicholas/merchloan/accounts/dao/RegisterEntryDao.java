@@ -1,7 +1,7 @@
 package com.github.karlnicholas.merchloan.accounts.dao;
 
-import com.github.karlnicholas.merchloan.accounts.config.SqlUtils;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

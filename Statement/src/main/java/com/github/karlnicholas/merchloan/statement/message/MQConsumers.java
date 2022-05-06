@@ -100,6 +100,9 @@ public class MQConsumers {
 
     public void receivedStatementMessage(String consumerTag, Delivery delivery) {
         StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
+        if (statementHeader == null) {
+            throw new IllegalStateException("Message body null");
+        }
         StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
                 .id(statementHeader.getId())
                 .statementDate(statementHeader.getStatementDate())
@@ -176,6 +179,9 @@ public class MQConsumers {
             } else {
                 requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
             }
+        } catch (InterruptedException iex) {
+            log.error("receivedStatementMessage {}", iex);
+            Thread.currentThread().interrupt();
         } catch (Exception ex) {
             log.error("receivedStatementMessage {}", ex);
             requestResponse.setError(ex.getMessage());

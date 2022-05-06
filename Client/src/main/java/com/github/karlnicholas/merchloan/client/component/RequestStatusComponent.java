@@ -24,13 +24,11 @@ import java.util.UUID;
 @Slf4j
 public class RequestStatusComponent {
     private final ObjectMapper objectMapper;
-    private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient httpclient;
 
     public RequestStatusComponent(PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        this.connManager = connManager;
         httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
@@ -45,13 +43,7 @@ public class RequestStatusComponent {
         } catch (ParseException | IOException e) {
             log.error("accountRequest", e);
         }
-//        } catch (IOException e) {
-//            log.error("accountRequest", e);
-//        }
         return Optional.empty();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-//        return restTemplate.exchange("http://localhost:8090/api/query/request/{id}", HttpMethod.GET, null, RequestStatusDto.class, id);
     }
 
     public Optional<UUID> checkRequestStatus(UUID id) {

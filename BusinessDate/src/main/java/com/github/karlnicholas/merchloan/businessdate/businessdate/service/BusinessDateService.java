@@ -38,14 +38,14 @@ public class BusinessDateService {
             Optional<BusinessDate> existingBusinessDate = businessDateDao.findById(con, 1L);
             if (existingBusinessDate.isPresent()) {
                 Instant start = Instant.now();
-                BusinessDate priorBusinessDate = BusinessDate.builder().businessDate(existingBusinessDate.get().getBusinessDate()).build();
+                BusinessDate priorBusinessDate = BusinessDate.builder().date(existingBusinessDate.get().getDate()).build();
                 Object stillProcessing = mqProducers.servicerequestCheckRequest();
                 if (stillProcessing == null || ((Boolean)stillProcessing).booleanValue()) {
-                    throw new IllegalStateException("Still processing prior business date" + priorBusinessDate.getBusinessDate());
+                    throw new IllegalStateException("Still processing prior business date" + priorBusinessDate.getDate());
                 }
-                businessDateDao.updateDate(con, BusinessDate.builder().id(1L).businessDate(businessDate).build());
+                businessDateDao.updateDate(con, BusinessDate.builder().id(1L).date(businessDate).build());
                 redisComponent.updateBusinessDate(businessDate);
-                startBillingCycle(priorBusinessDate.getBusinessDate());
+                startBillingCycle(priorBusinessDate.getDate());
                 log.info("updateBusinessDate {} {}", businessDate, Duration.between(start, Instant.now()));
                 return priorBusinessDate;
             } else {
@@ -57,13 +57,13 @@ public class BusinessDateService {
     public void initializeBusinessDate() throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             Optional<BusinessDate> businessDate = businessDateDao.findById(con, 1L);
-            BusinessDate currentBd = BusinessDate.builder().id(1L).businessDate(LocalDate.now()).build();
+            BusinessDate currentBd = BusinessDate.builder().id(1L).date(LocalDate.now()).build();
             if ( businessDate.isPresent()) {
                 businessDateDao.updateDate(con, currentBd);
             } else {
                 businessDateDao.insert(con, currentBd);
             }
-            redisComponent.updateBusinessDate(currentBd.getBusinessDate());
+            redisComponent.updateBusinessDate(currentBd.getDate());
         }
     }
 

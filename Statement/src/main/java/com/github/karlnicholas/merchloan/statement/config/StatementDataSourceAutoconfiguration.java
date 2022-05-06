@@ -3,15 +3,12 @@ package com.github.karlnicholas.merchloan.statement.config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
 @Configuration
-@ConditionalOnClass(DataSource.class)
 public class StatementDataSourceAutoconfiguration {
 	@Value("${statementdb.host:localhost}")
 	private String statementdbHost;
@@ -30,13 +27,10 @@ public class StatementDataSourceAutoconfiguration {
 	private String prepStmtCacheSqlLimit;
 
 	@Bean
-	@ConditionalOnMissingBean
 	public DataSource getDataSource() {
 		HikariConfig config = new HikariConfig();
 		String databaseUrl = "jdbc:h2:tcp://" + statementdbHost + ":9100/mem:statement;DB_CLOSE_DELAY=-1";
 		config.setJdbcUrl(databaseUrl);
-//		config.setUsername(databaseUser);
-//		config.setPassword(databasePassword);
 
 		config.addDataSourceProperty("maximumPoolSize", maximumPoolSize);
 		config.addDataSourceProperty("minimumIdle", minimumIdle);

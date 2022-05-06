@@ -55,7 +55,6 @@ public class LoanCycle {
         if (cycleDate == null)
             return;
         try {
-//                log.info(Thread.currentThread().getName() + ": " + currentDate);
             if (currentDate != null && cycleDate.compareTo(currentDate) <= 0) {
                 futureResult = loanProcessQueue.process(currentLoanHandler, loanData);
             }
@@ -68,7 +67,6 @@ public class LoanCycle {
         if (cycleDate == null)
             return;
         try {
-//                log.info(Thread.currentThread().getName() + ": " + currentDate);
             if (currentDate != null && cycleDate.compareTo(currentDate) <= 0) {
                 LocalDate saveDate = cycleDate;
                 CYCLE_STATES saveState = cycleState;
@@ -102,7 +100,6 @@ public class LoanCycle {
 
     private void changeToPaymentOrComplete(LocalDate currentDate) {
         if (loanData.getLoanState().getLoanState().equalsIgnoreCase("CLOSED")) {
-//            log.info("Loan Closed: {} {}", currentDate, loanData);
             cycleDate = null;
         } else if (loanData.getLoanState().getCurrentPayment().compareTo(loanData.getLoanState().getMonthlyPayments()) > 0) {
             log.error("Payment Error: {} {}", currentDate, loanData);

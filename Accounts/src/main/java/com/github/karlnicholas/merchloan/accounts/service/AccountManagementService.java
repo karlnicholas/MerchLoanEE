@@ -1,11 +1,11 @@
 package com.github.karlnicholas.merchloan.accounts.service;
 
-import com.github.karlnicholas.merchloan.accounts.config.SqlUtils;
 import com.github.karlnicholas.merchloan.accounts.dao.AccountDao;
 import com.github.karlnicholas.merchloan.accounts.dao.LoanDao;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class AccountManagementService {
                     .build());
             requestResponse.setSuccess();
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && createAccount.getRetry()) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && Boolean.TRUE.equals(createAccount.getRetry())) {
                 requestResponse.setSuccess();
             } else {
                 requestResponse.setError(ex.getMessage());
@@ -78,7 +78,7 @@ public class AccountManagementService {
                 requestResponse.setError("Account not found for " + fundLoan.getAccountId());
             }
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && fundLoan.getRetry()) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && Boolean.TRUE.equals(fundLoan.getRetry())) {
                 requestResponse.setSuccess();
             } else {
                 requestResponse.setError(ex.getMessage());
@@ -124,7 +124,7 @@ public class AccountManagementService {
                 requestResponse.setError("Loan not found for loanId: " + statementHeader.getLoanId());
             }
         } catch (SQLException ex) {
-            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && statementHeader.getRetry()) {
+            if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && Boolean.TRUE.equals(statementHeader.getRetry())) {
                 requestResponse.setSuccess();
             } else {
                 requestResponse.setError(ex.getMessage());

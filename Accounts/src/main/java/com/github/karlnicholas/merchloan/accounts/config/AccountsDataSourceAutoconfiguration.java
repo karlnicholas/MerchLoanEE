@@ -3,16 +3,13 @@ package com.github.karlnicholas.merchloan.accounts.config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
 @Configuration
-@ConditionalOnClass(DataSource.class)
-public class StatementDataSourceAutoconfiguration {
+public class AccountsDataSourceAutoconfiguration {
 	@Value("${accountsdb.host:localhost}")
 	private String accountsdbHost;
 
@@ -30,7 +27,6 @@ public class StatementDataSourceAutoconfiguration {
 	private String prepStmtCacheSqlLimit;
 
 	@Bean
-	@ConditionalOnMissingBean
 	public DataSource getDataSource() {
 		HikariConfig config = new HikariConfig();
 		String databaseUrl = "jdbc:h2:tcp://" + accountsdbHost + ":9101/mem:accounts;DB_CLOSE_DELAY=-1";

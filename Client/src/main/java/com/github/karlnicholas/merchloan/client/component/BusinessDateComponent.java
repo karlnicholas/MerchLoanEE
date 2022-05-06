@@ -22,11 +22,9 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class BusinessDateComponent {
-    private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient httpclient;
 
     public BusinessDateComponent(PoolingHttpClientConnectionManager connManager) {
-        this.connManager = connManager;
         httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
@@ -35,7 +33,6 @@ public class BusinessDateComponent {
         StringEntity strEntity = new StringEntity(date, ContentType.TEXT_PLAIN);
         HttpPost httpPost = new HttpPost("http://localhost:8100/api/businessdate");
         httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
-//            httpPost.setHeader("Content-type", ContentType.TEXT_PLAIN.getMimeType());
         httpPost.setEntity(strEntity);
 
         try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
@@ -45,19 +42,17 @@ public class BusinessDateComponent {
         } catch (ParseException | IOException e) {
             log.error("accountRequest", e);
         }
-//        } catch (IOException e) {
-//            log.error("accountRequest", e);
-//        }
         return Optional.empty();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setAccept(Collections.singletonList(MediaType.ALL));
-//        headers.setContentType(MediaType.TEXT_PLAIN);
-//        HttpEntity<String> request = new HttpEntity<>(businessDate.format(DateTimeFormatter.ISO_DATE), headers);
-//        return restTemplate.exchange("http://localhost:8100/api/businessdate", HttpMethod.POST, request, Void.class);
+    }
+
+
+    public boolean updateBusinessDate(LocalDate localDate) {
+        if (!checkStillProcessingWithRetry())
+            return false;
+        return openAccount(localDate);
     }
 
     private Optional<Boolean> checkStillProcessing() {
-        CloseableHttpClient httpclient = HttpClients.custom().setConnectionManager(connManager).build();
         HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/checkrequests");
         httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 
@@ -67,22 +62,16 @@ public class BusinessDateComponent {
         } catch (ParseException | IOException e) {
             log.error("accountRequest", e);
         }
-//        } catch (IOException e) {
-//            log.error("accountRequest", e);
-//        }
         return Optional.empty();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setAccept(Collections.singletonList(MediaType.ALL));
-//        return restTemplate.exchange("http://localhost:8090/api/query/checkrequests", HttpMethod.GET, null, Boolean.class);
     }
 
-    public boolean updateBusinessDate(LocalDate localDate) {
+    private boolean checkStillProcessingWithRetry() {
         int requestCount = 0;
         boolean loop = true;
         do {
             try {
                 Optional<Boolean> stillProcessingResp = checkStillProcessing();
-                if (stillProcessingResp.isEmpty() || stillProcessingResp.get().booleanValue() == true) {
+                if (stillProcessingResp.isEmpty() || Boolean.TRUE.equals(stillProcessingResp.get())) {
                     return false;
                 }
                 loop = false;
@@ -97,10 +86,13 @@ public class BusinessDateComponent {
                 loop = false;
             }
         } while (loop);
-        if (requestCount >= 3) {
-            return false;
-        }
-        // Open Account
+        return requestCount < 3;
+    }
+
+    // Open Account
+    private boolean openAccount(LocalDate localDate) {
+        int requestCount = 0;
+        boolean loop = true;
         do {
             try {
                 Optional<Integer> requestResponse = postBusinessDate(localDate);
@@ -118,5 +110,4 @@ public class BusinessDateComponent {
         } while (loop);
         return (requestCount < 3);
     }
-
 }

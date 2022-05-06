@@ -31,7 +31,7 @@ public class RedisConfig {
     }
 
     @Bean
-    RedisTemplate<?, ?> redisTemplate() {
+    RedisTemplate<Long, LocalDate> redisTemplate() {
         RedisTemplate<Long, LocalDate> template = new RedisTemplate<>();
         template.setConnectionFactory( connectionFactory() );
         return template;

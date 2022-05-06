@@ -33,7 +33,7 @@ public class MQConsumers {
     private final MQProducers rabbitMqSender;
     private final MQConsumerUtils mqConsumerUtils;
     private final Channel responseChannel;
-
+    private static final String NULL_ERROR_MESSAGE = "Message body null";
 
     public MQConsumers(Connection connection, MQProducers rabbitMqSender, MQConsumerUtils mqConsumerUtils, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws IOException {
         this.accountManagementService = accountManagementService;
@@ -127,6 +127,7 @@ public class MQConsumers {
             }
         } catch (Exception ex) {
             log.error("receivedQueryLoanIdMessage exception {}", ex.getMessage());
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -140,6 +141,9 @@ public class MQConsumers {
 
     public void receivedCreateAccountMessage(String consumerTag, Delivery delivery) throws IOException {
         CreateAccount createAccount = (CreateAccount) SerializationUtils.deserialize(delivery.getBody());
+        if ( createAccount == null ) {
+            throw new IllegalStateException(NULL_ERROR_MESSAGE);
+        }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {
             log.debug("receivedCreateAccountMessage{}", createAccount);
@@ -160,6 +164,9 @@ public class MQConsumers {
         // 10000 * 0.08791548
         // = 879.16
         FundLoan fundLoan = (FundLoan) SerializationUtils.deserialize(delivery.getBody());
+        if ( fundLoan == null ) {
+            throw new IllegalStateException(NULL_ERROR_MESSAGE);
+        }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(fundLoan.getId())
                 .build();
@@ -187,6 +194,9 @@ public class MQConsumers {
 
     public void receivedValidateCreditMessage(String consumerTag, Delivery delivery) throws IOException {
         CreditLoan creditLoan = (CreditLoan) SerializationUtils.deserialize(delivery.getBody());
+        if ( creditLoan == null ) {
+            throw new IllegalStateException(NULL_ERROR_MESSAGE);
+        }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(creditLoan.getId())
                 .build();
@@ -212,6 +222,9 @@ public class MQConsumers {
 
     public void receivedValidateDebitMessage(String consumerTag, Delivery delivery) throws IOException {
         DebitLoan debitLoan = (DebitLoan) SerializationUtils.deserialize(delivery.getBody());
+        if ( debitLoan == null ) {
+            throw new IllegalStateException(NULL_ERROR_MESSAGE);
+        }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(debitLoan.getId())
                 .build();
@@ -238,6 +251,9 @@ public class MQConsumers {
 
     public void receivedCloseLoanMessage(String consumerTag, Delivery delivery) throws IOException {
         CloseLoan closeLoan = (CloseLoan) SerializationUtils.deserialize(delivery.getBody());
+        if ( closeLoan == null ) {
+            throw new IllegalStateException(NULL_ERROR_MESSAGE);
+        }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(closeLoan.getId()).build();
         try {
             log.debug("receivedCloseLoanMessage {} ", closeLoan);
@@ -279,6 +295,9 @@ public class MQConsumers {
             } else {
                 serviceRequestResponse.setFailure("loan not found for id: " + closeLoan.getLoanId());
             }
+        } catch (InterruptedException iex) {
+            log.error("receivedCloseLoanMessage exception {}", iex.getMessage());
+            Thread.currentThread().interrupt();
         } catch (Exception ex) {
             log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
             serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
@@ -289,6 +308,9 @@ public class MQConsumers {
 
     public void receivedLoanClosedMessage(String consumerTag, Delivery delivery) throws IOException {
         StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
+        if ( statementHeader == null ) {
+            throw new IllegalStateException(NULL_ERROR_MESSAGE);
+        }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
         try {
             log.debug("receivedLoanClosedMessage {} ", statementHeader);

@@ -47,9 +47,9 @@ public class ApiHandler {
                 , String.class);
     }
 
-    public Mono<ServerResponse> getCheckRequests(ServerRequest serverRequest) {
+    public Mono<ServerResponse> getCheckRequests() {
         return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
-                Mono.fromSupplier(()-> mqProducers.queryCheckRequest())
+                Mono.fromSupplier(mqProducers::queryCheckRequest)
                 , Boolean.class);
     }
 }

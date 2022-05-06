@@ -9,8 +9,8 @@ import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 public class ReplyWaitingHandler {
-    public static final int responseTimeout = 3000;
-    public static final long timeoutMax = 9_000_000_000L;
+    public static final int RESPONSE_TIMEOUT = 3000;
+    public static final long TIMEOUT_MAX = 9_000_000_000L;
     private final ConcurrentMap<String, ReplyWaiting> repliesWaiting;
 
     public ReplyWaitingHandler() {
@@ -24,8 +24,8 @@ public class ReplyWaitingHandler {
     public Object getReply(String responseKey) throws InterruptedException {
         synchronized (repliesWaiting) {
             while (repliesWaiting.containsKey(responseKey) && repliesWaiting.get(responseKey).checkReply().isEmpty()) {
-                repliesWaiting.wait(responseTimeout);
-                if (System.nanoTime() - repliesWaiting.get(responseKey).getNanoTime() > timeoutMax) {
+                repliesWaiting.wait(RESPONSE_TIMEOUT);
+                if (System.nanoTime() - repliesWaiting.get(responseKey).getNanoTime() > TIMEOUT_MAX) {
                     log.error("getReply timeout");
                     break;
                 }

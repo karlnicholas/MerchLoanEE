@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
 
 @Configuration
 @ConditionalOnClass(DataSource.class)
@@ -32,11 +31,9 @@ public class DataSourceAutoconfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DataSource getDataSource() throws SQLException {
+	public DataSource getDataSource()  {
 		HikariConfig config = new HikariConfig();
 		config.setJdbcUrl(databaseUrl);
-//		config.setUsername(databaseUser);
-//		config.setPassword(databasePassword);
 
 		config.addDataSourceProperty("maximumPoolSize", maximumPoolSize);
 		config.addDataSourceProperty("minimumIdle", minimumIdle);

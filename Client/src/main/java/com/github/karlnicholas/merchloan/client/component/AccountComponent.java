@@ -27,13 +27,11 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class AccountComponent {
     private final ObjectMapper objectMapper;
-    private final PoolingHttpClientConnectionManager connManager;
     private final CloseableHttpClient httpclient;
 
     public AccountComponent(PoolingHttpClientConnectionManager connManager) {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        this.connManager = connManager;
         httpclient = HttpClients.custom().setConnectionManager(connManager).build();
     }
 
@@ -42,7 +40,6 @@ public class AccountComponent {
         StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
         HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/accountRequest");
         httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
-//            httpPost.setHeader("Content-type", ContentType.APPLICATION_JSON.getMimeType());
         httpPost.setEntity(strEntity);
 
         try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
@@ -53,11 +50,7 @@ public class AccountComponent {
         } catch (ParseException e) {
             log.error("accountRequest", e);
         }
-//        } catch (IOException e) {
-//            log.error("accountRequest", e);
-//        }
         return Optional.empty();
-//        return restTemplate.exchange("http://localhost:8080/api/v1/service/accountRequest", HttpMethod.POST, request, UUID.class);
     }
 
     public Optional<UUID> createAccount(String customer) throws HttpException, IOException, ExecutionException, InterruptedException {

@@ -35,7 +35,7 @@ public class LoanStatementHandler implements LoanProcessHandler {
         int waitTime = 300;
         do {
             Optional<UUID> requestStatus = requestStatusComponent.checkRequestStatus(loanData.getLastPaymentRequestId());
-            if (requestStatus != null && requestStatus.isPresent()) {
+            if (requestStatus.isPresent()) {
                 return true;
             }
             requestCount++;
@@ -57,7 +57,7 @@ public class LoanStatementHandler implements LoanProcessHandler {
         int waitTime = 300;
         do {
             Optional<LoanDto> loanState = loanStateComponent.checkLoanStatus(loanData.getLoanId());
-            if (loanState != null && loanState.isPresent()) {
+            if (loanState.isPresent()) {
                 LoanDto loanDto = loanState.get();
                 if (loanDto.getLoanState().equalsIgnoreCase("CLOSED") || ( loanDto.getLastStatementDate() != null && loanDto.getLastStatementDate().isEqual(loanData.getLastStatementDate()))) {
                     loanData.setLoanState(loanDto);

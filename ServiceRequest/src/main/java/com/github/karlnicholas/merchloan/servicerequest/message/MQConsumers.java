@@ -98,6 +98,9 @@ public class MQConsumers {
 
     public void receivedServiceRequestBillloanMessage(String consumerTag, Delivery delivery) {
         BillingCycle billingCycle = (BillingCycle) SerializationUtils.deserialize(delivery.getBody());
+        if ( billingCycle == null ) {
+            throw new IllegalStateException("Message body null");
+        }
         log.debug("Billloan Received {}", billingCycle);
         serviceRequestService.statementStatementRequest(StatementRequest.builder()
                         .loanId(billingCycle.getLoanId())

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,19 +23,10 @@ public class LoanProcessQueue {
         tasks = new ArrayList<>();
     }
 
-    public Future<Boolean> process(LoanProcessHandler loanProcessHandler, LoanData loanData) throws ExecutionException, InterruptedException {
+    public Future<Boolean> process(LoanProcessHandler loanProcessHandler, LoanData loanData) {
         Future<Boolean> task = executorService.submit(() -> loanProcessHandler.progressState(loanData));
         tasks.add(task);
         return task;
-    }
-
-    private void sleep(int waitTime) {
-        try {
-            Thread.sleep(waitTime);
-        } catch (InterruptedException ex) {
-            log.error("Sleep while check status interrupted: {}", ex.getMessage());
-            Thread.currentThread().interrupt();
-        }
     }
 
     public boolean checkWorking() {
@@ -44,7 +34,7 @@ public class LoanProcessQueue {
         boolean working = false;
         while (tit.hasNext()) {
             Future<?> task = tit.next();
-            Boolean done = task.isDone();
+            boolean done = task.isDone();
             if (done) tit.remove();
             else working = true;
         }

@@ -13,18 +13,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-//@Table(indexes = {
-//        @Index(columnList = "loanId"),
-//        @Index(columnList = "rowNum"),
-//        @Index(unique = true, columnList = "loanId, rowNum")
-//})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegisterEntry {
-    enum CREDITDEBIT {CREDIT, DEBIT}
-//    @Id
-//    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
-//    @Column(columnDefinition = "BINARY(16)")
     private UUID loanId;
     private LocalDate date;
     private String description;

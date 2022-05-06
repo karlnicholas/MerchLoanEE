@@ -112,7 +112,6 @@ public class QueryService {
                     registerEntries = new ArrayList<>();
                 }
             }
-            //        List<RegisterEntry> registerEntries = registerEntryRepository.findByLoanIdAndDateBetweenOrderByRowNum(statementHeader.getLoanId(), statementHeader.getStartDate(), statementHeader.getEndDate());
             // determine current balance, payoff amount
             BigDecimal startingBalance;
             BigDecimal interestBalance;
@@ -158,8 +157,7 @@ public class QueryService {
 
     public List<RegisterEntry> queryRegisterByLoanId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
-            List<RegisterEntry> registerEntries = registerEntryDao.findByLoanIdOrderByTimestamp(con, id);
-            return registerEntries;
+            return registerEntryDao.findByLoanIdOrderByTimestamp(con, id);
         }
     }
 }
