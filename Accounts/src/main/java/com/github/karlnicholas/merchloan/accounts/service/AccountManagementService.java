@@ -113,9 +113,9 @@ public class AccountManagementService {
             if (loanOpt.isPresent()) {
                 Optional<Account> accountQ = accountDao.findById(con, loanOpt.get().getAccountId());
                 if (accountQ.isPresent()) {
-
                     statementHeader.setCustomer(accountQ.get().getCustomer());
                     statementHeader.setAccountId(loanOpt.get().getAccountId());
+                    statementHeader.setLoanFunding(loanOpt.get().getFunding());
                     requestResponse.setSuccess();
                 } else {
                     requestResponse.setError("Account not found for loanId: " + statementHeader.getLoanId());

@@ -120,12 +120,8 @@ public class MQConsumers {
                     BigDecimal interestBalance;
                     if (lastStatement.isPresent()) {
                         interestBalance = lastStatement.get().getEndingBalance();
-                    } else if (!statementHeader.getRegisterEntries().isEmpty()) {
-                        //TODO: assuming this is the funding entry. Horrible logic.
-                        interestBalance = statementHeader.getRegisterEntries().get(0).getDebit();
                     } else {
-                        //TODO: really should never get here.
-                        interestBalance = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
+                        interestBalance = statementHeader.getLoanFunding();
                     }
                     boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
                     // so, let's do interest and fee calculations here.
