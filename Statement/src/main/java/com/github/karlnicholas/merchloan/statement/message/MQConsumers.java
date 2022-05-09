@@ -33,6 +33,8 @@ public class MQConsumers {
     private final MQProducers mqProducers;
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
+    private static final String LOG_STRING = "receivedStatementMessage {}";
+
 
     public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, MQProducers mqProducers, StatementService statementService, QueryService queryService) throws IOException {
         this.statementService = statementService;
@@ -55,7 +57,7 @@ public class MQConsumers {
         try {
             UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
             log.debug("receivedQueryStatementMessage {}", loanId);
-            String result = queryService.findById(loanId).map(Statement::getStatement).orElse("ERROR: No statement found for id " + loanId);
+            String result = queryService.findById(loanId).map(Statement::getStatementDoc).orElse("ERROR: No statement found for id " + loanId);
             reply(delivery, result);
         } catch (Exception ex) {
             log.error("receivedQueryStatementMessage exception {}", ex.getMessage());
@@ -110,76 +112,69 @@ public class MQConsumers {
                 .build();
         boolean loanClosed = false;
         try {
-            log.debug("receivedStatementMessage {}", statementHeader);
+            log.debug(LOG_STRING, statementHeader);
             statementHeader = (StatementHeader) mqProducers.accountQueryStatementHeader(statementHeader);
-            if (statementHeader.getCustomer() != null) {
-                Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
-                if (statementExistsOpt.isEmpty()) {
-                    Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
-                    // determine interest balance
-                    BigDecimal interestBalance;
-                    if (lastStatement.isPresent()) {
-                        interestBalance = lastStatement.get().getEndingBalance();
-                    } else {
-                        interestBalance = statementHeader.getLoanFunding();
-                    }
-                    boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
-                    // so, let's do interest and fee calculations here.
-                    if (!paymentCreditFound) {
-                        RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder()
-                                .id(statementHeader.getFeeChargeId())
-                                .loanId(statementHeader.getLoanId())
-                                .date(statementHeader.getStatementDate())
-                                .debit(new BigDecimal("30.00"))
-                                .description("Non payment fee")
-                                .retry(statementHeader.getRetry())
-                                .build()
-                        );
-                        statementHeader.getRegisterEntries().add(feeRegisterEntry);
-                    }
-                    BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
-                    RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder()
-                            .id(statementHeader.getInterestChargeId())
-                            .loanId(statementHeader.getLoanId())
-                            .date(statementHeader.getStatementDate())
-                            .debit(interestAmt)
-                            .description("Interest")
-                            .retry(statementHeader.getRetry())
-                            .build()
-                    );
-                    statementHeader.getRegisterEntries().add(interestRegisterEntry);
-                    BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
-                    BigDecimal endingBalance = startingBalance;
-                    for (RegisterEntryMessage re : statementHeader.getRegisterEntries()) {
-                        if (re.getCredit() != null) {
-                            endingBalance = endingBalance.subtract(re.getCredit());
-                            re.setBalance(endingBalance);
-                        }
-                        if (re.getDebit() != null) {
-                            endingBalance = endingBalance.add(re.getDebit());
-                            re.setBalance(endingBalance);
-                        }
-                    }
-                    // so, done with interest and fee calculations here?
-                    statementService.saveStatement(statementHeader, startingBalance, endingBalance);
-                    if (endingBalance.compareTo(BigDecimal.ZERO) <= 0) {
-                        requestResponse.setSuccess();
-                        mqProducers.accountLoanClosed(statementHeader);
-                        loanClosed = true;
-                    } else {
-                        requestResponse.setSuccess();
-                    }
-                } else {
-                    requestResponse.setFailure("WARN: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
-                }
-            } else {
+            if (statementHeader.getCustomer() == null) {
                 requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
+                return;
+            }
+            Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
+            if (statementExistsOpt.isPresent()) {
+                requestResponse.setFailure("ERROR: Statement already exists for loanId " + statementHeader.getLoanId() + " and statement date " + statementHeader.getStatementDate());
+                return;
+            }
+            Optional<Statement> lastStatement = statementService.findLastStatement(statementHeader.getLoanId());
+            // determine interest balance
+            BigDecimal interestBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : statementHeader.getLoanFunding();
+            boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
+            // so, let's do interest and fee calculations here.
+            if (!paymentCreditFound) {
+                RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder()
+                        .id(statementHeader.getFeeChargeId())
+                        .loanId(statementHeader.getLoanId())
+                        .date(statementHeader.getStatementDate())
+                        .debit(new BigDecimal("30.00"))
+                        .description("Non payment fee")
+                        .retry(statementHeader.getRetry())
+                        .build()
+                );
+                statementHeader.getRegisterEntries().add(feeRegisterEntry);
+            }
+            BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
+            RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder()
+                    .id(statementHeader.getInterestChargeId())
+                    .loanId(statementHeader.getLoanId())
+                    .date(statementHeader.getStatementDate())
+                    .debit(interestAmt)
+                    .description("Interest")
+                    .retry(statementHeader.getRetry())
+                    .build()
+            );
+            statementHeader.getRegisterEntries().add(interestRegisterEntry);
+            BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
+            BigDecimal endingBalance = startingBalance;
+            for (RegisterEntryMessage re : statementHeader.getRegisterEntries()) {
+                if (re.getCredit() != null) {
+                    endingBalance = endingBalance.subtract(re.getCredit());
+                    re.setBalance(endingBalance);
+                }
+                if (re.getDebit() != null) {
+                    endingBalance = endingBalance.add(re.getDebit());
+                    re.setBalance(endingBalance);
+                }
+            }
+            // so, done with interest and fee calculations here?
+            statementService.saveStatement(statementHeader, startingBalance, endingBalance);
+            requestResponse.setSuccess();
+            if (endingBalance.compareTo(BigDecimal.ZERO) <= 0) {
+                mqProducers.accountLoanClosed(statementHeader);
+                loanClosed = true;
             }
         } catch (InterruptedException iex) {
-            log.error("receivedStatementMessage {}", iex);
+            log.error(LOG_STRING, iex);
             Thread.currentThread().interrupt();
         } catch (Exception ex) {
-            log.error("receivedStatementMessage {}", ex);
+            log.error(LOG_STRING, ex);
             requestResponse.setError(ex.getMessage());
         } finally {
             if (!loanClosed) {

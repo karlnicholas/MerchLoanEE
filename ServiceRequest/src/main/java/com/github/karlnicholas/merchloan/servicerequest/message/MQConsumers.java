@@ -8,6 +8,7 @@ import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
+import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequestException;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -93,7 +95,11 @@ public class MQConsumers {
     public void receivedServiceRequestMessage(String consumerTag, Delivery delivery) {
         ServiceRequestResponse serviceRequest = (ServiceRequestResponse) SerializationUtils.deserialize(delivery.getBody());
         log.debug("ServiceRequestResponse Received {}", serviceRequest);
-        serviceRequestService.completeServiceRequest(serviceRequest);
+        try {
+            serviceRequestService.completeServiceRequest(serviceRequest);
+        } catch (SQLException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     public void receivedServiceRequestBillloanMessage(String consumerTag, Delivery delivery) {
@@ -102,19 +108,27 @@ public class MQConsumers {
             throw new IllegalStateException("Message body null");
         }
         log.debug("Billloan Received {}", billingCycle);
-        serviceRequestService.statementStatementRequest(StatementRequest.builder()
-                        .loanId(billingCycle.getLoanId())
-                        .statementDate(billingCycle.getStatementDate())
-                        .startDate(billingCycle.getStartDate())
-                        .endDate(billingCycle.getEndDate())
-                        .build(),
-                Boolean.FALSE, null);
+        try {
+            serviceRequestService.statementStatementRequest(StatementRequest.builder()
+                            .loanId(billingCycle.getLoanId())
+                            .statementDate(billingCycle.getStatementDate())
+                            .startDate(billingCycle.getStartDate())
+                            .endDate(billingCycle.getEndDate())
+                            .build(),
+                    Boolean.FALSE, null);
+        } catch ( ServiceRequestException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     public void receivedServiceStatementCompleteMessage(String consumerTag, Delivery delivery) {
         StatementCompleteResponse statementCompleteResponse = (StatementCompleteResponse) SerializationUtils.deserialize(delivery.getBody());
         log.debug("StatementComplete Received {}", statementCompleteResponse);
-        serviceRequestService.statementComplete(statementCompleteResponse);
+        try {
+            serviceRequestService.statementComplete(statementCompleteResponse);
+        } catch (SQLException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
 }

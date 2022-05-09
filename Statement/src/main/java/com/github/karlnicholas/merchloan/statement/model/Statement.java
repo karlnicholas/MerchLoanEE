@@ -18,5 +18,5 @@ public class Statement {
     private LocalDate statementDate;
     private BigDecimal startingBalance;
     private BigDecimal endingBalance;
-    private String statement;
+    private String statementDoc;
 }

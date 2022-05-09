@@ -74,7 +74,7 @@ public class StatementService {
                     .id(statementHeader.getId())
                     .loanId(statementHeader.getLoanId())
                     .statementDate(statementHeader.getStatementDate())
-                    .statement(objectMapper.writeValueAsString(statementDto))
+                    .statementDoc(objectMapper.writeValueAsString(statementDto))
                     .startingBalance(startingBalance)
                     .endingBalance(endingBalance)
                     .build();

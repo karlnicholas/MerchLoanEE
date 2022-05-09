@@ -25,7 +25,7 @@ public class StatementDao {
             ps.setObject(3, statement.getStatementDate());
             ps.setBigDecimal(4, statement.getStartingBalance());
             ps.setBigDecimal(5, statement.getEndingBalance());
-            ps.setBytes(6, statement.getStatement().getBytes(StandardCharsets.UTF_8));
+            ps.setBytes(6, statement.getStatementDoc().getBytes(StandardCharsets.UTF_8));
             ps.executeUpdate();
         }
     }
@@ -41,7 +41,7 @@ public class StatementDao {
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
-                            .statement(new String(rs.getBytes(6), StandardCharsets.UTF_8))
+                            .statementDoc(new String(rs.getBytes(6), StandardCharsets.UTF_8))
                             .build());
                 else
                     return Optional.empty();
@@ -61,7 +61,7 @@ public class StatementDao {
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
-                            .statement(new String(rs.getBytes(6), StandardCharsets.UTF_8))
+                            .statementDoc(new String(rs.getBytes(6), StandardCharsets.UTF_8))
                             .build());
                 }
                 return statements;
@@ -81,7 +81,7 @@ public class StatementDao {
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
-                            .statement(new String(rs.getBytes(6), StandardCharsets.UTF_8))
+                            .statementDoc(new String(rs.getBytes(6), StandardCharsets.UTF_8))
                             .build());
                 else
                     return Optional.empty();
@@ -100,7 +100,7 @@ public class StatementDao {
                             .statementDate(((Date) rs.getObject(3)).toLocalDate())
                             .startingBalance(rs.getBigDecimal(4))
                             .endingBalance(rs.getBigDecimal(5))
-                            .statement(new String(rs.getBytes(6), StandardCharsets.UTF_8))
+                            .statementDoc(new String(rs.getBytes(6), StandardCharsets.UTF_8))
                             .build());
                 else
                     return Optional.empty();
