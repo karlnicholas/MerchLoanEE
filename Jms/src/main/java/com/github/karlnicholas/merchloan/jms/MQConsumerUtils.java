@@ -1,15 +1,13 @@
 package com.github.karlnicholas.merchloan.jms;
 
 
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.DeliverCallback;
 import lombok.Data;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import javax.jms.*;
 import java.io.IOException;
 
 @Configuration
@@ -18,17 +16,19 @@ import java.io.IOException;
 @Data
 public class MQConsumerUtils {
 
-    public void bindConsumer(Connection connection, String exchange, String queueName, boolean exclusive, DeliverCallback deliverCallback) throws IOException {
-        Channel channel = connection.createChannel();
-        channel.exchangeDeclare(exchange, BuiltinExchangeType.DIRECT, false, true, null);
-        channel.queueDeclare(queueName, false, exclusive, true, null);
-        channel.queueBind(queueName, exchange, queueName);
-        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+    public void bindConsumer(Session session, Destination queue, MessageListener messageListener) throws JMSException {
+        MessageConsumer consumer = session.createConsumer(queue);
+        consumer.setMessageListener(messageListener);
+//        Channel channel = connection.createChannel();
+//        channel.exchangeDeclare(exchange, BuiltinExchangeType.DIRECT, false, true, null);
+//        channel.queueDeclare(queueName, false, exclusive, true, null);
+//        channel.queueBind(queueName, exchange, queueName);
+//        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
     }
 
     private String exchange;
 
-    private String accountCreateaccountQueue;
+    private String accountCreateAccountQueue;
     private String accountFundingQueue;
     private String accountValidateCreditQueue;
     private String accountValidateDebitQueue;

@@ -1,14 +1,15 @@
 package com.github.karlnicholas.merchloan.jms;
 
-import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.SerializationUtils;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
-public class ReplyWaitingHandler {
+public class ReplyWaitingHandler implements MessageListener {
     public static final int RESPONSE_TIMEOUT = 3000;
     public static final long TIMEOUT_MAX = 9_000_000_000L;
     private final ConcurrentMap<String, ReplyWaiting> repliesWaiting;
@@ -34,11 +35,16 @@ public class ReplyWaitingHandler {
         return repliesWaiting.remove(responseKey).getReply();
     }
 
-    public void handleReplies(String consumerTag, Delivery delivery) {
+    @Override
+    public void onMessage(Message message) {
         synchronized (repliesWaiting) {
-            String corrId = delivery.getProperties().getCorrelationId();
-            repliesWaiting.get(corrId).setReply(SerializationUtils.deserialize(delivery.getBody()));
-            repliesWaiting.notifyAll();
+            try {
+                String corrId = message.getJMSCorrelationID();
+                repliesWaiting.get(corrId).setReply(message.getObjectProperty("messageBody"));
+                repliesWaiting.notifyAll();
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

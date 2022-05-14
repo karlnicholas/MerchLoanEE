@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import javax.jms.JMSException;
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -49,7 +49,7 @@ public class ServiceRequestService {
                     .retry(retry)
                     .build());
             return id;
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | JMSException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -70,7 +70,7 @@ public class ServiceRequestService {
                             .build()
             );
             return id;
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | JMSException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -90,7 +90,7 @@ public class ServiceRequestService {
                             .build()
             );
             return id;
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | JMSException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -112,7 +112,7 @@ public class ServiceRequestService {
                             .build()
             );
             return id;
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | JMSException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -134,7 +134,7 @@ public class ServiceRequestService {
                             .build()
             );
             return id;
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | JMSException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -154,7 +154,7 @@ public class ServiceRequestService {
                             .build()
             );
             return id;
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException | JMSException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }

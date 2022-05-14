@@ -12,15 +12,11 @@ import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequest
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.SerializationUtils;
 
-import java.io.IOException;
+import javax.jms.*;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,31 +24,31 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumers {
+    private final Session session;
     private final ServiceRequestService serviceRequestService;
-    private final MQConsumerUtils mqConsumerUtils;
-    private final Channel responseChannel;
+    private final MessageProducer responseProducer;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws IOException {
+    public MQConsumers(Session session, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
+        this.session = session;
         this.serviceRequestService = serviceRequestService;
-        this.mqConsumerUtils = mqConsumerUtils;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueue(), true, this::receivedServiceRequestMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServicerequestQueryIdQueue(), true, this::receivedServiceRequestQueryIdMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestCheckRequestQueue(), true, this::receivedCheckRequestMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestBillLoanQueue(), true, this::receivedServiceRequestBillloanMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getServiceRequestStatementCompleteQueue(), true, this::receivedServiceStatementCompleteMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServicerequestQueue()), this::receivedServiceRequestMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServicerequestQueryIdQueue()), this::receivedServiceRequestQueryIdMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue()), this::receivedCheckRequestMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue()), this::receivedServiceRequestBillloanMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue()), this::receivedServiceStatementCompleteMessage);
 
-        responseChannel = connection.createChannel();
+        responseProducer = session.createProducer(null);
     }
 
-    public void receivedServiceRequestQueryIdMessage(String consumerTag, Delivery delivery) {
+    public void receivedServiceRequestQueryIdMessage(Message message) {
         try {
-            UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
+            UUID id = (UUID) ((ObjectMessage) message).getObject();
             log.debug("ServiceRequestQueryId Received {}", id);
             Optional<ServiceRequest> requestOpt = queryService.getServiceRequest(id);
             String response;
@@ -67,48 +63,42 @@ public class MQConsumers {
             } else {
                 response = "ERROR: id not found: " + id;
             }
-            reply(delivery, response);
+            reply(message, response);
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
         }
     }
 
 
-    public void receivedCheckRequestMessage(String consumerTag, Delivery delivery) {
+    public void receivedCheckRequestMessage(Message message) {
         log.debug("CheckRequest Received");
         try {
-            reply(delivery, queryService.checkRequest());
+            reply(message, queryService.checkRequest());
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
         }
     }
 
-    private void reply(Delivery delivery, Object data) throws IOException {
-        AMQP.BasicProperties replyProps = new AMQP.BasicProperties
-                .Builder()
-                .correlationId(delivery.getProperties().getCorrelationId())
-                .build();
-        responseChannel.basicPublish(mqConsumerUtils.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
-
+    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+        Message message = session.createObjectMessage(data);
+        message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
+        responseProducer.send(consumerMessage.getJMSReplyTo(), message);
     }
 
-    public void receivedServiceRequestMessage(String consumerTag, Delivery delivery) {
-        ServiceRequestResponse serviceRequest = (ServiceRequestResponse) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("ServiceRequestResponse Received {}", serviceRequest);
+    public void receivedServiceRequestMessage(Message message) {
         try {
+            ServiceRequestResponse serviceRequest = (ServiceRequestResponse) ((ObjectMessage) message).getObject();
+            log.debug("ServiceRequestResponse Received {}", serviceRequest);
             serviceRequestService.completeServiceRequest(serviceRequest);
-        } catch (SQLException ex) {
-            throw new IllegalStateException(ex);
+        } catch (SQLException | JMSException ex) {
+            throw new java.lang.IllegalStateException(ex);
         }
     }
 
-    public void receivedServiceRequestBillloanMessage(String consumerTag, Delivery delivery) {
-        BillingCycle billingCycle = (BillingCycle) SerializationUtils.deserialize(delivery.getBody());
-        if ( billingCycle == null ) {
-            throw new IllegalStateException("Message body null");
-        }
-        log.debug("Billloan Received {}", billingCycle);
+    public void receivedServiceRequestBillloanMessage(Message message) {
         try {
+            BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
+            log.debug("Billloan Received {}", billingCycle);
             serviceRequestService.statementStatementRequest(StatementRequest.builder()
                             .loanId(billingCycle.getLoanId())
                             .statementDate(billingCycle.getStatementDate())
@@ -116,18 +106,18 @@ public class MQConsumers {
                             .endDate(billingCycle.getEndDate())
                             .build(),
                     Boolean.FALSE, null);
-        } catch ( ServiceRequestException ex) {
-            throw new IllegalStateException(ex);
+        } catch (ServiceRequestException | JMSException ex) {
+            throw new java.lang.IllegalStateException(ex);
         }
     }
 
-    public void receivedServiceStatementCompleteMessage(String consumerTag, Delivery delivery) {
-        StatementCompleteResponse statementCompleteResponse = (StatementCompleteResponse) SerializationUtils.deserialize(delivery.getBody());
-        log.debug("StatementComplete Received {}", statementCompleteResponse);
+    public void receivedServiceStatementCompleteMessage(Message message) {
         try {
+            StatementCompleteResponse statementCompleteResponse = (StatementCompleteResponse) ((ObjectMessage) message).getObject();
+            log.debug("StatementComplete Received {}", statementCompleteResponse);
             serviceRequestService.statementComplete(statementCompleteResponse);
-        } catch (SQLException ex) {
-            throw new IllegalStateException(ex);
+        } catch (SQLException | JMSException ex) {
+            throw new java.lang.IllegalStateException(ex);
         }
     }
 

@@ -8,15 +8,11 @@ import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.Delivery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.SerializationUtils;
 
-import java.io.IOException;
+import javax.jms.*;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
@@ -25,91 +21,43 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumers {
-    private final MQConsumerUtils mqConsumerUtils;
-    private final QueryService queryService;
-    private Channel responseChannel;
-    private final ObjectMapper objectMapper;
+    private final Session session;
     private final StatementService statementService;
     private final MQProducers mqProducers;
+    private final MessageProducer replyProducer;
+    private final QueryService queryService;
+    private final ObjectMapper objectMapper;
+    private static final String LOG_STRING = "receivedStatementMessage";
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
-    private static final String LOG_STRING = "receivedStatementMessage {}";
 
-
-    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, MQProducers mqProducers, StatementService statementService, QueryService queryService) throws IOException {
+    public MQConsumers(Session session, MQConsumerUtils mqConsumerUtils, StatementService statementService, MQProducers mqProducers, QueryService queryService) throws JMSException {
+        this.session = session;
         this.statementService = statementService;
         this.mqProducers = mqProducers;
-        this.mqConsumerUtils = mqConsumerUtils;
         this.queryService = queryService;
+
         objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementStatementQueue(), false, this::receivedStatementMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementCloseStatementQueue(), false, this::receivedCloseStatementMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementQueue(), false, this::receivedQueryStatementMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryStatementsQueue(), false, this::receivedQueryStatementsMessage);
-        mqConsumerUtils.bindConsumer(connection, mqConsumerUtils.getExchange(), mqConsumerUtils.getStatementQueryMostRecentStatementQueue(), false, this::receivedQueryMostRecentStatementMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementStatementQueue()), this::onStatementMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementCloseStatementQueue()), this::onCloseStatementMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryStatementQueue()), this::onQueryStatementMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryStatementsQueue()), this::onQueryStatementsMessage);
+        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue()), this::onQueryMostRecentStatementMessage);
 
-        responseChannel = connection.createChannel();
+        replyProducer = session.createProducer(null);
+
     }
 
-    public void receivedQueryStatementMessage(String consumerTag, Delivery delivery) {
+    public void onStatementMessage(Message message) {
+        StatementHeader statementHeader;
         try {
-            UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
-            log.debug("receivedQueryStatementMessage {}", loanId);
-            String result = queryService.findById(loanId).map(Statement::getStatementDoc).orElse("ERROR: No statement found for id " + loanId);
-            reply(delivery, result);
-        } catch (Exception ex) {
-            log.error("receivedQueryStatementMessage exception {}", ex.getMessage());
+            statementHeader = (StatementHeader) ((ObjectMessage)message).getObject();
+        } catch (JMSException e) {
+            throw new RuntimeException("Message body null");
         }
-    }
-
-    public void receivedQueryMostRecentStatementMessage(String consumerTag, Delivery delivery) throws IOException {
-        try {
-            UUID loanId = (UUID) SerializationUtils.deserialize(delivery.getBody());
-            log.debug("receivedQueryMostRecentStatementMessage {}", loanId);
-            MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder()
-                            .id(statement.getId())
-                            .loanId(loanId)
-                            .statementDate(statement.getStatementDate())
-                            .endingBalance(statement.getEndingBalance())
-                            .startingBalance(statement.getStartingBalance())
-                            .build())
-                    .orElse(MostRecentStatement.builder().loanId(loanId).build());
-            reply(delivery, mostRecentStatement);
-        } catch (Exception ex) {
-            log.error("receivedQueryMostRecentStatementMessage exception {}", ex.getMessage());
-        }
-    }
-
-    public void receivedQueryStatementsMessage(String consumerTag, Delivery delivery) {
-        try {
-            UUID id = (UUID) SerializationUtils.deserialize(delivery.getBody());
-            log.debug("receivedQueryStatementsMessage Received {}", id);
-            reply(delivery, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
-        } catch (Exception ex) {
-            log.error("receivedQueryStatementsMessage exception {}", ex.getMessage());
-        }
-    }
-
-    private void reply(Delivery delivery, Object data) throws IOException {
-        AMQP.BasicProperties replyProps = new AMQP.BasicProperties
-                .Builder()
-                .correlationId(delivery.getProperties().getCorrelationId())
-                .build();
-        responseChannel.basicPublish(mqConsumerUtils.getExchange(), delivery.getProperties().getReplyTo(), replyProps, SerializationUtils.serialize(data));
-    }
-
-    public void receivedStatementMessage(String consumerTag, Delivery delivery) {
-        StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
-        if (statementHeader == null) {
-            throw new IllegalStateException("Message body null");
-        }
-        StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
-                .id(statementHeader.getId())
-                .statementDate(statementHeader.getStatementDate())
-                .loanId(statementHeader.getLoanId())
-                .build();
+        StatementCompleteResponse requestResponse = StatementCompleteResponse.builder().id(statementHeader.getId()).statementDate(statementHeader.getStatementDate()).loanId(statementHeader.getLoanId()).build();
         boolean loanClosed = false;
         try {
             log.debug(LOG_STRING, statementHeader);
@@ -129,27 +77,11 @@ public class MQConsumers {
             boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
             // so, let's do interest and fee calculations here.
             if (!paymentCreditFound) {
-                RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder()
-                        .id(statementHeader.getFeeChargeId())
-                        .loanId(statementHeader.getLoanId())
-                        .date(statementHeader.getStatementDate())
-                        .debit(new BigDecimal("30.00"))
-                        .description("Non payment fee")
-                        .retry(statementHeader.getRetry())
-                        .build()
-                );
+                RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder().id(statementHeader.getFeeChargeId()).loanId(statementHeader.getLoanId()).date(statementHeader.getStatementDate()).debit(new BigDecimal("30.00")).description("Non payment fee").retry(statementHeader.getRetry()).build());
                 statementHeader.getRegisterEntries().add(feeRegisterEntry);
             }
             BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
-            RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder()
-                    .id(statementHeader.getInterestChargeId())
-                    .loanId(statementHeader.getLoanId())
-                    .date(statementHeader.getStatementDate())
-                    .debit(interestAmt)
-                    .description("Interest")
-                    .retry(statementHeader.getRetry())
-                    .build()
-            );
+            RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder().id(statementHeader.getInterestChargeId()).loanId(statementHeader.getLoanId()).date(statementHeader.getStatementDate()).debit(interestAmt).description("Interest").retry(statementHeader.getRetry()).build());
             statementHeader.getRegisterEntries().add(interestRegisterEntry);
             BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
             BigDecimal endingBalance = startingBalance;
@@ -180,15 +112,54 @@ public class MQConsumers {
             if (!loanClosed) {
                 try {
                     mqProducers.serviceRequestStatementComplete(requestResponse);
-                } catch (IOException innerEx) {
+                } catch (JMSException innerEx) {
                     log.error("ERROR SENDING ERROR", innerEx);
                 }
             }
         }
     }
 
-    public void receivedCloseStatementMessage(String consumerTag, Delivery delivery) {
-        StatementHeader statementHeader = (StatementHeader) SerializationUtils.deserialize(delivery.getBody());
+    public void onQueryMostRecentStatementMessage(Message message) {
+        try {
+            UUID loanId = (UUID) ((ObjectMessage)message).getObject();
+            log.debug("onQueryMostRecentStatementMessage {}", loanId);
+            MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder().id(statement.getId()).loanId(loanId).statementDate(statement.getStatementDate()).endingBalance(statement.getEndingBalance()).startingBalance(statement.getStartingBalance()).build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
+
+            reply(message, mostRecentStatement);
+        } catch (Exception ex) {
+            log.error("receivedQueryMostRecentStatementMessage exception {}", ex.getMessage());
+        }
+    }
+
+    public void onQueryStatementMessage(Message message) {
+        try {
+            UUID loanId = (UUID) ((ObjectMessage)message).getObject();
+            log.debug("onQueryStatementMessage {}", loanId);
+            String result = queryService.findById(loanId).map(Statement::getStatementDoc).orElse("ERROR: No statement found for id " + loanId);
+            reply(message, result);
+        } catch (Exception ex) {
+            log.error("receivedQueryStatementMessage exception {}", ex.getMessage());
+        }
+
+    }
+
+    public void onQueryStatementsMessage(Message message) {
+        try {
+            UUID id = (UUID) ((ObjectMessage)message).getObject();
+            log.debug("onQueryStatementsMessage {}", id);
+            reply(message, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
+        } catch (Exception ex) {
+            log.error("receivedQueryStatementsMessage exception {}", ex.getMessage());
+        }
+    }
+
+    public void onCloseStatementMessage(Message message) {
+        StatementHeader statementHeader;
+        try {
+            statementHeader = (StatementHeader) ((ObjectMessage)message).getObject();
+        } catch (JMSException e) {
+            throw new RuntimeException(e);
+        }
         try {
             log.debug("receivedCloseStatementMessage {}", statementHeader);
             Optional<Statement> statementExistsOpt = statementService.findStatement(statementHeader.getLoanId(), statementHeader.getStatementDate());
@@ -222,5 +193,11 @@ public class MQConsumers {
                 log.error("ERROR SENDING ERROR", innerEx);
             }
         }
+    }
+
+    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+        Message message = session.createObjectMessage(data);
+        message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
+        replyProducer.send(consumerMessage.getJMSReplyTo(), message);
     }
 }
