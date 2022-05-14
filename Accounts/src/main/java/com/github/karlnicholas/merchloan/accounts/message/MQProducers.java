@@ -7,10 +7,8 @@ import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
 
 import javax.jms.*;
-import java.io.IOException;
 import java.util.UUID;
 
 @Service

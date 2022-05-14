@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import javax.jms.JMSException;
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;

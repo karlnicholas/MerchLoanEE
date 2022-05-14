@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.jms.*;
-import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Optional;
