@@ -2,13 +2,11 @@ package com.github.karlnicholas.merchloan.jms;
 
 
 import lombok.Data;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 import javax.jms.*;
-import java.io.IOException;
 
 @Configuration
 @ConfigurationProperties(prefix = "rabbitmq")

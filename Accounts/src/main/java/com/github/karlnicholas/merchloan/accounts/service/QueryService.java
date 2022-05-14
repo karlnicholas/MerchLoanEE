@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.jms.JMSException;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -49,7 +50,7 @@ public class QueryService {
         }
     }
 
-    public Optional<LoanDto> queryLoanId(UUID loanId) throws IOException, InterruptedException, SQLException {
+    public Optional<LoanDto> queryLoanId(UUID loanId) throws JMSException, InterruptedException, SQLException {
         // get last statement
         // get register entries
         // return last statement date
@@ -90,7 +91,7 @@ public class QueryService {
         }
     }
 
-    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws IOException, InterruptedException, SQLException {
+    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws JMSException, InterruptedException, SQLException {
         try (Connection con = dataSource.getConnection()) {
             // get most recent statement
             MostRecentStatement mostRecentStatement = (MostRecentStatement) rabbitMqSender.queryMostRecentStatement(loanId);

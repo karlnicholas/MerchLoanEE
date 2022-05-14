@@ -8,8 +8,8 @@ import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.jms.JMSException;
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -33,7 +33,7 @@ public class BusinessDateService {
         this.mqProducers = mqProducers;
     }
 
-    public BusinessDate updateBusinessDate(LocalDate businessDate) throws IOException, InterruptedException, SQLException {
+    public BusinessDate updateBusinessDate(LocalDate businessDate) throws InterruptedException, SQLException, JMSException {
         try (Connection con = dataSource.getConnection()) {
             Optional<BusinessDate> existingBusinessDate = businessDateDao.findById(con, 1L);
             if (existingBusinessDate.isPresent()) {
@@ -67,7 +67,7 @@ public class BusinessDateService {
         }
     }
 
-    public void startBillingCycle(LocalDate priorBusinessDate) throws IOException, InterruptedException {
+    public void startBillingCycle(LocalDate priorBusinessDate) throws InterruptedException, JMSException {
         List<BillingCycle> loansToCycle = (List<BillingCycle>) mqProducers.acccountQueryLoansToCycle(priorBusinessDate);
         for( BillingCycle billingCycle: loansToCycle) {
             mqProducers.serviceRequestBillLoan(billingCycle);

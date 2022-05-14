@@ -37,7 +37,7 @@ public class MQProducers {
         servicerequestQueue = session.createQueue(mqConsumerUtils.getServicerequestQueue());
         accountLoanClosedQueue = session.createQueue(mqConsumerUtils.getAccountLoanClosedQueue());
         serviceRequestStatementCompleteQueue = session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue());
-        mqConsumerUtils.bindConsumer(session, statementReplyQueue, replyWaitingHandler::onMessage);
+        mqConsumerUtils.bindConsumer(session, session.createTemporaryQueue(), replyWaitingHandler::onMessage);
     }
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws InterruptedException, JMSException {

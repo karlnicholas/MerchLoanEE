@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import javax.jms.JMSException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
@@ -21,7 +21,7 @@ public class BusinessDateController {
     }
 
     @PostMapping(value = "businessdate", consumes = MediaType.TEXT_PLAIN_VALUE)
-    public void postBusinessDate(@RequestBody String businessDate) throws IOException, InterruptedException, SQLException {
+    public void postBusinessDate(@RequestBody String businessDate) throws InterruptedException, SQLException, JMSException {
         businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
     }
 }
