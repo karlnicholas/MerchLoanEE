@@ -17,13 +17,13 @@ public class MQProducers {
     private final Session session;
     private final MessageProducer businessDateProducer;
     private final ReplyWaitingHandler replyWaitingHandler;
-    private final Destination businessDateReplyQueue;
+    private final Queue businessDateReplyQueue;
     private final Destination serviceRequestCheckRequestQueue;
     private final Destination accountQueryLoansToCycleQueue;
     private final Destination serviceRequestBillLoanQueue;
     @Autowired
-    public MQProducers(Session session, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = session;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
+        this.session = connection.createSession();
         businessDateReplyQueue = session.createTemporaryQueue();
         replyWaitingHandler = new ReplyWaitingHandler();
         businessDateProducer = session.createProducer(null);
@@ -31,6 +31,7 @@ public class MQProducers {
         accountQueryLoansToCycleQueue = session.createQueue(mqConsumerUtils.getAccountQueryLoansToCycleQueue());
         serviceRequestBillLoanQueue = session.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue());
         mqConsumerUtils.bindConsumer(session, businessDateReplyQueue, replyWaitingHandler::onMessage);
+        connection.start();
     }
 
     public Object servicerequestCheckRequest() throws InterruptedException, JMSException {

@@ -14,7 +14,7 @@ public class MQProducers {
     private final Session session;
     private final MessageProducer queryProducer;
     private final ReplyWaitingHandler replyWaitingHandler;
-    private final Destination queryReplyQueue;
+    private final Queue queryReplyQueue;
     private final Destination servicerequestQueryIdQueue;
     private final Destination accountQueryAccountIdQueue;
     private final Destination accountQueryLoanIdQueue;
@@ -22,8 +22,8 @@ public class MQProducers {
     private final Destination statementQueryStatementsQueue;
     private final Destination serviceRequestCheckRequestQueue;
 
-    public MQProducers(Session session, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = session;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
+        this.session = connection.createSession();
         this.queryProducer = session.createProducer(null);
         replyWaitingHandler = new ReplyWaitingHandler();
         queryReplyQueue = session.createTemporaryQueue();
@@ -34,6 +34,7 @@ public class MQProducers {
         statementQueryStatementsQueue = session.createQueue(mqConsumerUtils.getStatementQueryStatementsQueue());
         serviceRequestCheckRequestQueue = session.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue());
         mqConsumerUtils.bindConsumer(session, queryReplyQueue, replyWaitingHandler::onMessage);
+        connection.start();
     }
 
     public Object queryServiceRequest(UUID id) {

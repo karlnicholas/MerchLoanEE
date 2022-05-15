@@ -30,8 +30,8 @@ public class MQConsumers {
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public MQConsumers(Session session, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
-        this.session = session;
+    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
+        this.session = connection.createSession();
         this.serviceRequestService = serviceRequestService;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
@@ -44,6 +44,7 @@ public class MQConsumers {
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue()), this::receivedServiceStatementCompleteMessage);
 
         responseProducer = session.createProducer(null);
+        connection.start();
     }
 
     public void receivedServiceRequestQueryIdMessage(Message message) {

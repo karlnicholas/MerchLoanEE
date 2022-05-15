@@ -14,7 +14,7 @@ import javax.jms.*;
 @Data
 public class MQConsumerUtils {
 
-    public void bindConsumer(Session session, Destination queue, MessageListener messageListener) throws JMSException {
+    public void bindConsumer(Session session, Queue queue, MessageListener messageListener) throws JMSException {
         MessageConsumer consumer = session.createConsumer(queue);
         consumer.setMessageListener(messageListener);
 //        Channel channel = connection.createChannel();

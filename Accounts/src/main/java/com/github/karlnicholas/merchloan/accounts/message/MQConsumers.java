@@ -30,8 +30,8 @@ public class MQConsumers {
     private final MQProducers rabbitMqSender;
     private final MessageProducer responseProducer;
 
-    public MQConsumers(Session session, MQProducers rabbitMqSender, MQConsumerUtils mqConsumerUtils, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws JMSException {
-        this.session = session;
+    public MQConsumers(Connection connection, MQProducers rabbitMqSender, MQConsumerUtils mqConsumerUtils, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws JMSException {
+        this.session = connection.createSession();
         this.accountManagementService = accountManagementService;
         this.registerManagementService = registerManagementService;
         this.queryService = queryService;
@@ -52,6 +52,7 @@ public class MQConsumers {
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getAccountQueryLoanIdQueue()), this::receivedQueryLoanIdMessage);
 
         responseProducer = session.createProducer(null);
+        connection.start();
     }
 
     public void receivedStatementHeaderMessage(Message message) {

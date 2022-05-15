@@ -17,14 +17,14 @@ public class MQProducers {
     private final Session session;
     private final MessageProducer accountProducer;
     private final ReplyWaitingHandler replyWaitingHandler;
-    private final Destination accountsReplyQueue;
+    private final Queue accountsReplyQueue;
     private final Destination servicerequestQueue;
     private final Destination statementCloseStatementQueue;
     private final Destination statementQueryMostRecentStatementQueue;
 
     @Autowired
-    public MQProducers(Session session, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = session;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
+        this.session = connection.createSession();
         replyWaitingHandler = new ReplyWaitingHandler();
         accountsReplyQueue = session.createTemporaryQueue();
         accountProducer = session.createProducer(null);
@@ -32,6 +32,7 @@ public class MQProducers {
         statementCloseStatementQueue = session.createQueue(mqConsumerUtils.getStatementCloseStatementQueue());
         statementQueryMostRecentStatementQueue = session.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue());
         mqConsumerUtils.bindConsumer(session, accountsReplyQueue, replyWaitingHandler::onMessage);
+        connection.start();
     }
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws JMSException {

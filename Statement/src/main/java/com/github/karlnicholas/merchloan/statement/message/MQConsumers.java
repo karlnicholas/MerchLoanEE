@@ -31,8 +31,8 @@ public class MQConsumers {
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
 
-    public MQConsumers(Session session, MQConsumerUtils mqConsumerUtils, StatementService statementService, MQProducers mqProducers, QueryService queryService) throws JMSException {
-        this.session = session;
+    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, StatementService statementService, MQProducers mqProducers, QueryService queryService) throws JMSException {
+        this.session = connection.createSession();
         this.statementService = statementService;
         this.mqProducers = mqProducers;
         this.queryService = queryService;
@@ -47,7 +47,7 @@ public class MQConsumers {
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue()), this::onQueryMostRecentStatementMessage);
 
         replyProducer = session.createProducer(null);
-
+        connection.start();
     }
 
     public void onStatementMessage(Message message) {

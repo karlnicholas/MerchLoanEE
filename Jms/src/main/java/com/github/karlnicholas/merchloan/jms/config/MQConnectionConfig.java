@@ -9,11 +9,10 @@ import org.springframework.context.annotation.Configuration;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
-import javax.jms.Session;
 
 @Configuration
 @Slf4j
-public class MDConnectionConfig {
+public class MQConnectionConfig {
     @Value("${rabbitmq.host:localhost}")
     private String host;
     @Value("${rabbitmq.port:61616}")
@@ -27,13 +26,11 @@ public class MDConnectionConfig {
     }
 
     @Bean
-    public Session getSession(ConnectionFactory connectionFactory) throws InterruptedException, JMSException {
+    public Connection getConnection(ConnectionFactory connectionFactory) throws InterruptedException, JMSException {
         int retryCount = 0;
         while (retryCount < 3) {
             try {
-                Connection connection = connectionFactory.createConnection();
-                connection.start();
-                return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                return connectionFactory.createConnection();
             } catch (JMSException e) {
                 Thread.sleep(3000);
                 // apply retry logic

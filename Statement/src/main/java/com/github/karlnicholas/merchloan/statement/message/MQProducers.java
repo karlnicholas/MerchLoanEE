@@ -27,8 +27,8 @@ public class MQProducers {
     private final Destination serviceRequestStatementCompleteQueue;
 
     @Autowired
-    public MQProducers(Session session, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = session;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
+        this.session = connection.createSession();
         statementReplyQueue = session.createTemporaryQueue();
         replyWaitingHandler = new ReplyWaitingHandler();
         statementProducer = session.createProducer(null);
@@ -38,6 +38,7 @@ public class MQProducers {
         accountLoanClosedQueue = session.createQueue(mqConsumerUtils.getAccountLoanClosedQueue());
         serviceRequestStatementCompleteQueue = session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue());
         mqConsumerUtils.bindConsumer(session, session.createTemporaryQueue(), replyWaitingHandler::onMessage);
+        connection.start();
     }
 
     public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws InterruptedException, JMSException {

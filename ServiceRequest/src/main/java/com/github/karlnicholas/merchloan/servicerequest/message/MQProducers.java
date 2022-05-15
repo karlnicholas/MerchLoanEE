@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 
 @Service
 @Slf4j
@@ -24,8 +21,8 @@ public class MQProducers {
     private final Destination accountCloseLoanQueue;
 
     @Autowired
-    public MQProducers(Session session, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = session;
+    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
+        this.session = connection.createSession();
         serviceRequestProducer = session.createProducer(null);
         accountCreateAccountQueue = session.createQueue(mqConsumerUtils.getAccountCreateAccountQueue());
         accountFundingQueue = session.createQueue(mqConsumerUtils.getAccountFundingQueue());
@@ -33,6 +30,7 @@ public class MQProducers {
         accountValidateDebitQueue = session.createQueue(mqConsumerUtils.getAccountValidateDebitQueue());
         statementStatementQueue = session.createQueue(mqConsumerUtils.getStatementStatementQueue());
         accountCloseLoanQueue = session.createQueue(mqConsumerUtils.getAccountCloseLoanQueue());
+        connection.start();
     }
 
     public void accountCreateAccount(CreateAccount createAccount) throws JMSException {
