@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -40,7 +41,7 @@ public class ReplyWaitingHandler implements MessageListener {
         synchronized (repliesWaiting) {
             try {
                 String corrId = message.getJMSCorrelationID();
-                repliesWaiting.get(corrId).setReply(message.getObjectProperty("messageBody"));
+                repliesWaiting.get(corrId).setReply(((ObjectMessage) message).getObject());
                 repliesWaiting.notifyAll();
             } catch (JMSException e) {
                 throw new RuntimeException(e);
