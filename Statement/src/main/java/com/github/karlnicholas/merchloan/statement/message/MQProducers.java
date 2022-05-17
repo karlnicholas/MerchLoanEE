@@ -19,7 +19,7 @@ public class MQProducers {
     private final Session session;
     private final MessageProducer statementProducer;
     private final ReplyWaitingHandler replyWaitingHandler;
-    private final Destination statementReplyQueue;
+    private final Queue statementReplyQueue;
     private final Destination accountBillingCycleChargeQueue;
     private final Destination accountQueryStatementHeaderQueue;
     private final Destination servicerequestQueue;
@@ -37,7 +37,7 @@ public class MQProducers {
         servicerequestQueue = session.createQueue(mqConsumerUtils.getServicerequestQueue());
         accountLoanClosedQueue = session.createQueue(mqConsumerUtils.getAccountLoanClosedQueue());
         serviceRequestStatementCompleteQueue = session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue());
-        mqConsumerUtils.bindConsumer(session, session.createTemporaryQueue(), replyWaitingHandler::onMessage);
+        mqConsumerUtils.bindConsumer(session, statementReplyQueue, replyWaitingHandler::onMessage);
         connection.start();
     }
 
