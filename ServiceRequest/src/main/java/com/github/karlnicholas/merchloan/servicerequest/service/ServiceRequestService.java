@@ -9,11 +9,12 @@ import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequest
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.message.MQProducers;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
+import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,11 +39,11 @@ public class ServiceRequestService {
         this.dataSource = dataSource;
     }
 
-    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID accountRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(accountRequest);
-            mqProducers.accountCreateAccount(CreateAccount.builder()
+            mqProducers.accountCreateAccount(session, CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
                     .createDate(redisComponent.getBusinessDate())
@@ -54,12 +55,12 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID fundingRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
             UUID id = null;
             id = retry == Boolean.TRUE ? existingId : persistRequest(fundingRequest);
-            mqProducers.accountFundLoan(
+            mqProducers.accountFundLoan(session,
                     FundLoan.builder()
                             .id(id)
                             .accountId(fundingRequest.getAccountId())
@@ -75,11 +76,11 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID accountValidateCreditRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(creditRequest);
-            mqProducers.accountValidateCredit(
+            mqProducers.accountValidateCredit(session,
                     CreditLoan.builder()
                             .id(id)
                             .loanId(creditRequest.getLoanId())
@@ -95,11 +96,11 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID statementStatementRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
-            mqProducers.statementStatement(
+            mqProducers.statementStatement(session,
                     StatementHeader.builder()
                             .id(id)
                             .loanId(statementRequest.getLoanId())
@@ -117,11 +118,11 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID closeRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(closeRequest);
-            mqProducers.accountCloseLoan(
+            mqProducers.accountCloseLoan(session,
                     CloseLoan.builder()
                             .id(id)
                             .loanId(closeRequest.getLoanId())
@@ -139,11 +140,11 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID accountValidateDebitRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(debitRequest);
-            mqProducers.accountValidateDebit(
+            mqProducers.accountValidateDebit(session,
                     DebitLoan.builder()
                             .id(id)
                             .loanId(debitRequest.getLoanId())

@@ -24,7 +24,7 @@ public class RetryService {
         try {
             Class<? extends ServiceRequestMessage> messageClass = (Class<? extends ServiceRequestMessage>) Class.forName(requestType);
             ServiceRequestMessage serviceRequestMessage = objectMapper.readValue(serviceRequest.getRequest(), messageClass);
-            log.debug("retryServiceRequest {}", serviceRequestMessage);
+            log.debug("retryServiceRequest: {}", serviceRequestMessage);
             serviceRequestRouter.routeRequest(requestType, serviceRequestMessage, Boolean.TRUE, serviceRequest.getId());
         } catch (Exception e) {
             log.error("ERROR in RETRY", e);

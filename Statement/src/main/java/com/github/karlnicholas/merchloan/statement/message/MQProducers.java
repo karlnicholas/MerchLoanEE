@@ -10,14 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.jms.*;
+import jakarta.jms.*;
+
 import java.util.UUID;
 
 @Component
 @Slf4j
 public class MQProducers {
-    private final Session session;
-    private final MessageProducer statementProducer;
     private final ReplyWaitingHandler replyWaitingHandler;
     private final Queue statementReplyQueue;
     private final Destination accountBillingCycleChargeQueue;
@@ -28,54 +27,65 @@ public class MQProducers {
 
     @Autowired
     public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = connection.createSession();
-        statementReplyQueue = session.createTemporaryQueue();
-        replyWaitingHandler = new ReplyWaitingHandler();
-        statementProducer = session.createProducer(null);
-        accountBillingCycleChargeQueue = session.createQueue(mqConsumerUtils.getAccountBillingCycleChargeQueue());
-        accountQueryStatementHeaderQueue = session.createQueue(mqConsumerUtils.getAccountQueryStatementHeaderQueue());
-        servicerequestQueue = session.createQueue(mqConsumerUtils.getServicerequestQueue());
-        accountLoanClosedQueue = session.createQueue(mqConsumerUtils.getAccountLoanClosedQueue());
-        serviceRequestStatementCompleteQueue = session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue());
-        mqConsumerUtils.bindConsumer(session, statementReplyQueue, replyWaitingHandler::onMessage);
+        try (Session session = connection.createSession()) {
+            replyWaitingHandler = new ReplyWaitingHandler();
+            accountBillingCycleChargeQueue = session.createQueue(mqConsumerUtils.getAccountBillingCycleChargeQueue());
+            accountQueryStatementHeaderQueue = session.createQueue(mqConsumerUtils.getAccountQueryStatementHeaderQueue());
+            servicerequestQueue = session.createQueue(mqConsumerUtils.getServicerequestQueue());
+            accountLoanClosedQueue = session.createQueue(mqConsumerUtils.getAccountLoanClosedQueue());
+            serviceRequestStatementCompleteQueue = session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue());
+        }
+        Session consumerSession = connection.createSession();
+        statementReplyQueue = consumerSession.createTemporaryQueue();
+        mqConsumerUtils.bindConsumer(consumerSession, statementReplyQueue, replyWaitingHandler::onMessage);
         connection.start();
     }
 
-    public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws InterruptedException, JMSException {
+    public Object accountBillingCycleCharge(Session session, BillingCycleCharge billingCycleCharge) throws InterruptedException, JMSException {
         log.debug("accountBillingCycleCharge: {}", billingCycleCharge);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         Message message = session.createObjectMessage(billingCycleCharge);
         message.setJMSCorrelationID(responseKey);
         message.setJMSReplyTo(statementReplyQueue);
-        statementProducer.send(accountBillingCycleChargeQueue, message);
-        return replyWaitingHandler.getReply(responseKey);
+        try (MessageProducer producer = session.createProducer(accountBillingCycleChargeQueue)) {
+            producer.send(message);
+            return replyWaitingHandler.getReply(responseKey);
+        }
     }
 
-    public Object accountQueryStatementHeader(StatementHeader statementHeader) throws InterruptedException, JMSException {
+    public Object accountQueryStatementHeader(Session session, StatementHeader statementHeader) throws InterruptedException, JMSException {
         log.debug("accountQueryStatementHeader: {}", statementHeader);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
         Message message = session.createObjectMessage(statementHeader);
         message.setJMSCorrelationID(responseKey);
         message.setJMSReplyTo(statementReplyQueue);
-        statementProducer.send(accountQueryStatementHeaderQueue, message);
-        return replyWaitingHandler.getReply(responseKey);
+        try (MessageProducer producer = session.createProducer(accountQueryStatementHeaderQueue)) {
+            producer.send(message);
+            return replyWaitingHandler.getReply(responseKey);
+        }
     }
 
-    public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws JMSException {
+    public void serviceRequestServiceRequest(Session session, ServiceRequestResponse serviceRequest) throws JMSException {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
-        statementProducer.send(servicerequestQueue, session.createObjectMessage(serviceRequest));
+        try (MessageProducer producer = session.createProducer(servicerequestQueue)) {
+            producer.send(session.createObjectMessage(serviceRequest));
+        }
     }
 
-    public void accountLoanClosed(StatementHeader statementHeader) throws JMSException {
+    public void accountLoanClosed(Session session, StatementHeader statementHeader) throws JMSException {
         log.debug("accountLoanClosed: {}", statementHeader);
-        statementProducer.send(accountLoanClosedQueue, session.createObjectMessage(statementHeader));
+        try (MessageProducer producer = session.createProducer(accountLoanClosedQueue)) {
+            producer.send(session.createObjectMessage(statementHeader));
+        }
     }
 
-    public void serviceRequestStatementComplete(StatementCompleteResponse requestResponse) throws JMSException {
+    public void serviceRequestStatementComplete(Session session, StatementCompleteResponse requestResponse) throws JMSException {
         log.debug("serviceRequestStatementComplete: {}", requestResponse);
-        statementProducer.send(serviceRequestStatementCompleteQueue, session.createObjectMessage(requestResponse));
+        try (MessageProducer producer = session.createProducer(serviceRequestStatementCompleteQueue)) {
+            producer.send(session.createObjectMessage(requestResponse));
+        }
     }
 
 }

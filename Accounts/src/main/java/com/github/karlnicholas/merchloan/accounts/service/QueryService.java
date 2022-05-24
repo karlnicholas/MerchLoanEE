@@ -10,11 +10,12 @@ import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
+import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,15 +33,15 @@ public class QueryService {
     private final AccountDao accountDao;
     private final LoanDao loanDao;
     private final RegisterEntryDao registerEntryDao;
-    private final MQProducers rabbitMqSender;
+    private final MQProducers mqProducers;
 
     @Autowired
-    public QueryService(DataSource dataSource, AccountDao accountDao, LoanDao loanDao, RegisterEntryDao registerEntryDao, MQProducers rabbitMqSender) {
+    public QueryService(DataSource dataSource, AccountDao accountDao, LoanDao loanDao, RegisterEntryDao registerEntryDao, MQProducers mqProducers) {
         this.dataSource = dataSource;
         this.accountDao = accountDao;
         this.loanDao = loanDao;
         this.registerEntryDao = registerEntryDao;
-        this.rabbitMqSender = rabbitMqSender;
+        this.mqProducers = mqProducers;
     }
 
     public Optional<Account> queryAccountId(UUID id) throws SQLException {
@@ -49,7 +50,7 @@ public class QueryService {
         }
     }
 
-    public Optional<LoanDto> queryLoanId(UUID loanId) throws JMSException, InterruptedException, SQLException {
+    public Optional<LoanDto> queryLoanId(Session session, UUID loanId) throws JMSException, InterruptedException, SQLException {
         // get last statement
         // get register entries
         // return last statement date
@@ -78,7 +79,7 @@ public class QueryService {
                             .months(loan.getMonths())
                             .build();
                     if (loan.getLoanState() != Loan.LOAN_STATE.CLOSED) {
-                        computeLoanValues(loanId, loan, loanDto);
+                        computeLoanValues(session, loanId, loan, loanDto);
                     }
                     return Optional.of(loanDto);
                 } else {
@@ -90,10 +91,10 @@ public class QueryService {
         }
     }
 
-    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws JMSException, InterruptedException, SQLException {
+    private void computeLoanValues(Session session, UUID loanId, Loan loan, LoanDto loanDto) throws JMSException, InterruptedException, SQLException {
         try (Connection con = dataSource.getConnection()) {
             // get most recent statement
-            MostRecentStatement mostRecentStatement = (MostRecentStatement) rabbitMqSender.queryMostRecentStatement(loanId);
+            MostRecentStatement mostRecentStatement = (MostRecentStatement) mqProducers.queryMostRecentStatement(session, loanId);
             // generate a simulated new statement for current period
             StatementHeader statementHeader = StatementHeader.builder().build();
             statementHeader.setLoanId(loanId);

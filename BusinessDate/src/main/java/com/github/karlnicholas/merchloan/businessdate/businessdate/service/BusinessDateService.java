@@ -8,7 +8,7 @@ import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -15,7 +15,8 @@ import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestSe
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.jms.*;
+import jakarta.jms.*;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -26,12 +27,11 @@ import java.util.UUID;
 public class MQConsumers {
     private final Session session;
     private final ServiceRequestService serviceRequestService;
-    private final MessageProducer responseProducer;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
 
     public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
-        this.session = connection.createSession();
+        session = connection.createSession();
         this.serviceRequestService = serviceRequestService;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
@@ -43,14 +43,13 @@ public class MQConsumers {
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue()), this::receivedServiceRequestBillloanMessage);
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue()), this::receivedServiceStatementCompleteMessage);
 
-        responseProducer = session.createProducer(null);
         connection.start();
     }
 
     public void receivedServiceRequestQueryIdMessage(Message message) {
         try {
             UUID id = (UUID) ((ObjectMessage) message).getObject();
-            log.debug("ServiceRequestQueryId Received {}", id);
+            log.debug("receivedServiceRequestQueryIdMessage: {}", id);
             Optional<ServiceRequest> requestOpt = queryService.getServiceRequest(id);
             String response;
             if (requestOpt.isPresent()) {
@@ -72,7 +71,7 @@ public class MQConsumers {
 
 
     public void receivedCheckRequestMessage(Message message) {
-        log.debug("CheckRequest Received");
+        log.trace("receivedCheckRequestMessage");
         try {
             reply(message, queryService.checkRequest());
         } catch (Exception e) {
@@ -83,24 +82,26 @@ public class MQConsumers {
     public void reply(Message consumerMessage, Serializable data) throws JMSException {
         Message message = session.createObjectMessage(data);
         message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        responseProducer.send(consumerMessage.getJMSReplyTo(), message);
+        try (MessageProducer producer = session.createProducer(consumerMessage.getJMSReplyTo())) {
+            producer.send(message);
+        }
     }
 
     public void receivedServiceRequestMessage(Message message) {
         try {
             ServiceRequestResponse serviceRequest = (ServiceRequestResponse) ((ObjectMessage) message).getObject();
-            log.debug("ServiceRequestResponse Received {}", serviceRequest);
+            log.debug("receivedServiceRequestMessage {}", serviceRequest);
             serviceRequestService.completeServiceRequest(serviceRequest);
         } catch (SQLException | JMSException ex) {
-            throw new java.lang.IllegalStateException(ex);
+            log.error("receivedServiceStatementCompleteMessage", ex);
         }
     }
 
     public void receivedServiceRequestBillloanMessage(Message message) {
         try {
             BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
-            log.debug("Billloan Received {}", billingCycle);
-            serviceRequestService.statementStatementRequest(StatementRequest.builder()
+            log.debug("receivedServiceRequestBillloanMessage: {}", billingCycle);
+            serviceRequestService.statementStatementRequest(session, StatementRequest.builder()
                             .loanId(billingCycle.getLoanId())
                             .statementDate(billingCycle.getStatementDate())
                             .startDate(billingCycle.getStartDate())
@@ -108,17 +109,17 @@ public class MQConsumers {
                             .build(),
                     Boolean.FALSE, null);
         } catch (ServiceRequestException | JMSException ex) {
-            throw new java.lang.IllegalStateException(ex);
+            log.error("receivedServiceStatementCompleteMessage", ex);
         }
     }
 
     public void receivedServiceStatementCompleteMessage(Message message) {
         try {
             StatementCompleteResponse statementCompleteResponse = (StatementCompleteResponse) ((ObjectMessage) message).getObject();
-            log.debug("StatementComplete Received {}", statementCompleteResponse);
+            log.debug("receivedServiceStatementCompleteMessage: {}", statementCompleteResponse);
             serviceRequestService.statementComplete(statementCompleteResponse);
         } catch (SQLException | JMSException ex) {
-            throw new java.lang.IllegalStateException(ex);
+            log.error("receivedServiceStatementCompleteMessage", ex);
         }
     }
 

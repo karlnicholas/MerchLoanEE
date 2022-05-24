@@ -2,6 +2,8 @@ package com.github.karlnicholas.merchloan.servicerequest.component;
 
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
+import jakarta.jms.Connection;
+import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,9 +14,12 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class ServiceRequestRouter {
+    private final Connection connection;
     private final Map<String, ExceptionFunction<? super ServiceRequestMessage, UUID>>  routingMap;
 
-    public ServiceRequestRouter(ServiceRequestService serviceRequestService) {
+
+    public ServiceRequestRouter(Connection connection, ServiceRequestService serviceRequestService) {
+        this.connection = connection;
         routingMap = new HashMap<>();
         routingMap.put(AccountRequest.class.getName(), serviceRequestService::accountRequest);
         routingMap.put(FundingRequest.class.getName(), serviceRequestService::fundingRequest);
@@ -25,6 +30,8 @@ public class ServiceRequestRouter {
     }
 
     public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
-        return routingMap.get(clazz).route(serviceRequestMessage, retry, existingId);
+        try ( Session session = connection.createSession()) {
+            return routingMap.get(clazz).route(session, serviceRequestMessage, retry, existingId);
+        }
     }
 }

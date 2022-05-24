@@ -6,13 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.jms.*;
+import jakarta.jms.*;
 
 @Service
 @Slf4j
 public class MQProducers {
-    private final Session session;
-    private final MessageProducer serviceRequestProducer;
     private final Destination accountCreateAccountQueue;
     private final Destination accountFundingQueue;
     private final Destination accountValidateCreditQueue;
@@ -22,45 +20,58 @@ public class MQProducers {
 
     @Autowired
     public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.session = connection.createSession();
-        serviceRequestProducer = session.createProducer(null);
-        accountCreateAccountQueue = session.createQueue(mqConsumerUtils.getAccountCreateAccountQueue());
-        accountFundingQueue = session.createQueue(mqConsumerUtils.getAccountFundingQueue());
-        accountValidateCreditQueue = session.createQueue(mqConsumerUtils.getAccountValidateCreditQueue());
-        accountValidateDebitQueue = session.createQueue(mqConsumerUtils.getAccountValidateDebitQueue());
-        statementStatementQueue = session.createQueue(mqConsumerUtils.getStatementStatementQueue());
-        accountCloseLoanQueue = session.createQueue(mqConsumerUtils.getAccountCloseLoanQueue());
+        connection.setClientID("ServiceRequest");
+        try ( Session session = connection.createSession() ) {
+            accountCreateAccountQueue = session.createQueue(mqConsumerUtils.getAccountCreateAccountQueue());
+            accountFundingQueue = session.createQueue(mqConsumerUtils.getAccountFundingQueue());
+            accountValidateCreditQueue = session.createQueue(mqConsumerUtils.getAccountValidateCreditQueue());
+            accountValidateDebitQueue = session.createQueue(mqConsumerUtils.getAccountValidateDebitQueue());
+            statementStatementQueue = session.createQueue(mqConsumerUtils.getStatementStatementQueue());
+            accountCloseLoanQueue = session.createQueue(mqConsumerUtils.getAccountCloseLoanQueue());
+        }
         connection.start();
     }
 
-    public void accountCreateAccount(CreateAccount createAccount) throws JMSException {
+    public void accountCreateAccount(Session session, CreateAccount createAccount) throws JMSException {
         log.debug("accountCreateAccount: {}", createAccount);
-        serviceRequestProducer.send(accountCreateAccountQueue, session.createObjectMessage(createAccount));
+        try (MessageProducer producer = session.createProducer(accountCreateAccountQueue)) {
+            producer.send(session.createObjectMessage(createAccount));
+        }
     }
 
-    public void accountFundLoan(FundLoan fundLoan) throws JMSException {
+    public void accountFundLoan(Session session, FundLoan fundLoan) throws JMSException {
         log.debug("accountFundLoan: {}", fundLoan);
-        serviceRequestProducer.send(accountFundingQueue, session.createObjectMessage(fundLoan));
+        try (MessageProducer producer = session.createProducer(accountFundingQueue)) {
+            producer.send(session.createObjectMessage(fundLoan));
+        }
     }
 
-    public void accountValidateCredit(CreditLoan creditLoan) throws JMSException {
+    public void accountValidateCredit(Session session, CreditLoan creditLoan) throws JMSException {
         log.debug("accountValidateCredit: {}", creditLoan);
-        serviceRequestProducer.send(accountValidateCreditQueue, session.createObjectMessage(creditLoan));
+        try (MessageProducer producer = session.createProducer(accountValidateCreditQueue)) {
+            producer.send(session.createObjectMessage(creditLoan));
+        }
     }
 
-    public void accountValidateDebit(DebitLoan debitLoan) throws JMSException {
+    public void accountValidateDebit(Session session, DebitLoan debitLoan) throws JMSException {
         log.debug("accountValidateDebit: {}", debitLoan);
-        serviceRequestProducer.send(accountValidateDebitQueue, session.createObjectMessage(debitLoan));
+        try (MessageProducer producer = session.createProducer(accountValidateDebitQueue)) {
+            producer.send(session.createObjectMessage(debitLoan));
+        }
     }
 
-    public void statementStatement(StatementHeader statementHeader) throws JMSException {
+    public void statementStatement(Session session, StatementHeader statementHeader) throws JMSException {
         log.debug("statementStatement: {}", statementHeader);
-        serviceRequestProducer.send(statementStatementQueue, session.createObjectMessage(statementHeader));
+        try (MessageProducer producer = session.createProducer(statementStatementQueue)) {
+            producer.send(session.createObjectMessage(statementHeader));
+        }
     }
 
-    public void accountCloseLoan(CloseLoan closeLoan) throws JMSException {
+    public void accountCloseLoan(Session session, CloseLoan closeLoan) throws JMSException {
         log.debug("accountCloseLoan: {}", closeLoan);
-        serviceRequestProducer.send(accountCloseLoanQueue, session.createObjectMessage(closeLoan));
+        try (MessageProducer producer = session.createProducer(accountCloseLoanQueue)) {
+            producer.send(session.createObjectMessage(closeLoan));
+        }
     }
 
 }

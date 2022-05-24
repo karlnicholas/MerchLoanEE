@@ -13,7 +13,7 @@ import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -22,16 +22,17 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumers {
+    private final Connection connection;
     private final Session session;
     private final AccountManagementService accountManagementService;
     private final RegisterManagementService registerManagementService;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
     private final MQProducers rabbitMqSender;
-    private final MessageProducer responseProducer;
 
     public MQConsumers(Connection connection, MQProducers rabbitMqSender, MQConsumerUtils mqConsumerUtils, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws JMSException {
-        this.session = connection.createSession();
+        this.connection = connection;
+        session = connection.createSession();
         this.accountManagementService = accountManagementService;
         this.registerManagementService = registerManagementService;
         this.queryService = queryService;
@@ -50,8 +51,6 @@ public class MQConsumers {
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getAccountQueryLoansToCycleQueue()), this::receivedLoansToCycleMessage);
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getAccountQueryAccountIdQueue()), this::receivedQueryAccountIdMessage);
         mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getAccountQueryLoanIdQueue()), this::receivedQueryLoanIdMessage);
-
-        responseProducer = session.createProducer(null);
         connection.start();
     }
 
@@ -62,7 +61,7 @@ public class MQConsumers {
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
             if (serviceRequestResponse.isSuccess())
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-            reply(message, statementHeader);
+            reply(session, message, statementHeader);
         } catch (Exception ex) {
             log.error("receivedStatementHeaderMessage exception {}", ex.getMessage());
         }
@@ -71,8 +70,8 @@ public class MQConsumers {
     public void receivedLoansToCycleMessage(Message message) {
         try {
             LocalDate businessDate = (LocalDate) ((ObjectMessage) message).getObject();
-            log.debug("receivedLoansToCycleMessage {}", businessDate);
-            reply(message, (Serializable) accountManagementService.loansToCycle(businessDate));
+            log.trace("receivedLoansToCycleMessage: {}", businessDate);
+            reply(session, message, (Serializable) accountManagementService.loansToCycle(businessDate));
         } catch (Exception ex) {
             log.error("receivedLoansToCycleMessage exception {}", ex.getMessage());
         }
@@ -81,7 +80,7 @@ public class MQConsumers {
     public void receivedBillingCycleChargeMessage(Message message) {
         try {
             BillingCycleCharge billingCycleCharge = (BillingCycleCharge) ((ObjectMessage) message).getObject();
-            log.debug("receivedBillingCycleChargeMessage {}", billingCycleCharge);
+            log.debug("receivedBillingCycleChargeMessage: {}", billingCycleCharge);
             RegisterEntry re = registerManagementService.billingCycleCharge(billingCycleCharge);
             RegisterEntryMessage registerEntryMessage = RegisterEntryMessage.builder()
                     .date(re.getDate())
@@ -90,7 +89,7 @@ public class MQConsumers {
                     .description(re.getDescription())
                     .timeStamp(re.getTimeStamp())
                     .build();
-            reply(message, registerEntryMessage);
+            reply(session, message, registerEntryMessage);
         } catch (Exception ex) {
             log.error("receivedBillingCycleChargeMessage exception {}", ex.getMessage());
         }
@@ -99,12 +98,12 @@ public class MQConsumers {
     public void receivedQueryAccountIdMessage(Message message) {
         try {
             UUID id = (UUID) ((ObjectMessage) message).getObject();
-            log.debug("receivedQueryAccountIdMessage {}", id);
+            log.debug("receivedQueryAccountIdMessage: {}", id);
             Optional<Account> accountOpt = queryService.queryAccountId(id);
             if (accountOpt.isPresent()) {
-                reply(message, objectMapper.writeValueAsString(accountOpt.get()));
+                reply(session, message, objectMapper.writeValueAsString(accountOpt.get()));
             } else {
-                reply(message, "ERROR: id not found: " + id);
+                reply(session, message, "ERROR: id not found: " + id);
             }
         } catch (Exception ex) {
             log.error("receivedQueryAccountIdMessage exception {}", ex.getMessage());
@@ -114,44 +113,46 @@ public class MQConsumers {
     public void receivedQueryLoanIdMessage(Message message) {
         try {
             UUID id = (UUID) ((ObjectMessage) message).getObject();
-            log.debug("receivedQueryLoanIdMessage {}", id);
-            Optional<LoanDto> r = queryService.queryLoanId(id);
+            log.debug("receivedQueryLoanIdMessage: {}", id);
+            Optional<LoanDto> r = queryService.queryLoanId(session, id);
             if (r.isPresent()) {
-                reply(message, objectMapper.writeValueAsString(r.get()));
+                reply(session, message, objectMapper.writeValueAsString(r.get()));
             } else {
-                reply(message, ("ERROR: Loan not found for id: " + id));
+                reply(session, message, ("ERROR: Loan not found for id: " + id));
             }
+            log.debug("receivedQueryLoanIdMessage complete: {}", id);
         } catch (Exception ex) {
             log.error("receivedQueryLoanIdMessage exception {}", ex.getMessage());
-            Thread.currentThread().interrupt();
         }
     }
 
-    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+    public void reply(Session session, Message consumerMessage, Serializable data) throws JMSException {
         Message message = session.createObjectMessage(data);
         message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        responseProducer.send(consumerMessage.getJMSReplyTo(), message);
+        try (MessageProducer producer = session.createProducer(consumerMessage.getJMSReplyTo())) {
+            producer.send(message);
+        }
     }
 
     public void receivedCreateAccountMessage(Message message) {
-        CreateAccount createAccount;
+        CreateAccount createAccount = null;
         try {
             createAccount = (CreateAccount) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.error("receivedCreateAccountMessage exception {}", e);
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {
-            log.debug("receivedCreateAccountMessage{}", createAccount);
+            log.debug("receivedCreateAccountMessage: {}", createAccount);
             accountManagementService.createAccount(createAccount, requestResponse);
         } catch (Exception ex) {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
         } finally {
             try {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+                rabbitMqSender.serviceRequestServiceRequest(session, requestResponse);
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedCreateAccountMessage exception {}", e);
             }
         }
     }
@@ -167,13 +168,13 @@ public class MQConsumers {
         try {
             fundLoan = (FundLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.error("receivedFundingMessage exception", e);
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(fundLoan.getId())
                 .build();
         try {
-            log.debug("receivedFundingMessage {} ", fundLoan);
+            log.debug("receivedFundingMessage: {} ", fundLoan);
             accountManagementService.fundAccount(fundLoan, requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.fundLoan(
@@ -187,13 +188,13 @@ public class MQConsumers {
                         requestResponse);
             }
         } catch (Exception ex) {
-            log.error("receivedFundingMessage exception {}", ex.getMessage());
+            log.error("receivedFundingMessage exception", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
             try {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+                rabbitMqSender.serviceRequestServiceRequest(session, requestResponse);
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedFundingMessage exception", e.getMessage());
             }
         }
     }
@@ -203,13 +204,13 @@ public class MQConsumers {
         try {
             creditLoan = (CreditLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.error("receivedValidateCreditMessage exception", e);
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(creditLoan.getId())
                 .build();
         try {
-            log.debug("receivedValidateCreditMessage {} ", creditLoan);
+            log.debug("receivedValidateCreditMessage: {} ", creditLoan);
             accountManagementService.validateLoan(creditLoan.getLoanId(), requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.creditLoan(CreditLoan.builder()
@@ -221,13 +222,13 @@ public class MQConsumers {
                         .build(), requestResponse);
             }
         } catch (Exception ex) {
-            log.error("receivedValidateCreditMessage exception {}", ex.getMessage());
+            log.error("receivedValidateCreditMessage exception", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
             try {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+                rabbitMqSender.serviceRequestServiceRequest(session, requestResponse);
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedValidateCreditMessage exception", e);
             }
         }
     }
@@ -237,13 +238,13 @@ public class MQConsumers {
         try {
             debitLoan = (DebitLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.error("receivedValidateDebitMessage exception", e);
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(debitLoan.getId())
                 .build();
         try {
-            log.debug("receivedValidateDebitMessage {} ", debitLoan);
+            log.debug("receivedValidateDebitMessage: {} ", debitLoan);
             accountManagementService.validateLoan(debitLoan.getLoanId(), requestResponse);
             if (requestResponse.isSuccess()) {
                 registerManagementService.debitLoan(DebitLoan.builder()
@@ -256,13 +257,13 @@ public class MQConsumers {
                         requestResponse);
             }
         } catch (Exception ex) {
-            log.error("receivedValidateDebitMessage exception {}", ex.getMessage());
+            log.error("receivedValidateDebitMessage exception", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
             try {
-                rabbitMqSender.serviceRequestServiceRequest(requestResponse);
+                rabbitMqSender.serviceRequestServiceRequest(session, requestResponse);
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedValidateDebitMessage exception", e);
             }
         }
     }
@@ -272,12 +273,12 @@ public class MQConsumers {
         try {
             closeLoan = (CloseLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.error("receivedCloseLoanMessage exception", e);
         }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(closeLoan.getId()).build();
         try {
-            log.debug("receivedCloseLoanMessage {} ", closeLoan);
-            Optional<LoanDto> loanOpt = queryService.queryLoanId(closeLoan.getLoanId());
+            log.debug("receivedCloseLoanMessage: {} ", closeLoan);
+            Optional<LoanDto> loanOpt = queryService.queryLoanId(session, closeLoan.getLoanId());
             if (loanOpt.isPresent()) {
                 if (closeLoan.getAmount().compareTo(loanOpt.get().getPayoffAmount()) == 0) {
                     registerManagementService.debitLoan(DebitLoan.builder()
@@ -308,24 +309,21 @@ public class MQConsumers {
                             .endDate(closeLoan.getDate())
                             .build();
                     registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-                    rabbitMqSender.statementCloseStatement(statementHeader);
+                    rabbitMqSender.statementCloseStatement(session, statementHeader);
                 } else {
                     serviceRequestResponse.setFailure("PayoffAmount incorrect. Required: " + loanOpt.get().getPayoffAmount());
                 }
             } else {
                 serviceRequestResponse.setFailure("loan not found for id: " + closeLoan.getLoanId());
             }
-        } catch (InterruptedException iex) {
-            log.error("receivedCloseLoanMessage exception {}", iex.getMessage());
-            Thread.currentThread().interrupt();
         } catch (Exception ex) {
-            log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
+            log.error("receivedCloseLoanMessage exception", ex);
             serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
         } finally {
             try {
-                rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+                rabbitMqSender.serviceRequestServiceRequest(session, serviceRequestResponse);
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedCloseLoanMessage exception", e);
             }
         }
     }
@@ -335,21 +333,21 @@ public class MQConsumers {
         try {
             statementHeader = (StatementHeader) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            throw new RuntimeException(e);
+            log.error("receivedLoanClosedMessage exception", e);
         }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
         try {
-            log.debug("receivedLoanClosedMessage {} ", statementHeader);
+            log.debug("receivedLoanClosedMessage: {} ", statementHeader);
             accountManagementService.closeLoan(statementHeader.getLoanId());
             serviceRequestResponse.setSuccess();
         } catch (Exception ex) {
-            log.error("receivedLoanClosedMessage exception {}", ex.getMessage());
+            log.error("receivedLoanClosedMessage exception", ex);
             serviceRequestResponse.setError("receivedLoanClosedMessage exception: " + ex.getMessage());
         } finally {
             try {
-                rabbitMqSender.serviceRequestServiceRequest(serviceRequestResponse);
+                rabbitMqSender.serviceRequestServiceRequest(session, serviceRequestResponse);
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedLoanClosedMessage exception", e);
             }
         }
     }
