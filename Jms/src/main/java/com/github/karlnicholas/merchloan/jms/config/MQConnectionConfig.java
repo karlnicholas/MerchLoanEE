@@ -1,8 +1,6 @@
 package com.github.karlnicholas.merchloan.jms.config;
 
-import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
-import jakarta.jms.JMSException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
