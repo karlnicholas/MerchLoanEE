@@ -25,25 +25,44 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumers {
-    private final Session session;
     private final ServiceRequestService serviceRequestService;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
+    private final JMSContext servicerequestContext;
+    private final JMSContext servicerequestQueryIdContext;
+//    private final JMSProducer servicerequestQueryIdProducer;
+    private final JMSContext serviceRequestCheckRequestContext;
+//    private final JMSProducer serviceRequestCheckRequestProducer;
+    private final JMSContext serviceRequestBillLoanContext;
+    private final JMSContext serviceRequestStatementCompleteContext;
 
-    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
-        session = connection.createSession();
+    public MQConsumers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
         this.serviceRequestService = serviceRequestService;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServicerequestQueue()), this::receivedServiceRequestMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServicerequestQueryIdQueue()), this::receivedServiceRequestQueryIdMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue()), this::receivedCheckRequestMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue()), this::receivedServiceRequestBillloanMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue()), this::receivedServiceStatementCompleteMessage);
+        servicerequestContext = connectionFactory.createContext();
+        servicerequestContext.setClientID("ServiceRequest::servicerequestContext");
+        servicerequestContext.createConsumer(servicerequestContext.createQueue(mqConsumerUtils.getServicerequestQueue())).setMessageListener(this::receivedServiceRequestMessage);
 
-        connection.start();
+        servicerequestQueryIdContext = connectionFactory.createContext();
+        servicerequestQueryIdContext.setClientID("ServiceRequest::servicerequestQueryIdContext");
+        servicerequestQueryIdContext.createConsumer(servicerequestQueryIdContext.createQueue(mqConsumerUtils.getServicerequestQueryIdQueue())).setMessageListener(this::receivedServiceRequestQueryIdMessage);
+//        servicerequestQueryIdProducer = servicerequestQueryIdContext.createProducer();
+
+        serviceRequestCheckRequestContext = connectionFactory.createContext();
+        serviceRequestCheckRequestContext.setClientID("ServiceRequest::serviceRequestCheckRequestContext");
+        serviceRequestCheckRequestContext.createConsumer(serviceRequestCheckRequestContext.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue())).setMessageListener(this::receivedCheckRequestMessage);
+//        serviceRequestCheckRequestProducer = serviceRequestCheckRequestContext.createProducer();
+
+        serviceRequestBillLoanContext = connectionFactory.createContext();
+        serviceRequestBillLoanContext.setClientID("ServiceRequest::serviceRequestBillLoanContext");
+        serviceRequestBillLoanContext.createConsumer(serviceRequestBillLoanContext.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue())).setMessageListener(this::receivedServiceRequestBillloanMessage);
+
+        serviceRequestStatementCompleteContext = connectionFactory.createContext();
+        serviceRequestStatementCompleteContext.setClientID("ServiceRequest::serviceRequestStatementCompleteContext");
+        serviceRequestStatementCompleteContext.createConsumer(serviceRequestStatementCompleteContext.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue())).setMessageListener(this::receivedServiceStatementCompleteMessage);
     }
 
     public void receivedServiceRequestQueryIdMessage(Message message) {
@@ -63,7 +82,7 @@ public class MQConsumers {
             } else {
                 response = "ERROR: id not found: " + id;
             }
-            reply(message, response);
+            reply(servicerequestQueryIdContext, message, response);
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
         }
@@ -73,18 +92,16 @@ public class MQConsumers {
     public void receivedCheckRequestMessage(Message message) {
         log.trace("receivedCheckRequestMessage");
         try {
-            reply(message, queryService.checkRequest());
+            reply(serviceRequestCheckRequestContext, message, queryService.checkRequest());
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
         }
     }
 
-    public void reply(Message consumerMessage, Serializable data) throws JMSException {
-        Message message = session.createObjectMessage(data);
+    public void reply(JMSContext context, Message consumerMessage, Serializable data) throws JMSException {
+        Message message = context.createObjectMessage(data);
         message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        try (MessageProducer producer = session.createProducer(consumerMessage.getJMSReplyTo())) {
-            producer.send(message);
-        }
+        context.createProducer().send(consumerMessage.getJMSReplyTo(), message);
     }
 
     public void receivedServiceRequestMessage(Message message) {
@@ -101,7 +118,7 @@ public class MQConsumers {
         try {
             BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
             log.debug("receivedServiceRequestBillloanMessage: {}", billingCycle);
-            serviceRequestService.statementStatementRequest(session, StatementRequest.builder()
+            serviceRequestService.statementStatementRequest(StatementRequest.builder()
                             .loanId(billingCycle.getLoanId())
                             .statementDate(billingCycle.getStatementDate())
                             .startDate(billingCycle.getStartDate())

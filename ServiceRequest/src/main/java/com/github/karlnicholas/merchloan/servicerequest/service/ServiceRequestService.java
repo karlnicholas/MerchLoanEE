@@ -9,12 +9,14 @@ import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequest
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.message.MQProducers;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
+import jakarta.jms.JMSContext;
 import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import jakarta.jms.JMSException;
+
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -39,11 +41,11 @@ public class ServiceRequestService {
         this.dataSource = dataSource;
     }
 
-    public UUID accountRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(accountRequest);
-            mqProducers.accountCreateAccount(session, CreateAccount.builder()
+            mqProducers.accountCreateAccount(CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
                     .createDate(redisComponent.getBusinessDate())
@@ -55,20 +57,19 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID fundingRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID fundingRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
             UUID id = null;
             id = retry == Boolean.TRUE ? existingId : persistRequest(fundingRequest);
-            mqProducers.accountFundLoan(session,
-                    FundLoan.builder()
-                            .id(id)
-                            .accountId(fundingRequest.getAccountId())
-                            .amount(fundingRequest.getAmount())
-                            .startDate(redisComponent.getBusinessDate())
-                            .description(fundingRequest.getDescription())
-                            .retry(retry)
-                            .build()
+            mqProducers.accountFundLoan(FundLoan.builder()
+                    .id(id)
+                    .accountId(fundingRequest.getAccountId())
+                    .amount(fundingRequest.getAmount())
+                    .startDate(redisComponent.getBusinessDate())
+                    .description(fundingRequest.getDescription())
+                    .retry(retry)
+                    .build()
             );
             return id;
         } catch (SQLException | JMSException | JsonProcessingException ex) {
@@ -76,19 +77,18 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID accountValidateCreditRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID accountValidateCreditRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(creditRequest);
-            mqProducers.accountValidateCredit(session,
-                    CreditLoan.builder()
-                            .id(id)
-                            .loanId(creditRequest.getLoanId())
-                            .date(redisComponent.getBusinessDate())
-                            .amount(creditRequest.getAmount())
-                            .description(creditRequest.getDescription())
-                            .retry(retry)
-                            .build()
+            mqProducers.accountValidateCredit(CreditLoan.builder()
+                    .id(id)
+                    .loanId(creditRequest.getLoanId())
+                    .date(redisComponent.getBusinessDate())
+                    .amount(creditRequest.getAmount())
+                    .description(creditRequest.getDescription())
+                    .retry(retry)
+                    .build()
             );
             return id;
         } catch (SQLException | JMSException | JsonProcessingException ex) {
@@ -96,21 +96,20 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID statementStatementRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID statementStatementRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
-            mqProducers.statementStatement(session,
-                    StatementHeader.builder()
-                            .id(id)
-                            .loanId(statementRequest.getLoanId())
-                            .interestChargeId(UUID.randomUUID())
-                            .feeChargeId(UUID.randomUUID())
-                            .statementDate(statementRequest.getStatementDate())
-                            .startDate(statementRequest.getStartDate())
-                            .endDate(statementRequest.getEndDate())
-                            .retry(retry)
-                            .build()
+            mqProducers.statementStatement(StatementHeader.builder()
+                    .id(id)
+                    .loanId(statementRequest.getLoanId())
+                    .interestChargeId(UUID.randomUUID())
+                    .feeChargeId(UUID.randomUUID())
+                    .statementDate(statementRequest.getStatementDate())
+                    .startDate(statementRequest.getStartDate())
+                    .endDate(statementRequest.getEndDate())
+                    .retry(retry)
+                    .build()
             );
             return id;
         } catch (SQLException | JMSException | JsonProcessingException ex) {
@@ -118,21 +117,20 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID closeRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID closeRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             CloseRequest closeRequest = (CloseRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(closeRequest);
-            mqProducers.accountCloseLoan(session,
-                    CloseLoan.builder()
-                            .id(id)
-                            .loanId(closeRequest.getLoanId())
-                            .interestChargeId(UUID.randomUUID())
-                            .paymentId(UUID.randomUUID())
-                            .date(redisComponent.getBusinessDate())
-                            .amount(closeRequest.getAmount())
-                            .description(closeRequest.getDescription())
-                            .retry(retry)
-                            .build()
+            mqProducers.accountCloseLoan(CloseLoan.builder()
+                    .id(id)
+                    .loanId(closeRequest.getLoanId())
+                    .interestChargeId(UUID.randomUUID())
+                    .paymentId(UUID.randomUUID())
+                    .date(redisComponent.getBusinessDate())
+                    .amount(closeRequest.getAmount())
+                    .description(closeRequest.getDescription())
+                    .retry(retry)
+                    .build()
             );
             return id;
         } catch (SQLException | JMSException | JsonProcessingException ex) {
@@ -140,19 +138,18 @@ public class ServiceRequestService {
         }
     }
 
-    public UUID accountValidateDebitRequest(Session session, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
+    public UUID accountValidateDebitRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(debitRequest);
-            mqProducers.accountValidateDebit(session,
-                    DebitLoan.builder()
-                            .id(id)
-                            .loanId(debitRequest.getLoanId())
-                            .date(redisComponent.getBusinessDate())
-                            .amount(debitRequest.getAmount())
-                            .description(debitRequest.getDescription())
-                            .retry(retry)
-                            .build()
+            mqProducers.accountValidateDebit(DebitLoan.builder()
+                    .id(id)
+                    .loanId(debitRequest.getLoanId())
+                    .date(redisComponent.getBusinessDate())
+                    .amount(debitRequest.getAmount())
+                    .description(debitRequest.getDescription())
+                    .retry(retry)
+                    .build()
             );
             return id;
         } catch (SQLException | JMSException | JsonProcessingException ex) {

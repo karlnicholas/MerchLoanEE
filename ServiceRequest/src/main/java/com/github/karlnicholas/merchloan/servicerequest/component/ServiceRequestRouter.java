@@ -14,12 +14,10 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class ServiceRequestRouter {
-    private final Connection connection;
     private final Map<String, ExceptionFunction<? super ServiceRequestMessage, UUID>>  routingMap;
 
 
-    public ServiceRequestRouter(Connection connection, ServiceRequestService serviceRequestService) {
-        this.connection = connection;
+    public ServiceRequestRouter(ServiceRequestService serviceRequestService) {
         routingMap = new HashMap<>();
         routingMap.put(AccountRequest.class.getName(), serviceRequestService::accountRequest);
         routingMap.put(FundingRequest.class.getName(), serviceRequestService::fundingRequest);
@@ -30,8 +28,6 @@ public class ServiceRequestRouter {
     }
 
     public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {
-        try ( Session session = connection.createSession()) {
-            return routingMap.get(clazz).route(session, serviceRequestMessage, retry, existingId);
-        }
+        return routingMap.get(clazz).route(serviceRequestMessage, retry, existingId);
     }
 }

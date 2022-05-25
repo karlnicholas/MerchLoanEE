@@ -21,19 +21,23 @@ public class MQConnectionConfig {
     @Value("${rabbitmq.virtual-host:/}")
     private String virtualHost;
 
-//    @Bean
-//    public ConnectionFactory getConnectionFactory() {
-//        return new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
-//    }
-
     @Bean
-    public Connection getConnection() throws InterruptedException, JMSException {
+    public ConnectionFactory getConnectionFactory() {
 //        JmsPoolConnectionFactory poolingFactory = new JmsPoolConnectionFactory();
 //        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
 //        poolingFactory.setConnectionFactory(connectionFactory);
 //        return poolingFactory;
-        return new ActiveMQConnectionFactory("tcp://" + host + ":" + port).createConnection();
+        return new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
     }
+
+//    @Bean
+//    public Connection getConnection() throws InterruptedException, JMSException {
+////        JmsPoolConnectionFactory poolingFactory = new JmsPoolConnectionFactory();
+////        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
+////        poolingFactory.setConnectionFactory(connectionFactory);
+////        return poolingFactory;
+//        return getConnectionFactory().createConnection();
+//    }
 
 //    @Bean
 //    public Connection getConnection(ConnectionFactory connectionFactory) throws InterruptedException, JMSException {

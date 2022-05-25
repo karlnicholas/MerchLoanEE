@@ -16,50 +16,52 @@ import java.util.UUID;
 @Slf4j
 public class MQProducers {
     private final ReplyWaitingHandler replyWaitingHandler;
-    private final Queue accountsReplyQueue;
+    private final JMSContext accountsReplyContext;
+    private final Destination accountsReplyQueue;
+    private final JMSContext servicerequestContext;
     private final Destination servicerequestQueue;
+    private final JMSContext statementCloseStatementContext;
     private final Destination statementCloseStatementQueue;
+    private final JMSContext statementQueryMostRecentStatementContext;
     private final Destination statementQueryMostRecentStatementQueue;
 
     @Autowired
-    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        try (Session session = connection.createSession()) {
-            replyWaitingHandler = new ReplyWaitingHandler();
-            servicerequestQueue = session.createQueue(mqConsumerUtils.getServicerequestQueue());
-            statementCloseStatementQueue = session.createQueue(mqConsumerUtils.getStatementCloseStatementQueue());
-            statementQueryMostRecentStatementQueue = session.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue());
-        }
-        Session consumerSession = connection.createSession();
-        accountsReplyQueue = consumerSession.createTemporaryQueue();
-        mqConsumerUtils.bindConsumer(consumerSession, accountsReplyQueue, replyWaitingHandler::onMessage);
-        connection.start();
+    public MQProducers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils) throws JMSException {
+        servicerequestContext = connectionFactory.createContext();
+        servicerequestQueue = servicerequestContext.createQueue(mqConsumerUtils.getServicerequestQueue());
+
+        statementCloseStatementContext = connectionFactory.createContext();
+        statementCloseStatementQueue = statementCloseStatementContext.createQueue(mqConsumerUtils.getStatementCloseStatementQueue());
+
+        statementQueryMostRecentStatementContext = connectionFactory.createContext();
+        statementQueryMostRecentStatementQueue = statementQueryMostRecentStatementContext.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue());
+
+
+        accountsReplyContext = connectionFactory.createContext();
+        replyWaitingHandler = new ReplyWaitingHandler();
+        accountsReplyQueue = accountsReplyContext.createTemporaryQueue();
+        accountsReplyContext.createConsumer(accountsReplyQueue).setMessageListener(replyWaitingHandler::onMessage);
+
     }
 
-    public void serviceRequestServiceRequest(Session session, ServiceRequestResponse serviceRequest) throws JMSException {
+    public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws JMSException {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
-            try(MessageProducer producer = session.createProducer(servicerequestQueue)) {
-                producer.send(session.createObjectMessage(serviceRequest));
-            }
+        servicerequestContext.createProducer().send(servicerequestQueue, servicerequestContext.createObjectMessage(serviceRequest));
     }
 
-    public void statementCloseStatement(Session session, StatementHeader statementHeader) throws JMSException {
+    public void statementCloseStatement(StatementHeader statementHeader) {
         log.debug("statementCloseStatement: {}", statementHeader);
-        try(MessageProducer producer = session.createProducer(statementCloseStatementQueue)) {
-            producer.send(session.createObjectMessage(statementHeader));
-        }
+        statementCloseStatementContext.createProducer().send(statementCloseStatementQueue, statementCloseStatementContext.createObjectMessage(statementHeader));
     }
 
-    public Object queryMostRecentStatement(Session session, UUID loanId) throws InterruptedException, JMSException {
+    public Object queryMostRecentStatement(UUID loanId) throws InterruptedException, JMSException {
         log.debug("queryMostRecentStatement: {}", loanId);
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        Message message = session.createObjectMessage(loanId);
+        Message message = accountsReplyContext.createObjectMessage(loanId);
         message.setJMSCorrelationID(responseKey);
         message.setJMSReplyTo(accountsReplyQueue);
-        try ( MessageProducer producer = session.createProducer(statementQueryMostRecentStatementQueue)) {
-            producer.send(message);
-            return replyWaitingHandler.getReply(responseKey);
-        }
+        accountsReplyContext.createProducer().send(statementQueryMostRecentStatementQueue, message);
+        return replyWaitingHandler.getReply(responseKey);
     }
-
 }

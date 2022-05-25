@@ -3,6 +3,7 @@ package com.github.karlnicholas.merchloan.accounts.service;
 import com.github.karlnicholas.merchloan.accounts.dao.AccountDao;
 import com.github.karlnicholas.merchloan.accounts.dao.LoanDao;
 import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
+import com.github.karlnicholas.merchloan.accounts.message.MQConsumers;
 import com.github.karlnicholas.merchloan.accounts.message.MQProducers;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
@@ -10,6 +11,7 @@ import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
+import jakarta.jms.JMSContext;
 import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,7 @@ public class QueryService {
         }
     }
 
-    public Optional<LoanDto> queryLoanId(Session session, UUID loanId) throws JMSException, InterruptedException, SQLException {
+    public Optional<LoanDto> queryLoanId(UUID loanId) throws JMSException, InterruptedException, SQLException {
         // get last statement
         // get register entries
         // return last statement date
@@ -79,7 +81,7 @@ public class QueryService {
                             .months(loan.getMonths())
                             .build();
                     if (loan.getLoanState() != Loan.LOAN_STATE.CLOSED) {
-                        computeLoanValues(session, loanId, loan, loanDto);
+                        computeLoanValues(loanId, loan, loanDto);
                     }
                     return Optional.of(loanDto);
                 } else {
@@ -91,10 +93,10 @@ public class QueryService {
         }
     }
 
-    private void computeLoanValues(Session session, UUID loanId, Loan loan, LoanDto loanDto) throws JMSException, InterruptedException, SQLException {
+    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws JMSException, InterruptedException, SQLException {
         try (Connection con = dataSource.getConnection()) {
             // get most recent statement
-            MostRecentStatement mostRecentStatement = (MostRecentStatement) mqProducers.queryMostRecentStatement(session, loanId);
+            MostRecentStatement mostRecentStatement = (MostRecentStatement) mqProducers.queryMostRecentStatement(loanId);
             // generate a simulated new statement for current period
             StatementHeader statementHeader = StatementHeader.builder().build();
             statementHeader.setLoanId(loanId);
