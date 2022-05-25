@@ -73,7 +73,7 @@ public class MQProducers {
 
         replyWaitingHandler = new ReplyWaitingHandler();
         JMSContext queueReplyContext = connectionFactory.createContext();
-        queueReplyContext.setClientID("queueReplyContext");
+        queueReplyContext.setClientID("Query::queueReplyContext");
         queryReplyQueue = queueReplyContext.createTemporaryQueue();
         JMSConsumer replyConsumer = queueReplyContext.createConsumer(queryReplyQueue);
         replyConsumer.setMessageListener(replyWaitingHandler);

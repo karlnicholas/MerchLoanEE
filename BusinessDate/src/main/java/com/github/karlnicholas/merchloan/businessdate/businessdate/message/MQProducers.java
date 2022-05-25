@@ -14,62 +14,59 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class MQProducers {
-    private final Connection connection;
-    private final ReplyWaitingHandler replyWaitingHandler;
-    private final Queue businessDateReplyQueue;
+    private final JMSContext serviceRequestCheckRequestContext;
     private final Destination serviceRequestCheckRequestQueue;
+    private final JMSContext accountQueryLoansToCycleContext;
     private final Destination accountQueryLoansToCycleQueue;
+    private final JMSContext serviceRequestBillLoanContext;
     private final Destination serviceRequestBillLoanQueue;
+
+    private final ReplyWaitingHandler replyWaitingHandler;
+    private final JMSContext businessDateReplyContext;
+    private final Destination businessDateReplyQueue;
+
     @Autowired
-    public MQProducers(Connection connection, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.connection = connection;
-        connection.setClientID("BusinessDate");
-        try ( Session session = connection.createSession()) {
-            replyWaitingHandler = new ReplyWaitingHandler();
-            serviceRequestCheckRequestQueue = session.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue());
-            accountQueryLoansToCycleQueue = session.createQueue(mqConsumerUtils.getAccountQueryLoansToCycleQueue());
-            serviceRequestBillLoanQueue = session.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue());
-        }
-        Session consumerSession = connection.createSession();
-        businessDateReplyQueue = consumerSession.createTemporaryQueue();
-        mqConsumerUtils.bindConsumer(consumerSession, businessDateReplyQueue, replyWaitingHandler::onMessage);
-        connection.start();
+    public MQProducers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils) {
+
+        serviceRequestCheckRequestContext = connectionFactory.createContext();
+        serviceRequestCheckRequestContext.setClientID("BusinessDate::serviceRequestCheckRequestContext");
+        serviceRequestCheckRequestQueue = serviceRequestCheckRequestContext.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue());
+        accountQueryLoansToCycleContext = connectionFactory.createContext();
+        accountQueryLoansToCycleContext.setClientID("BusinessDate::accountQueryLoansToCycleContext");
+        accountQueryLoansToCycleQueue = accountQueryLoansToCycleContext.createQueue(mqConsumerUtils.getAccountQueryLoansToCycleQueue());
+        serviceRequestBillLoanContext = connectionFactory.createContext();
+        serviceRequestBillLoanContext.setClientID("BusinessDate::serviceRequestBillLoanContext");
+        serviceRequestBillLoanQueue = serviceRequestBillLoanContext.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue());
+
+        replyWaitingHandler = new ReplyWaitingHandler();
+        businessDateReplyContext = connectionFactory.createContext();
+        businessDateReplyContext.setClientID("BusinessDate::businessDateReplyContext");
+        businessDateReplyQueue = businessDateReplyContext.createTemporaryQueue();
+        businessDateReplyContext.createConsumer(businessDateReplyQueue).setMessageListener(replyWaitingHandler::onMessage);
     }
 
     public Object servicerequestCheckRequest() throws InterruptedException, JMSException {
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        try (Session session = connection.createSession()) {
-            Message message = session.createObjectMessage(new byte[0]);
-            message.setJMSCorrelationID(responseKey);
-            message.setJMSReplyTo(businessDateReplyQueue);
-            try (MessageProducer producer = session.createProducer(serviceRequestCheckRequestQueue)) {
-                producer.send(message);
-                return replyWaitingHandler.getReply(responseKey);
-            }
-        }
+        Message message = serviceRequestCheckRequestContext.createObjectMessage(new byte[0]);
+        message.setJMSCorrelationID(responseKey);
+        message.setJMSReplyTo(businessDateReplyQueue);
+        serviceRequestCheckRequestContext.createProducer().send(serviceRequestCheckRequestQueue, message);
+        return replyWaitingHandler.getReply(responseKey);
     }
 
     public Object acccountQueryLoansToCycle(LocalDate businessDate) throws InterruptedException, JMSException {
         String responseKey = UUID.randomUUID().toString();
         replyWaitingHandler.put(responseKey);
-        try (Session session = connection.createSession()) {
-            Message message = session.createObjectMessage(businessDate);
-            message.setJMSCorrelationID(responseKey);
-            message.setJMSReplyTo(businessDateReplyQueue);
-            try (MessageProducer producer = session.createProducer(accountQueryLoansToCycleQueue)) {
-                producer.send(message);
-                return replyWaitingHandler.getReply(responseKey);
-            }
-        }
+        Message message = accountQueryLoansToCycleContext.createObjectMessage(businessDate);
+        message.setJMSCorrelationID(responseKey);
+        message.setJMSReplyTo(businessDateReplyQueue);
+        accountQueryLoansToCycleContext.createProducer().send(accountQueryLoansToCycleQueue, message);
+        return replyWaitingHandler.getReply(responseKey);
     }
 
-    public void serviceRequestBillLoan(BillingCycle billingCycle) throws JMSException {
-        try (Session session = connection.createSession()) {
-            try (MessageProducer producer = session.createProducer(serviceRequestBillLoanQueue)) {
-                producer.send(session.createObjectMessage(billingCycle));
-            }
-        }
+    public void serviceRequestBillLoan(BillingCycle billingCycle) {
+        serviceRequestBillLoanContext.createProducer().send(serviceRequestBillLoanQueue, serviceRequestBillLoanContext.createObjectMessage(billingCycle));
     }
 
 }

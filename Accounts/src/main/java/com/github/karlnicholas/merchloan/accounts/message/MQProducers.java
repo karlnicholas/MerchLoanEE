@@ -28,17 +28,21 @@ public class MQProducers {
     @Autowired
     public MQProducers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils) throws JMSException {
         servicerequestContext = connectionFactory.createContext();
+        servicerequestContext.setClientID("Accounts::servicerequestContext");
         servicerequestQueue = servicerequestContext.createQueue(mqConsumerUtils.getServicerequestQueue());
 
         statementCloseStatementContext = connectionFactory.createContext();
+        statementCloseStatementContext.setClientID("Accounts::statementCloseStatementContext");
         statementCloseStatementQueue = statementCloseStatementContext.createQueue(mqConsumerUtils.getStatementCloseStatementQueue());
 
         statementQueryMostRecentStatementContext = connectionFactory.createContext();
+        statementQueryMostRecentStatementContext.setClientID("Accounts::statementQueryMostRecentStatementContext");
         statementQueryMostRecentStatementQueue = statementQueryMostRecentStatementContext.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue());
 
 
-        accountsReplyContext = connectionFactory.createContext();
         replyWaitingHandler = new ReplyWaitingHandler();
+        accountsReplyContext = connectionFactory.createContext();
+        accountsReplyContext.setClientID("Accounts::accountsReplyContext");
         accountsReplyQueue = accountsReplyContext.createTemporaryQueue();
         accountsReplyContext.createConsumer(accountsReplyQueue).setMessageListener(replyWaitingHandler::onMessage);
 

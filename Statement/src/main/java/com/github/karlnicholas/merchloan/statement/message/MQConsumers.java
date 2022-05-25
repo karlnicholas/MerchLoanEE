@@ -22,7 +22,6 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumers {
-    private final Session session;
     private final StatementService statementService;
     private final MQProducers mqProducers;
     private final QueryService queryService;
@@ -30,10 +29,15 @@ public class MQConsumers {
     private static final String LOG_STRING = "onStatementMessage";
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
+    private final JMSContext statementStatementContext;
+    private final JMSContext statementCloseStatementContext;
+    private final JMSContext statementQueryStatementContext;
+    private final JMSContext statementQueryStatementsContext;
+    private final JMSContext statementQueryMostRecentStatementContext;
 
-    public MQConsumers(Connection connection, MQConsumerUtils mqConsumerUtils, StatementService statementService, MQProducers mqProducers, QueryService queryService) throws JMSException {
+    public MQConsumers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils, StatementService statementService, MQProducers mqProducers, QueryService queryService) throws JMSException {
 //        this.connection = connection;
-        session = connection.createSession();
+//        session = connection.createSession();
         this.statementService = statementService;
         this.mqProducers = mqProducers;
         this.queryService = queryService;
@@ -41,13 +45,26 @@ public class MQConsumers {
         objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementStatementQueue()), this::onStatementMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementCloseStatementQueue()), this::onCloseStatementMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryStatementQueue()), this::onQueryStatementMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryStatementsQueue()), this::onQueryStatementsMessage);
-        mqConsumerUtils.bindConsumer(session, session.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue()), this::onQueryMostRecentStatementMessage);
+        statementStatementContext = connectionFactory.createContext();
+        statementStatementContext.setClientID("Statement::statementStatementContext");
+        statementStatementContext.createConsumer(statementStatementContext.createQueue(mqConsumerUtils.getStatementStatementQueue())).setMessageListener(this::onStatementMessage);
 
-        connection.start();
+        statementCloseStatementContext = connectionFactory.createContext();
+        statementCloseStatementContext.setClientID("Statement::statementCloseStatementContext");
+        statementCloseStatementContext.createConsumer(statementCloseStatementContext.createQueue(mqConsumerUtils.getStatementCloseStatementQueue())).setMessageListener(this::onCloseStatementMessage);
+
+        statementQueryStatementContext = connectionFactory.createContext();
+        statementQueryStatementContext.setClientID("Statement::statementQueryStatementContext");
+        statementQueryStatementContext.createConsumer(statementQueryStatementContext.createQueue(mqConsumerUtils.getStatementQueryStatementQueue())).setMessageListener(this::onQueryStatementMessage);
+
+        statementQueryStatementsContext = connectionFactory.createContext();
+        statementQueryStatementsContext.setClientID("Statement::statementQueryStatementsContext");
+        statementQueryStatementsContext.createConsumer(statementQueryStatementsContext.createQueue(mqConsumerUtils.getStatementQueryStatementsQueue())).setMessageListener(this::onQueryStatementsMessage);
+
+        statementQueryMostRecentStatementContext = connectionFactory.createContext();
+        statementQueryMostRecentStatementContext.setClientID("Statement::statementQueryMostRecentStatementContext");
+        statementQueryMostRecentStatementContext.createConsumer(statementQueryMostRecentStatementContext.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue())).setMessageListener(this::onQueryMostRecentStatementMessage);
+
     }
 
     public void onStatementMessage(Message message) {
@@ -61,7 +78,7 @@ public class MQConsumers {
         boolean loanClosed = false;
         try {
             log.debug("onStatementMessage {}", statementHeader);
-            statementHeader = (StatementHeader) mqProducers.accountQueryStatementHeader(session, statementHeader);
+            statementHeader = (StatementHeader) mqProducers.accountQueryStatementHeader(statementHeader);
             if (statementHeader.getCustomer() == null) {
                 requestResponse.setFailure("ERROR: Account/Loan not found for accountId " + statementHeader.getAccountId() + " and loanId " + statementHeader.getLoanId());
                 return;
@@ -77,11 +94,11 @@ public class MQConsumers {
             boolean paymentCreditFound = statementHeader.getRegisterEntries().stream().anyMatch(re -> re.getCredit() != null);
             // so, let's do interest and fee calculations here.
             if (!paymentCreditFound) {
-                RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(session, BillingCycleCharge.builder().id(statementHeader.getFeeChargeId()).loanId(statementHeader.getLoanId()).date(statementHeader.getStatementDate()).debit(new BigDecimal("30.00")).description("Non payment fee").retry(statementHeader.getRetry()).build());
+                RegisterEntryMessage feeRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder().id(statementHeader.getFeeChargeId()).loanId(statementHeader.getLoanId()).date(statementHeader.getStatementDate()).debit(new BigDecimal("30.00")).description("Non payment fee").retry(statementHeader.getRetry()).build());
                 statementHeader.getRegisterEntries().add(feeRegisterEntry);
             }
             BigDecimal interestAmt = interestBalance.multiply(interestRate).divide(interestMonths, 2, RoundingMode.HALF_EVEN);
-            RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(session, BillingCycleCharge.builder().id(statementHeader.getInterestChargeId()).loanId(statementHeader.getLoanId()).date(statementHeader.getStatementDate()).debit(interestAmt).description("Interest").retry(statementHeader.getRetry()).build());
+            RegisterEntryMessage interestRegisterEntry = (RegisterEntryMessage) mqProducers.accountBillingCycleCharge(BillingCycleCharge.builder().id(statementHeader.getInterestChargeId()).loanId(statementHeader.getLoanId()).date(statementHeader.getStatementDate()).debit(interestAmt).description("Interest").retry(statementHeader.getRetry()).build());
             statementHeader.getRegisterEntries().add(interestRegisterEntry);
             BigDecimal startingBalance = lastStatement.isPresent() ? lastStatement.get().getEndingBalance() : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN);
             BigDecimal endingBalance = startingBalance;
@@ -99,7 +116,7 @@ public class MQConsumers {
             statementService.saveStatement(statementHeader, startingBalance, endingBalance);
             requestResponse.setSuccess();
             if (endingBalance.compareTo(BigDecimal.ZERO) <= 0) {
-                mqProducers.accountLoanClosed(session, statementHeader);
+                mqProducers.accountLoanClosed(statementHeader);
                 loanClosed = true;
             }
         } catch (Exception ex) {
@@ -108,7 +125,7 @@ public class MQConsumers {
         } finally {
             if (!loanClosed) {
                 try {
-                    mqProducers.serviceRequestStatementComplete(session, requestResponse);
+                    mqProducers.serviceRequestStatementComplete(requestResponse);
                 } catch (JMSException innerEx) {
                     log.error("ERROR SENDING ERROR", innerEx);
                 }
@@ -122,7 +139,7 @@ public class MQConsumers {
             log.debug("onQueryMostRecentStatementMessage {}", loanId);
             MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder().id(statement.getId()).loanId(loanId).statementDate(statement.getStatementDate()).endingBalance(statement.getEndingBalance()).startingBalance(statement.getStartingBalance()).build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
 
-            reply(session, message, mostRecentStatement);
+            reply(statementQueryMostRecentStatementContext, message, mostRecentStatement);
             log.debug("onQueryMostRecentStatementMessage completed {}", loanId);
         } catch (Exception ex) {
             log.error("onQueryMostRecentStatementMessage exception", ex);
@@ -134,7 +151,7 @@ public class MQConsumers {
             UUID loanId = (UUID) ((ObjectMessage) message).getObject();
             log.debug("onQueryStatementMessage {}", loanId);
             String result = queryService.findById(loanId).map(Statement::getStatementDoc).orElse("ERROR: No statement found for id " + loanId);
-            reply(session, message, result);
+            reply(statementQueryStatementContext, message, result);
         } catch (Exception ex) {
             log.error("onQueryStatementMessage exception", ex);
         }
@@ -145,7 +162,7 @@ public class MQConsumers {
         try {
             UUID id = (UUID) ((ObjectMessage) message).getObject();
             log.debug("onQueryStatementsMessage {}", id);
-            reply(session, message, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
+            reply(statementQueryStatementsContext, message, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
         } catch (Exception ex) {
             log.error("onQueryStatementsMessage exception", ex);
         }
@@ -181,23 +198,21 @@ public class MQConsumers {
             }
             // just to save bandwidth
             statementHeader.setRegisterEntries(null);
-            mqProducers.accountLoanClosed(session, statementHeader);
+            mqProducers.accountLoanClosed(statementHeader);
         } catch (Exception ex) {
             log.error("onCloseStatementMessage", ex);
             try {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(statementHeader.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
-                mqProducers.serviceRequestServiceRequest(session, requestResponse);
+                mqProducers.serviceRequestServiceRequest(requestResponse);
             } catch (Exception innerEx) {
                 log.error("ERROR SENDING ERROR", innerEx);
             }
         }
     }
 
-    public void reply(Session session, Message consumerMessage, Serializable data) throws JMSException {
-        Message message = session.createObjectMessage(data);
+    public void reply(JMSContext context, Message consumerMessage, Serializable data) throws JMSException {
+        Message message = context.createObjectMessage(data);
         message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        try (MessageProducer producer = session.createProducer(consumerMessage.getJMSReplyTo())) {
-            producer.send(message);
-        }
+        context.createProducer().send(consumerMessage.getJMSReplyTo(), message);
     }
 }

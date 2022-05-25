@@ -35,32 +35,26 @@ public class MQProducers {
         accountCreateAccountContext = connectionFactory.createContext();
         accountCreateAccountContext.setClientID("ServiceRequest::accountCreateAccountContext");
         accountCreateAccountQueue = accountCreateAccountContext.createQueue(mqConsumerUtils.getAccountCreateAccountQueue());
-//        accountCreateAccountProducer = accountCreateAccountContext.createProducer();
 
         accountFundingContext = connectionFactory.createContext();
         accountFundingContext.setClientID("ServiceRequest::accountFundingContext");
         accountFundingQueue = accountFundingContext.createQueue(mqConsumerUtils.getAccountFundingQueue());
-//        accountFundingProducer = accountFundingContext.createProducer();
 
         accountValidateCreditContext = connectionFactory.createContext();
         accountValidateCreditContext.setClientID("ServiceRequest::accountValidateCreditContext");
         accountValidateCreditQueue = accountValidateCreditContext.createQueue(mqConsumerUtils.getAccountValidateCreditQueue());
-//        accountValidateCreditProducer = accountValidateCreditContext.createProducer();
 
         accountValidateDebitContext = connectionFactory.createContext();
         accountValidateDebitContext.setClientID("ServiceRequest::accountValidateDebitContext");
         accountValidateDebitQueue = accountValidateDebitContext.createQueue(mqConsumerUtils.getAccountValidateDebitQueue());
-//        accountValidateDebitProducer = accountValidateDebitContext.createProducer();
 
         statementStatementContext = connectionFactory.createContext();
         statementStatementContext.setClientID("ServiceRequest::statementStatementContext");
         statementStatementQueue = statementStatementContext.createQueue(mqConsumerUtils.getStatementStatementQueue());
-//        statementStatementProducer = statementStatementContext.createProducer();
 
         accountCloseLoanContext = connectionFactory.createContext();
         accountCloseLoanContext.setClientID("ServiceRequest::accountCloseLoanContext");
         accountCloseLoanQueue = accountCloseLoanContext.createQueue(mqConsumerUtils.getAccountCloseLoanQueue());
-//        accountCloseLoanProducer = accountCloseLoanContext.createProducer();
     }
 
     public void accountCreateAccount(CreateAccount createAccount) throws JMSException {

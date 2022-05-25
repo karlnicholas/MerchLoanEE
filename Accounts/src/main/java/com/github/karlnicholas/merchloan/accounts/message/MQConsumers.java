@@ -32,6 +32,7 @@ public class MQConsumers {
     private final JMSContext accountValidateCreditContext;
     private final JMSContext accountValidateDebitContext;
     private final JMSContext accountCloseLoanContext;
+    private final JMSContext accountLoanClosedContext;
     private final JMSContext accountQueryStatementHeaderContext;
     private final JMSContext accountBillingCycleChargeContext;
     private final JMSContext accountQueryLoansToCycleContext;
@@ -65,6 +66,10 @@ public class MQConsumers {
         accountCloseLoanContext = connectionFactory.createContext();
         accountCloseLoanContext.setClientID("Account::accountCloseLoanContext");
         accountCloseLoanContext.createConsumer(accountCloseLoanContext.createQueue(mqConsumerUtils.getAccountCloseLoanQueue())).setMessageListener(this::receivedCloseLoanMessage);
+
+        accountLoanClosedContext = connectionFactory.createContext();
+        accountLoanClosedContext.setClientID("Account::accountLoanClosedContext");
+        accountLoanClosedContext.createConsumer(accountLoanClosedContext.createQueue(mqConsumerUtils.getAccountLoanClosedQueue())).setMessageListener(this::receivedLoanClosedMessage);
 
         accountQueryStatementHeaderContext = connectionFactory.createContext();
         accountQueryStatementHeaderContext.setClientID("Account::accountQueryStatementHeaderContext");
