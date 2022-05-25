@@ -9,6 +9,7 @@ import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.activemq.artemis.jms.client.ActiveMQQueue;
 import org.springframework.stereotype.Component;
 
 import jakarta.jms.*;
@@ -29,15 +30,12 @@ public class MQConsumers {
     private static final String LOG_STRING = "onStatementMessage";
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
-    private final JMSContext statementStatementContext;
-    private final JMSContext statementCloseStatementContext;
-    private final JMSContext statementQueryStatementContext;
-    private final JMSContext statementQueryStatementsContext;
-    private final JMSContext statementQueryMostRecentStatementContext;
+    private final ConnectionFactory connectionFactory;
 
     public MQConsumers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils, StatementService statementService, MQProducers mqProducers, QueryService queryService) throws JMSException {
 //        this.connection = connection;
 //        session = connection.createSession();
+        this.connectionFactory = connectionFactory;
         this.statementService = statementService;
         this.mqProducers = mqProducers;
         this.queryService = queryService;
@@ -45,25 +43,15 @@ public class MQConsumers {
         objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        statementStatementContext = connectionFactory.createContext();
-        statementStatementContext.setClientID("Statement::statementStatementContext");
-        statementStatementContext.createConsumer(statementStatementContext.createQueue(mqConsumerUtils.getStatementStatementQueue())).setMessageListener(this::onStatementMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQQueue.createQueue(mqConsumerUtils.getStatementStatementQueue())).setMessageListener(this::onStatementMessage);
 
-        statementCloseStatementContext = connectionFactory.createContext();
-        statementCloseStatementContext.setClientID("Statement::statementCloseStatementContext");
-        statementCloseStatementContext.createConsumer(statementCloseStatementContext.createQueue(mqConsumerUtils.getStatementCloseStatementQueue())).setMessageListener(this::onCloseStatementMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQQueue.createQueue(mqConsumerUtils.getStatementCloseStatementQueue())).setMessageListener(this::onCloseStatementMessage);
 
-        statementQueryStatementContext = connectionFactory.createContext();
-        statementQueryStatementContext.setClientID("Statement::statementQueryStatementContext");
-        statementQueryStatementContext.createConsumer(statementQueryStatementContext.createQueue(mqConsumerUtils.getStatementQueryStatementQueue())).setMessageListener(this::onQueryStatementMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQQueue.createQueue(mqConsumerUtils.getStatementQueryStatementQueue())).setMessageListener(this::onQueryStatementMessage);
 
-        statementQueryStatementsContext = connectionFactory.createContext();
-        statementQueryStatementsContext.setClientID("Statement::statementQueryStatementsContext");
-        statementQueryStatementsContext.createConsumer(statementQueryStatementsContext.createQueue(mqConsumerUtils.getStatementQueryStatementsQueue())).setMessageListener(this::onQueryStatementsMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQQueue.createQueue(mqConsumerUtils.getStatementQueryStatementsQueue())).setMessageListener(this::onQueryStatementsMessage);
 
-        statementQueryMostRecentStatementContext = connectionFactory.createContext();
-        statementQueryMostRecentStatementContext.setClientID("Statement::statementQueryMostRecentStatementContext");
-        statementQueryMostRecentStatementContext.createConsumer(statementQueryMostRecentStatementContext.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue())).setMessageListener(this::onQueryMostRecentStatementMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQQueue.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue())).setMessageListener(this::onQueryMostRecentStatementMessage);
 
     }
 
@@ -139,7 +127,7 @@ public class MQConsumers {
             log.debug("onQueryMostRecentStatementMessage {}", loanId);
             MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId).map(statement -> MostRecentStatement.builder().id(statement.getId()).loanId(loanId).statementDate(statement.getStatementDate()).endingBalance(statement.getEndingBalance()).startingBalance(statement.getStartingBalance()).build()).orElse(MostRecentStatement.builder().loanId(loanId).build());
 
-            reply(statementQueryMostRecentStatementContext, message, mostRecentStatement);
+            reply(message, mostRecentStatement);
             log.debug("onQueryMostRecentStatementMessage completed {}", loanId);
         } catch (Exception ex) {
             log.error("onQueryMostRecentStatementMessage exception", ex);
@@ -151,7 +139,7 @@ public class MQConsumers {
             UUID loanId = (UUID) ((ObjectMessage) message).getObject();
             log.debug("onQueryStatementMessage {}", loanId);
             String result = queryService.findById(loanId).map(Statement::getStatementDoc).orElse("ERROR: No statement found for id " + loanId);
-            reply(statementQueryStatementContext, message, result);
+            reply(message, result);
         } catch (Exception ex) {
             log.error("onQueryStatementMessage exception", ex);
         }
@@ -162,7 +150,7 @@ public class MQConsumers {
         try {
             UUID id = (UUID) ((ObjectMessage) message).getObject();
             log.debug("onQueryStatementsMessage {}", id);
-            reply(statementQueryStatementsContext, message, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
+            reply(message, objectMapper.writeValueAsString(queryService.findByLoanId(id)));
         } catch (Exception ex) {
             log.error("onQueryStatementsMessage exception", ex);
         }
@@ -210,9 +198,11 @@ public class MQConsumers {
         }
     }
 
-    public void reply(JMSContext context, Message consumerMessage, Serializable data) throws JMSException {
-        Message message = context.createObjectMessage(data);
-        message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        context.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+        try(JMSContext context = connectionFactory.createContext()) {
+            Message message = context.createObjectMessage(data);
+            message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
+            context.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+        }
     }
 }

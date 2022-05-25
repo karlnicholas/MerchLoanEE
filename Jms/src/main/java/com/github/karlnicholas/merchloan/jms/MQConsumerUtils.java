@@ -14,15 +14,15 @@ import jakarta.jms.*;
 @Data
 public class MQConsumerUtils {
 
-    public void bindConsumer(Session session, Queue queue, MessageListener messageListener) throws JMSException {
-        MessageConsumer consumer = session.createConsumer(queue);
-        consumer.setMessageListener(messageListener);
-//        Channel channel = connection.createChannel();
-//        channel.exchangeDeclare(exchange, BuiltinExchangeType.DIRECT, false, true, null);
-//        channel.queueDeclare(queueName, false, exclusive, true, null);
-//        channel.queueBind(queueName, exchange, queueName);
-//        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
-    }
+//    public void bindConsumer(Session session, Queue queue, MessageListener messageListener) throws JMSException {
+//        MessageConsumer consumer = session.createConsumer(queue);
+//        consumer.setMessageListener(messageListener);
+////        Channel channel = connection.createChannel();
+////        channel.exchangeDeclare(exchange, BuiltinExchangeType.DIRECT, false, true, null);
+////        channel.queueDeclare(queueName, false, exclusive, true, null);
+////        channel.queueBind(queueName, exchange, queueName);
+////        channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+//    }
 
     private String exchange;
 

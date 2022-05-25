@@ -13,6 +13,7 @@ import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.springframework.stereotype.Component;
 
 import jakarta.jms.*;
@@ -25,44 +26,24 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumers {
+    private final ConnectionFactory connectionFactory;
     private final ServiceRequestService serviceRequestService;
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
-    private final JMSContext servicerequestContext;
-    private final JMSContext servicerequestQueryIdContext;
-//    private final JMSProducer servicerequestQueryIdProducer;
-    private final JMSContext serviceRequestCheckRequestContext;
-//    private final JMSProducer serviceRequestCheckRequestProducer;
-    private final JMSContext serviceRequestBillLoanContext;
-    private final JMSContext serviceRequestStatementCompleteContext;
 
     public MQConsumers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils, QueryService queryService, ServiceRequestService serviceRequestService) throws JMSException {
+        this.connectionFactory = connectionFactory;
         this.serviceRequestService = serviceRequestService;
         this.queryService = queryService;
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        servicerequestContext = connectionFactory.createContext();
-        servicerequestContext.setClientID("ServiceRequest::servicerequestContext");
-        servicerequestContext.createConsumer(servicerequestContext.createQueue(mqConsumerUtils.getServicerequestQueue())).setMessageListener(this::receivedServiceRequestMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getServicerequestQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedServiceRequestMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getServicerequestQueryIdQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedServiceRequestQueryIdMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getServiceRequestCheckRequestQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedCheckRequestMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getServiceRequestBillLoanQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedServiceRequestBillloanMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getServiceRequestStatementCompleteQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedServiceStatementCompleteMessage);
 
-        servicerequestQueryIdContext = connectionFactory.createContext();
-        servicerequestQueryIdContext.setClientID("ServiceRequest::servicerequestQueryIdContext");
-        servicerequestQueryIdContext.createConsumer(servicerequestQueryIdContext.createQueue(mqConsumerUtils.getServicerequestQueryIdQueue())).setMessageListener(this::receivedServiceRequestQueryIdMessage);
-//        servicerequestQueryIdProducer = servicerequestQueryIdContext.createProducer();
-
-        serviceRequestCheckRequestContext = connectionFactory.createContext();
-        serviceRequestCheckRequestContext.setClientID("ServiceRequest::serviceRequestCheckRequestContext");
-        serviceRequestCheckRequestContext.createConsumer(serviceRequestCheckRequestContext.createQueue(mqConsumerUtils.getServiceRequestCheckRequestQueue())).setMessageListener(this::receivedCheckRequestMessage);
-//        serviceRequestCheckRequestProducer = serviceRequestCheckRequestContext.createProducer();
-
-        serviceRequestBillLoanContext = connectionFactory.createContext();
-        serviceRequestBillLoanContext.setClientID("ServiceRequest::serviceRequestBillLoanContext");
-        serviceRequestBillLoanContext.createConsumer(serviceRequestBillLoanContext.createQueue(mqConsumerUtils.getServiceRequestBillLoanQueue())).setMessageListener(this::receivedServiceRequestBillloanMessage);
-
-        serviceRequestStatementCompleteContext = connectionFactory.createContext();
-        serviceRequestStatementCompleteContext.setClientID("ServiceRequest::serviceRequestStatementCompleteContext");
-        serviceRequestStatementCompleteContext.createConsumer(serviceRequestStatementCompleteContext.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue())).setMessageListener(this::receivedServiceStatementCompleteMessage);
     }
 
     public void receivedServiceRequestQueryIdMessage(Message message) {
@@ -82,7 +63,7 @@ public class MQConsumers {
             } else {
                 response = "ERROR: id not found: " + id;
             }
-            reply(servicerequestQueryIdContext, message, response);
+            reply(message, response);
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
         }
@@ -92,16 +73,18 @@ public class MQConsumers {
     public void receivedCheckRequestMessage(Message message) {
         log.trace("receivedCheckRequestMessage");
         try {
-            reply(serviceRequestCheckRequestContext, message, queryService.checkRequest());
+            reply(message, queryService.checkRequest());
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
         }
     }
 
-    public void reply(JMSContext context, Message consumerMessage, Serializable data) throws JMSException {
-        Message message = context.createObjectMessage(data);
-        message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        context.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+        try ( JMSContext jmsContext = connectionFactory.createContext()) {
+            Message message = jmsContext.createObjectMessage(data);
+            message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
+            jmsContext.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+        }
     }
 
     public void receivedServiceRequestMessage(Message message) {

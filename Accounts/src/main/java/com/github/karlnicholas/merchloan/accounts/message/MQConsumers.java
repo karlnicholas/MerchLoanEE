@@ -11,9 +11,11 @@ import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.springframework.stereotype.Component;
 
 import jakarta.jms.*;
+
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -27,19 +29,10 @@ public class MQConsumers {
     private final QueryService queryService;
     private final ObjectMapper objectMapper;
     private final MQProducers mqProducers;
-    private final JMSContext accountCreateAccountContext;
-    private final JMSContext accountFundingContext;
-    private final JMSContext accountValidateCreditContext;
-    private final JMSContext accountValidateDebitContext;
-    private final JMSContext accountCloseLoanContext;
-    private final JMSContext accountLoanClosedContext;
-    private final JMSContext accountQueryStatementHeaderContext;
-    private final JMSContext accountBillingCycleChargeContext;
-    private final JMSContext accountQueryLoansToCycleContext;
-    private final JMSContext accountQueryAccountIdContext;
-    private final JMSContext accountQueryLoanIdContext;
+    private final ConnectionFactory connectionFactory;
 
     public MQConsumers(ConnectionFactory connectionFactory, MQProducers mqProducers, MQConsumerUtils mqConsumerUtils, AccountManagementService accountManagementService, RegisterManagementService registerManagementService, QueryService queryService) throws JMSException {
+        this.connectionFactory = connectionFactory;
         this.mqProducers = mqProducers;
         this.accountManagementService = accountManagementService;
         this.registerManagementService = registerManagementService;
@@ -47,49 +40,25 @@ public class MQConsumers {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        accountCreateAccountContext = connectionFactory.createContext();
-        accountCreateAccountContext.setClientID("Account::accountCreateAccountContext");
-        accountCreateAccountContext.createConsumer(accountCreateAccountContext.createQueue(mqConsumerUtils.getAccountCreateAccountQueue())).setMessageListener(this::receivedCreateAccountMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountCreateAccountQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedCreateAccountMessage);
 
-        accountFundingContext = connectionFactory.createContext();
-        accountFundingContext.setClientID("Account::accountFundingContext");
-        accountFundingContext.createConsumer(accountFundingContext.createQueue(mqConsumerUtils.getAccountFundingQueue())).setMessageListener(this::receivedFundingMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountFundingQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedFundingMessage);
 
-        accountValidateCreditContext = connectionFactory.createContext();
-        accountValidateCreditContext.setClientID("Account::accountValidateCreditContext");
-        accountValidateCreditContext.createConsumer(accountValidateCreditContext.createQueue(mqConsumerUtils.getAccountValidateCreditQueue())).setMessageListener(this::receivedValidateCreditMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountValidateCreditQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedValidateCreditMessage);
 
-        accountValidateDebitContext = connectionFactory.createContext();
-        accountValidateDebitContext.setClientID("Account::accountValidateDebitContext");
-        accountValidateDebitContext.createConsumer(accountValidateDebitContext.createQueue(mqConsumerUtils.getAccountValidateDebitQueue())).setMessageListener(this::receivedValidateDebitMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountValidateDebitQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedValidateDebitMessage);
 
-        accountCloseLoanContext = connectionFactory.createContext();
-        accountCloseLoanContext.setClientID("Account::accountCloseLoanContext");
-        accountCloseLoanContext.createConsumer(accountCloseLoanContext.createQueue(mqConsumerUtils.getAccountCloseLoanQueue())).setMessageListener(this::receivedCloseLoanMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountLoanClosedQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedLoanClosedMessage);
 
-        accountLoanClosedContext = connectionFactory.createContext();
-        accountLoanClosedContext.setClientID("Account::accountLoanClosedContext");
-        accountLoanClosedContext.createConsumer(accountLoanClosedContext.createQueue(mqConsumerUtils.getAccountLoanClosedQueue())).setMessageListener(this::receivedLoanClosedMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountQueryStatementHeaderQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedStatementHeaderMessage);
 
-        accountQueryStatementHeaderContext = connectionFactory.createContext();
-        accountQueryStatementHeaderContext.setClientID("Account::accountQueryStatementHeaderContext");
-        accountQueryStatementHeaderContext.createConsumer(accountQueryStatementHeaderContext.createQueue(mqConsumerUtils.getAccountQueryStatementHeaderQueue())).setMessageListener(this::receivedStatementHeaderMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountBillingCycleChargeQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedBillingCycleChargeMessage);
 
-        accountBillingCycleChargeContext = connectionFactory.createContext();
-        accountBillingCycleChargeContext.setClientID("Account::accountBillingCycleChargeContext");
-        accountBillingCycleChargeContext.createConsumer(accountBillingCycleChargeContext.createQueue(mqConsumerUtils.getAccountBillingCycleChargeQueue())).setMessageListener(this::receivedBillingCycleChargeMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountQueryLoansToCycleQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedLoansToCycleMessage);
 
-        accountQueryLoansToCycleContext = connectionFactory.createContext();
-        accountQueryLoansToCycleContext.setClientID("Account::accountQueryLoansToCycleContext");
-        accountQueryLoansToCycleContext.createConsumer(accountQueryLoansToCycleContext.createQueue(mqConsumerUtils.getAccountQueryLoansToCycleQueue())).setMessageListener(this::receivedLoansToCycleMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountQueryAccountIdQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedQueryAccountIdMessage);
 
-        accountQueryAccountIdContext = connectionFactory.createContext();
-        accountQueryAccountIdContext.setClientID("Account::accountQueryAccountIdContext");
-        accountQueryAccountIdContext.createConsumer(accountQueryAccountIdContext.createQueue(mqConsumerUtils.getAccountQueryAccountIdQueue())).setMessageListener(this::receivedQueryAccountIdMessage);
-
-        accountQueryLoanIdContext = connectionFactory.createContext();
-        accountQueryLoanIdContext.setClientID("Account::accountQueryLoanIdContext");
-        accountQueryLoanIdContext.createConsumer(accountQueryLoanIdContext.createQueue(mqConsumerUtils.getAccountQueryLoanIdQueue())).setMessageListener(this::receivedQueryLoanIdMessage);
+        connectionFactory.createContext().createConsumer(ActiveMQDestination.createDestination(mqConsumerUtils.getAccountQueryLoanIdQueue(), ActiveMQDestination.TYPE.QUEUE)).setMessageListener(this::receivedQueryLoanIdMessage);
     }
 
     public void receivedStatementHeaderMessage(Message message) {
@@ -99,7 +68,7 @@ public class MQConsumers {
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
             if (serviceRequestResponse.isSuccess())
                 registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-            reply(accountQueryStatementHeaderContext, message, statementHeader);
+            reply(message, statementHeader);
         } catch (Exception ex) {
             log.error("receivedStatementHeaderMessage exception {}", ex.getMessage());
         }
@@ -109,7 +78,7 @@ public class MQConsumers {
         try {
             LocalDate businessDate = (LocalDate) ((ObjectMessage) message).getObject();
             log.trace("receivedLoansToCycleMessage: {}", businessDate);
-            reply(accountQueryLoansToCycleContext, message, (Serializable) accountManagementService.loansToCycle(businessDate));
+            reply(message, (Serializable) accountManagementService.loansToCycle(businessDate));
         } catch (Exception ex) {
             log.error("receivedLoansToCycleMessage exception {}", ex.getMessage());
         }
@@ -127,7 +96,7 @@ public class MQConsumers {
                     .description(re.getDescription())
                     .timeStamp(re.getTimeStamp())
                     .build();
-            reply(accountBillingCycleChargeContext, message, registerEntryMessage);
+            reply(message, registerEntryMessage);
         } catch (Exception ex) {
             log.error("receivedBillingCycleChargeMessage exception {}", ex.getMessage());
         }
@@ -139,9 +108,9 @@ public class MQConsumers {
             log.debug("receivedQueryAccountIdMessage: {}", id);
             Optional<Account> accountOpt = queryService.queryAccountId(id);
             if (accountOpt.isPresent()) {
-                reply(accountQueryAccountIdContext, message, objectMapper.writeValueAsString(accountOpt.get()));
+                reply(message, objectMapper.writeValueAsString(accountOpt.get()));
             } else {
-                reply(accountQueryAccountIdContext, message, "ERROR: id not found: " + id);
+                reply(message, "ERROR: id not found: " + id);
             }
         } catch (Exception ex) {
             log.error("receivedQueryAccountIdMessage exception {}", ex.getMessage());
@@ -154,9 +123,9 @@ public class MQConsumers {
             log.debug("receivedQueryLoanIdMessage: {}", id);
             Optional<LoanDto> r = queryService.queryLoanId(id);
             if (r.isPresent()) {
-                reply(accountQueryLoanIdContext, message, objectMapper.writeValueAsString(r.get()));
+                reply(message, objectMapper.writeValueAsString(r.get()));
             } else {
-                reply(accountQueryLoanIdContext, message, ("ERROR: Loan not found for id: " + id));
+                reply(message, ("ERROR: Loan not found for id: " + id));
             }
             log.debug("receivedQueryLoanIdMessage complete: {}", id);
         } catch (Exception ex) {
@@ -164,10 +133,12 @@ public class MQConsumers {
         }
     }
 
-    public void reply(JMSContext context, Message consumerMessage, Serializable data) throws JMSException {
-        Message message = context.createObjectMessage(data);
-        message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-        context.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+        try (JMSContext jmsContext = connectionFactory.createContext()) {
+            Message message = jmsContext.createObjectMessage(data);
+            message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
+            jmsContext.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+        }
     }
 
     public void receivedCreateAccountMessage(Message message) {

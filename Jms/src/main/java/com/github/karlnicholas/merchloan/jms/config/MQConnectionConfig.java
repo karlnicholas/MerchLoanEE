@@ -23,11 +23,11 @@ public class MQConnectionConfig {
 
     @Bean
     public ConnectionFactory getConnectionFactory() {
-//        JmsPoolConnectionFactory poolingFactory = new JmsPoolConnectionFactory();
-//        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
-//        poolingFactory.setConnectionFactory(connectionFactory);
-//        return poolingFactory;
-        return new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
+        JmsPoolConnectionFactory poolingFactory = new JmsPoolConnectionFactory();
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
+        poolingFactory.setConnectionFactory(connectionFactory);
+        return poolingFactory;
+//        return new ActiveMQConnectionFactory("tcp://" + host + ":" + port);
     }
 
 //    @Bean
