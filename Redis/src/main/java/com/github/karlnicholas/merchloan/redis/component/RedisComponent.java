@@ -1,24 +1,35 @@
 package com.github.karlnicholas.merchloan.redis.component;
 
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.RedisCodec;
 
+import javax.enterprise.context.ApplicationScoped;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 
-@Component
+@ApplicationScoped
 public class RedisComponent {
-    private final RedisTemplate<Long, LocalDate> redisTemplateBusinessDate;
+    private final RedisClient client;
 
-    public RedisComponent(RedisTemplate<Long, LocalDate> redisTemplateBusinessDate) {
-        this.redisTemplateBusinessDate = redisTemplateBusinessDate;
+    public RedisComponent() {
+        client = RedisClient.create("redis://localhost");
     }
 
+
     public void updateBusinessDate(LocalDate businessDate) {
-        redisTemplateBusinessDate.opsForValue().set(1L, businessDate);
+        try ( StatefulRedisConnection<Long, LocalDate> connection = client.connect(new LocalLocalDateRedisCodec()) ) {
+            RedisCommands<Long, LocalDate> commands = connection.sync();
+            commands.getStatefulConnection().sync().set(1L, businessDate);
+        }
     }
 
     public LocalDate getBusinessDate() {
-        return redisTemplateBusinessDate.opsForValue().get(1L);
+        try ( StatefulRedisConnection<Long, LocalDate> connection = client.connect(new LocalLocalDateRedisCodec()) ) {
+            RedisCommands<Long, LocalDate> commands = connection.sync();
+            return commands.getStatefulConnection().sync().get(1L);
+        }
     }
 
 }

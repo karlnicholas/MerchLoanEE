@@ -3,27 +3,28 @@ package com.github.karlnicholas.merchloan.servicerequest.service;
 import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-@Service
+@ApplicationScoped
 public class RetryScheduleService {
     private final ServiceRequestDao serviceRequestDao;
     private final RetryService retryService;
-    private final DataSource dataSource;
+    @Resource(lookup = "java:jboss/datasources/ServiceRequestDS")
+    private DataSource dataSource;
 
-    public RetryScheduleService(ServiceRequestDao serviceRequestDao, RetryService retryService, DataSource dataSource) {
+    @Inject
+    public RetryScheduleService(ServiceRequestDao serviceRequestDao, RetryService retryService) {
         this.serviceRequestDao = serviceRequestDao;
         this.retryService = retryService;
-        this.dataSource = dataSource;
     }
 
-    @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     public void retryService() throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             List<ServiceRequest> serviceRequests = serviceRequestDao.findByStatus(con, ServiceRequestMessage.STATUS.ERROR);

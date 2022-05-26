@@ -3,23 +3,26 @@ package com.github.karlnicholas.merchloan.servicerequest.service;
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class QueryService {
     private final ServiceRequestDao serviceRequestDao;
-    private final DataSource dataSource;
+    @Resource(lookup = "java:jboss/datasources/ServiceRequestDS")
+    private DataSource dataSource;
 
-    public QueryService(ServiceRequestDao serviceRequestDao, DataSource dataSource) {
+    @Inject
+    public QueryService(ServiceRequestDao serviceRequestDao) {
         this.serviceRequestDao = serviceRequestDao;
-        this.dataSource = dataSource;
     }
 
     public Optional<ServiceRequest> getServiceRequest(UUID id) throws SQLException {

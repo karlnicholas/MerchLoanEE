@@ -4,15 +4,15 @@ import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessag
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
 import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class ServiceRequestDao {
 //  id, request, request_type, local_date_time, status, status_message, retry_count

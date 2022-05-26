@@ -2,6 +2,7 @@ package com.github.karlnicholas.merchloan.servicerequest.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
@@ -9,14 +10,12 @@ import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequest
 import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
 import com.github.karlnicholas.merchloan.servicerequest.message.MQProducers;
 import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
-import jakarta.jms.JMSContext;
-import jakarta.jms.Session;
+import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.stereotype.Service;
 
-import jakarta.jms.JMSException;
-
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,21 +23,23 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class ServiceRequestService {
     private final MQProducers mqProducers;
     private final ServiceRequestDao serviceRequestDao;
     private final ObjectMapper objectMapper;
     private final RedisComponent redisComponent;
-    private final DataSource dataSource;
+    @Resource(lookup = "java:jboss/datasources/ServiceRequestDS")
+    private DataSource dataSource;
 
-    public ServiceRequestService(MQProducers mqProducers, ServiceRequestDao serviceRequestDao, ObjectMapper objectMapper, RedisComponent redisComponent, DataSource dataSource) {
+    @Inject
+    public ServiceRequestService(MQProducers mqProducers, ServiceRequestDao serviceRequestDao, RedisComponent redisComponent) {
         this.mqProducers = mqProducers;
         this.serviceRequestDao = serviceRequestDao;
-        this.objectMapper = objectMapper;
         this.redisComponent = redisComponent;
-        this.dataSource = dataSource;
+        this.objectMapper = new ObjectMapper().findAndRegisterModules()
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
@@ -52,7 +53,7 @@ public class ServiceRequestService {
                     .retry(retry)
                     .build());
             return id;
-        } catch (SQLException | JMSException | JsonProcessingException ex) {
+        } catch (SQLException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -72,7 +73,7 @@ public class ServiceRequestService {
                     .build()
             );
             return id;
-        } catch (SQLException | JMSException | JsonProcessingException ex) {
+        } catch (SQLException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -91,7 +92,7 @@ public class ServiceRequestService {
                     .build()
             );
             return id;
-        } catch (SQLException | JMSException | JsonProcessingException ex) {
+        } catch (SQLException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -112,7 +113,7 @@ public class ServiceRequestService {
                     .build()
             );
             return id;
-        } catch (SQLException | JMSException | JsonProcessingException ex) {
+        } catch (SQLException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -133,7 +134,7 @@ public class ServiceRequestService {
                     .build()
             );
             return id;
-        } catch (SQLException | JMSException | JsonProcessingException ex) {
+        } catch (SQLException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -152,7 +153,7 @@ public class ServiceRequestService {
                     .build()
             );
             return id;
-        } catch (SQLException | JMSException | JsonProcessingException ex) {
+        } catch (SQLException | JsonProcessingException ex) {
             throw new ServiceRequestException(ex);
         }
     }
@@ -165,9 +166,8 @@ public class ServiceRequestService {
 
     private void persistRequestWithId(ServiceRequestMessage requestMessage, UUID id) throws JsonProcessingException, SQLException {
         try (Connection con = dataSource.getConnection()) {
-            boolean retry;
+            int retry = 0;
             do {
-                retry = false;
                 try {
                     serviceRequestDao.insert(con,
                             ServiceRequest.builder()
@@ -179,11 +179,16 @@ public class ServiceRequestService {
                                     .retryCount(0)
                                     .build()
                     );
-                } catch (DuplicateKeyException dke) {
+                } catch (SQLException ex) {
+                    if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && retry < 3) {
+                        retry++;
+                    } else {
+                        throw ex;
+                    }
+                    log.error("createAccount {}", ex);
                     id = UUID.randomUUID();
-                    retry = true;
                 }
-            } while (retry);
+            } while (retry < 3);
         }
 
     }
@@ -197,7 +202,7 @@ public class ServiceRequestService {
                 sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
                 serviceRequestDao.update(con, sr);
             } else {
-                log.error("void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) not found: {}", serviceRequestResponse);
+                log.error("void completeServiceRequest(ServiceRequestResponseListener serviceRequestResponse) not found: {}", serviceRequestResponse);
             }
         }
     }

@@ -1,7 +1,5 @@
 package com.github.karlnicholas.merchloan.servicerequest.component;
 
-import jakarta.jms.Session;
-
 import java.util.UUID;
 
 @FunctionalInterface

@@ -133,13 +133,13 @@ public class MQConsumers {
         }
     }
 
-    public void reply(Message consumerMessage, Serializable data) throws JMSException {
-        try (JMSContext jmsContext = connectionFactory.createContext()) {
-            Message message = jmsContext.createObjectMessage(data);
-            message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
-            jmsContext.createProducer().send(consumerMessage.getJMSReplyTo(), message);
-        }
-    }
+//    public void reply(Message consumerMessage, Serializable data) throws JMSException {
+//        try (JMSContext jmsContext = connectionFactory.createContext()) {
+//            Message message = jmsContext.createObjectMessage(data);
+//            message.setJMSCorrelationID(consumerMessage.getJMSCorrelationID());
+//            jmsContext.createProducer().send(consumerMessage.getJMSReplyTo(), message);
+//        }
+//    }
 
     public void receivedCreateAccountMessage(Message message) {
         CreateAccount createAccount = null;

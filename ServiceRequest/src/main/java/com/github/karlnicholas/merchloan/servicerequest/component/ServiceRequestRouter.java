@@ -2,21 +2,21 @@ package com.github.karlnicholas.merchloan.servicerequest.component;
 
 import com.github.karlnicholas.merchloan.apimessage.message.*;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
-import jakarta.jms.Connection;
-import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Component
+@ApplicationScoped
 @Slf4j
 public class ServiceRequestRouter {
     private final Map<String, ExceptionFunction<? super ServiceRequestMessage, UUID>>  routingMap;
 
 
+    @Inject
     public ServiceRequestRouter(ServiceRequestService serviceRequestService) {
         routingMap = new HashMap<>();
         routingMap.put(AccountRequest.class.getName(), serviceRequestService::accountRequest);
