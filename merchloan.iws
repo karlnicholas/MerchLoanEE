@@ -10,26 +10,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="964fe7b4-602d-4f66-8a16-4d9cb8e51c22" name="Changes" comment="Updates.">
-      <change afterPath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/QueryApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/ServiceRequestApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/init/ServiceRequestInit.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Query/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Query/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/api/ApiHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/api/ApiHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/api/QueryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/api/QueryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/message/MQProducers.java" beforeDir="false" afterPath="$PROJECT_DIR$/Query/src/main/java/com/github/karlnicholas/merchloan/query/message/MQProducers.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/api/ServiceRequestController.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/api/ServiceRequestController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/component/ServiceRequestRouter.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/component/ServiceRequestRouter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/message/ServiceRequestBillloanListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/message/ServiceRequestBillloanListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/message/ServiceRequestResponseListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/message/ServiceRequestResponseListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/message/ServiceRequestStatementCompleteListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/message/ServiceRequestStatementCompleteListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/service/QueryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/service/QueryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/service/RetryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/service/RetryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/service/ServiceRequestService.java" beforeDir="false" afterPath="$PROJECT_DIR$/ServiceRequest/src/main/java/com/github/karlnicholas/merchloan/servicerequest/service/ServiceRequestService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchloan.iml" beforeDir="false" afterPath="$PROJECT_DIR$/merchloan.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/merchloan.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/merchloan.ipr" afterDir="false" />
+    <list default="true" id="964fe7b4-602d-4f66-8a16-4d9cb8e51c22" name="Changes" comment="Work in progress: Calls checkRequests.">
       <change beforePath="$PROJECT_DIR$/merchloan.iws" beforeDir="false" afterPath="$PROJECT_DIR$/merchloan.iws" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -171,7 +152,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1653616399509</updated>
-      <workItem from="1653616399720" duration="3483000" />
+      <workItem from="1653616399720" duration="4558000" />
     </task>
     <task id="LOCAL-00001" summary="Updates.">
       <created>1653616519949</created>
@@ -180,7 +161,14 @@
       <option name="project" value="LOCAL" />
       <updated>1653616519949</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Work in progress: Calls checkRequests.">
+      <created>1653620079003</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1653620079003</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -199,6 +187,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Updates." />
-    <option name="LAST_COMMIT_MESSAGE" value="Updates." />
+    <MESSAGE value="Work in progress: Calls checkRequests." />
+    <option name="LAST_COMMIT_MESSAGE" value="Work in progress: Calls checkRequests." />
   </component>
 </project>
