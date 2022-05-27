@@ -4,13 +4,6 @@
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/Accounts/target" />
-      <excludeFolder url="file://$MODULE_DIR$/AccountsDb/target" />
-      <excludeFolder url="file://$MODULE_DIR$/BusinessDate/target" />
-      <excludeFolder url="file://$MODULE_DIR$/Client/target" />
-      <excludeFolder url="file://$MODULE_DIR$/Statement/target" />
-      <excludeFolder url="file://$MODULE_DIR$/StatementDb/target" />
-      <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
