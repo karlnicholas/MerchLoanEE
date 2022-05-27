@@ -30,12 +30,12 @@ public class ServiceRequestStatementCompleteListener implements MessageListener 
 
     @Override
     public void onMessage(Message message) {
-        try {
-            StatementCompleteResponse statementCompleteResponse = (StatementCompleteResponse) ((ObjectMessage) message).getObject();
-            log.debug("ServiceRequestStatementComplete: {}", statementCompleteResponse);
-            serviceRequestService.statementComplete(statementCompleteResponse);
-        } catch (SQLException | JMSException ex) {
-            log.error("ServiceRequestStatementComplete", ex);
-        }
+//        try {
+//            StatementCompleteResponse statementCompleteResponse = (StatementCompleteResponse) ((ObjectMessage) message).getObject();
+//            log.debug("ServiceRequestStatementComplete: {}", statementCompleteResponse);
+//            serviceRequestService.statementComplete(statementCompleteResponse);
+//        } catch (SQLException | JMSException ex) {
+//            log.error("ServiceRequestStatementComplete", ex);
+//        }
     }
 }

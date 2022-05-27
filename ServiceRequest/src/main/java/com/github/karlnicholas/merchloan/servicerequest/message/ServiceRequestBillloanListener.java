@@ -31,19 +31,19 @@ public class ServiceRequestBillloanListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-        try {
-            BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
-            log.debug("ServiceRequestBillloan: {}", billingCycle);
-            serviceRequestService.statementStatementRequest(StatementRequest.builder()
-                            .loanId(billingCycle.getLoanId())
-                            .statementDate(billingCycle.getStatementDate())
-                            .startDate(billingCycle.getStartDate())
-                            .endDate(billingCycle.getEndDate())
-                            .build(),
-                    Boolean.FALSE, null);
-        } catch (ServiceRequestException | JMSException ex) {
-            log.error("ServiceRequestBillloan", ex);
-        }
+//        try {
+//            BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
+//            log.debug("ServiceRequestBillloan: {}", billingCycle);
+//            serviceRequestService.statementStatementRequest(StatementRequest.builder()
+//                            .loanId(billingCycle.getLoanId())
+//                            .statementDate(billingCycle.getStatementDate())
+//                            .startDate(billingCycle.getStartDate())
+//                            .endDate(billingCycle.getEndDate())
+//                            .build(),
+//                    Boolean.FALSE, null);
+//        } catch (ServiceRequestException | JMSException ex) {
+//            log.error("ServiceRequestBillloan", ex);
+//        }
 
     }
 }

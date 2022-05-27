@@ -19,12 +19,12 @@ public class ServiceRequestRouter {
     @Inject
     public ServiceRequestRouter(ServiceRequestService serviceRequestService) {
         routingMap = new HashMap<>();
-        routingMap.put(AccountRequest.class.getName(), serviceRequestService::accountRequest);
-        routingMap.put(FundingRequest.class.getName(), serviceRequestService::fundingRequest);
-        routingMap.put(CloseRequest.class.getName(), serviceRequestService::closeRequest);
-        routingMap.put(CreditRequest.class.getName(), serviceRequestService::accountValidateCreditRequest);
-        routingMap.put(DebitRequest.class.getName(), serviceRequestService::accountValidateDebitRequest);
-        routingMap.put(StatementRequest.class.getName(), serviceRequestService::statementStatementRequest);
+//        routingMap.put(AccountRequest.class.getName(), serviceRequestService::accountRequest);
+//        routingMap.put(FundingRequest.class.getName(), serviceRequestService::fundingRequest);
+//        routingMap.put(CloseRequest.class.getName(), serviceRequestService::closeRequest);
+//        routingMap.put(CreditRequest.class.getName(), serviceRequestService::accountValidateCreditRequest);
+//        routingMap.put(DebitRequest.class.getName(), serviceRequestService::accountValidateDebitRequest);
+//        routingMap.put(StatementRequest.class.getName(), serviceRequestService::statementStatementRequest);
     }
 
     public UUID routeRequest(String clazz, ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws Exception {

@@ -30,12 +30,12 @@ public class ServiceRequestResponseListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-        try {
-            ServiceRequestResponse serviceRequest = (ServiceRequestResponse) ((ObjectMessage) message).getObject();
-            log.debug("ServiceRequestResponse {}", serviceRequest);
-            serviceRequestService.completeServiceRequest(serviceRequest);
-        } catch (SQLException | JMSException ex) {
-            log.error("ServiceRequestResponse", ex);
-        }
+//        try {
+//            ServiceRequestResponse serviceRequest = (ServiceRequestResponse) ((ObjectMessage) message).getObject();
+//            log.debug("ServiceRequestResponse {}", serviceRequest);
+//            serviceRequestService.completeServiceRequest(serviceRequest);
+//        } catch (SQLException | JMSException ex) {
+//            log.error("ServiceRequestResponse", ex);
+//        }
     }
 }
