@@ -14,9 +14,9 @@ import java.util.UUID;
 public class MQProducers {
     @EJB(lookup = "ejb:/servicerequest-1.0-SNAPSHOT/ServiceRequestBeansImpl!com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb")
     private ServiceRequestEjb serviceRequestEjb;
-    @EJB
+    @EJB(lookup = "ejb:/accounts-1.0-SNAPSHOT/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
     private AccountsEjb accountsEjb;
-    @EJB
+    @EJB(lookup = "ejb:/statement-1.0-SNAPSHOT/StatementEjbImpl!com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb")
     private StatementEjb statementEjb;
 
     public Object queryServiceRequest(UUID id) {

@@ -10,11 +10,6 @@ import javax.inject.Inject;
 import javax.jms.*;
 import java.sql.SQLException;
 
-@JMSDestinationDefinition(
-        name = "java:global/jms/queue/ServiceRequestStatementCompleteQueue",
-        interfaceName = "javax.jms.Queue",
-        destinationName = "ServiceRequestStatementCompleteQueue"
-)
 @MessageDriven(name = "ServiceRequestStatementCompleteMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/ServiceRequestStatementCompleteQueue"),

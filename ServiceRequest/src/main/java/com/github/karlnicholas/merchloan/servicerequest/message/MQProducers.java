@@ -13,19 +13,19 @@ import javax.jms.Queue;
 @Slf4j
 public class MQProducers {
     @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
-    private static ConnectionFactory connectionFactory;
+    private ConnectionFactory connectionFactory;
     @Resource(lookup = "java:global/jms/queue/AccountCreateAccountQueue")
-    private static Queue accountCreateAccountQueue;
+    private Queue accountCreateAccountQueue;
     @Resource(lookup = "java:global/jms/queue/AccountFundingQueue")
-    private static Queue accountFundingQueue;
+    private Queue accountFundingQueue;
     @Resource(lookup = "java:global/jms/queue/AccountValidateCreditQueue")
-    private static Queue accountValidateCreditQueue;
+    private Queue accountValidateCreditQueue;
     @Resource(lookup = "java:global/jms/queue/AccountValidateDebitQueue")
-    private static Queue accountValidateDebitQueue;
+    private Queue accountValidateDebitQueue;
     @Resource(lookup = "java:global/jms/queue/StatementStatementQueue")
-    private static Queue statementStatementQueue;
+    private Queue statementStatementQueue;
     @Resource(lookup = "java:global/jms/queue/AccountCloseLoanQueue")
-    private static Queue accountCloseLoanQueue;
+    private Queue accountCloseLoanQueue;
 
     public void accountCreateAccount(CreateAccount createAccount) {
         log.debug("accountCreateAccount: {}", createAccount);

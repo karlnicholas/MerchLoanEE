@@ -29,8 +29,7 @@ import java.util.UUID;
 public class StatementService {
     @Inject
     private StatementDao statementDao;
-    @Inject
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     @Resource(lookup = "java:jboss/datasources/StatementDS")
     private DataSource dataSource;
 

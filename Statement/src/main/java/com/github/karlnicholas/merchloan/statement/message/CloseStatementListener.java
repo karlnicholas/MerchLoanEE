@@ -16,11 +16,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
 
-@JMSDestinationDefinition(
-        name = "java:global/jms/queue/StatementCloseStatementQueue",
-        interfaceName = "javax.jms.Queue",
-        destinationName = "StatementCloseStatementQueue"
-)
 @MessageDriven(name = "CloseStatementMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/StatementCloseStatementQueue"),

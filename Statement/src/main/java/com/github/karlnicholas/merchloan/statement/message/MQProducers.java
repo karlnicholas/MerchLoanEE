@@ -6,11 +6,13 @@ import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSContext;
 import javax.jms.Queue;
 
 @Slf4j
+@ApplicationScoped
 public class MQProducers {
     @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
     private ConnectionFactory connectionFactory;

@@ -11,11 +11,6 @@ import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
 
-@JMSDestinationDefinition(
-        name = "java:global/jms/queue/AccountValidateDebitQueue",
-        interfaceName = "javax.jms.Queue",
-        destinationName = "AccountValidateDebitQueue"
-)
 @MessageDriven(name = "ValidateDebitMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountValidateDebitQueue"),
