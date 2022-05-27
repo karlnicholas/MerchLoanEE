@@ -16,14 +16,11 @@ import java.util.UUID;
 @ApplicationScoped
 @Slf4j
 public class QueryService {
-    private final ServiceRequestDao serviceRequestDao;
+    @Inject
+    private ServiceRequestDao serviceRequestDao;
     @Resource(lookup = "java:jboss/datasources/ServiceRequestDS")
     private DataSource dataSource;
 
-    @Inject
-    public QueryService(ServiceRequestDao serviceRequestDao) {
-        this.serviceRequestDao = serviceRequestDao;
-    }
 
     public Optional<ServiceRequest> getServiceRequest(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {

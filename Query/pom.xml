@@ -10,9 +10,12 @@
     <artifactId>query</artifactId>
     <name>Query</name>
     <description>Query</description>
+    <packaging>war</packaging>
+
     <properties>
         <java.version>11</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>javax</groupId>
@@ -35,5 +38,13 @@
             <artifactId>servicerequestinterface</artifactId>
         </dependency>
     </dependencies>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

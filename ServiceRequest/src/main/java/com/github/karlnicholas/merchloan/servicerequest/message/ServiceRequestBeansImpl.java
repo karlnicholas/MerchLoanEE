@@ -8,7 +8,9 @@ import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestBeans;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.ejb.*;
+import javax.ejb.EJBException;
+import javax.ejb.Remote;
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.Optional;

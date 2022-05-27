@@ -1,27 +1,8 @@
 package com.github.karlnicholas.merchloan.servicerequest.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.karlnicholas.merchloan.apimessage.message.*;
-import com.github.karlnicholas.merchloan.jmsmessage.*;
-import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
-import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequestException;
-import com.github.karlnicholas.merchloan.servicerequest.dao.ServiceRequestDao;
-import com.github.karlnicholas.merchloan.servicerequest.message.MQProducers;
-import com.github.karlnicholas.merchloan.servicerequest.model.ServiceRequest;
-import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
 
 @ApplicationScoped
 @Slf4j
@@ -170,7 +151,7 @@ public class ServiceRequestService {
 //            do {
 //                try {
 //                    serviceRequestDao.insert(con,
-//                            ServiceRequest.builder()
+//                            ServiceRequestInit.builder()
 //                                    .id(id)
 //                                    .request(objectMapper.writeValueAsString(requestMessage))
 //                                    .localDateTime(LocalDateTime.now())
@@ -195,9 +176,9 @@ public class ServiceRequestService {
 //
 //    public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) throws SQLException {
 //        try (Connection con = dataSource.getConnection()) {
-//            Optional<ServiceRequest> srQ = serviceRequestDao.findById(con, serviceRequestResponse.getId());
+//            Optional<ServiceRequestInit> srQ = serviceRequestDao.findById(con, serviceRequestResponse.getId());
 //            if (srQ.isPresent()) {
-//                ServiceRequest sr = srQ.get();
+//                ServiceRequestInit sr = srQ.get();
 //                sr.setStatus(serviceRequestResponse.getStatus());
 //                sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
 //                serviceRequestDao.update(con, sr);

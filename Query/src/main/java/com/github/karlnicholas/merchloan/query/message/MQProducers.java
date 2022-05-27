@@ -3,10 +3,8 @@ package com.github.karlnicholas.merchloan.query.message;
 import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestBeans;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
-import javax.jms.Queue;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -14,8 +12,8 @@ import java.util.UUID;
 public class MQProducers {
 //    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
 //    private ConnectionFactory connectionFactory;
-    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueryIdQueue")
-    private Queue serviceRequestQueryIdQueue;
+//    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueryIdQueue")
+//    private Queue serviceRequestQueryIdQueue;
 //    @Resource(lookup = "java:global/jms/queue/AccountQueryAccountIdQueue")
 //    private Queue accountQueryAccountIdQueue;
 //    @Resource(lookup = "java:global/jms/queue/AccountQueryLoanIdQueue")
@@ -24,7 +22,7 @@ public class MQProducers {
 //    private Queue statementQueryStatementQueue;
 //    @Resource(lookup = "java:global/jms/queue/StatementQueryStatementsQueue")
 //    private Queue statementQueryStatementsQueue;
-    @EJB
+    @EJB(lookup = "ejb:/servicerequest-1.0-SNAPSHOT/ServiceRequestBeansImpl!com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestBeans")
     private ServiceRequestBeans serviceRequestBeans;
 
     public Object queryServiceRequest(UUID id) throws Throwable {

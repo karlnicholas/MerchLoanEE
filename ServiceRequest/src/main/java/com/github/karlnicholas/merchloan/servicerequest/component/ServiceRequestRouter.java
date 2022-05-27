@@ -1,6 +1,6 @@
 package com.github.karlnicholas.merchloan.servicerequest.component;
 
-import com.github.karlnicholas.merchloan.apimessage.message.*;
+import com.github.karlnicholas.merchloan.apimessage.message.ServiceRequestMessage;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,10 +14,11 @@ import java.util.UUID;
 @Slf4j
 public class ServiceRequestRouter {
     private final Map<String, ExceptionFunction<? super ServiceRequestMessage, UUID>>  routingMap;
-
+    @Inject
+    private ServiceRequestService serviceRequestService;
 
     @Inject
-    public ServiceRequestRouter(ServiceRequestService serviceRequestService) {
+    public ServiceRequestRouter() {
         routingMap = new HashMap<>();
 //        routingMap.put(AccountRequest.class.getName(), serviceRequestService::accountRequest);
 //        routingMap.put(FundingRequest.class.getName(), serviceRequestService::fundingRequest);

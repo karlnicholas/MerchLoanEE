@@ -1,15 +1,14 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
-import com.github.karlnicholas.merchloan.apimessage.message.StatementRequest;
-import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
-import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequestException;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.*;
+import javax.jms.JMSDestinationDefinition;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 
 @JMSDestinationDefinition(
         name = "java:global/jms/queue/ServiceRequestBillloanQueue",
@@ -22,12 +21,9 @@ import javax.jms.*;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class ServiceRequestBillloanListener implements MessageListener {
-    private final ServiceRequestService serviceRequestService;
-
     @Inject
-    public ServiceRequestBillloanListener(ServiceRequestService serviceRequestService) {
-        this.serviceRequestService = serviceRequestService;
-    }
+    private ServiceRequestService serviceRequestService;
+
 
     @Override
     public void onMessage(Message message) {

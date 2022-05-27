@@ -3,10 +3,8 @@ package com.github.karlnicholas.merchloan.redis.component;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.core.codec.RedisCodec;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.nio.ByteBuffer;
 import java.time.LocalDate;
 
 @ApplicationScoped

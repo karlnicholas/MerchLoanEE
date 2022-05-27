@@ -13,12 +13,12 @@ import javax.inject.Inject;
 @ApplicationScoped
 @Slf4j
 public class RetryService {
-    private final ServiceRequestRouter serviceRequestRouter;
+    @Inject
+    private ServiceRequestRouter serviceRequestRouter;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public RetryService(ServiceRequestRouter serviceRequestRouter) {
-        this.serviceRequestRouter = serviceRequestRouter;
+    public RetryService() {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }

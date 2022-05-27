@@ -1,11 +1,8 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
-import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
-import javax.jms.*;
 
 @ApplicationScoped
 @Slf4j

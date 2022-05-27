@@ -1,14 +1,14 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
-import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.*;
-import java.sql.SQLException;
+import javax.jms.JMSDestinationDefinition;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 
 @JMSDestinationDefinition(
         name = "java:global/jms/queue/ServiceRequestStatementCompleteQueue",
@@ -21,12 +21,9 @@ import java.sql.SQLException;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class ServiceRequestStatementCompleteListener implements MessageListener {
-    private final ServiceRequestService serviceRequestService;
-
     @Inject
-    public ServiceRequestStatementCompleteListener(ServiceRequestService serviceRequestService) {
-        this.serviceRequestService = serviceRequestService;
-    }
+    private ServiceRequestService serviceRequestService;
+
 
     @Override
     public void onMessage(Message message) {
