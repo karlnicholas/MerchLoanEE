@@ -39,7 +39,7 @@ public class AccountsEjbImpl implements AccountsEjb {
     }
 
     @Override
-    public StatementHeader statementHeader(StatementHeader statementHeader) throws Throwable {
+    public StatementHeader statementHeader(StatementHeader statementHeader) throws EJBException {
         try {
             log.debug("receivedStatementHeaderMessage {}", statementHeader);
             ServiceRequestResponse serviceRequestResponse = accountManagementService.statementHeader(statementHeader);
@@ -48,23 +48,23 @@ public class AccountsEjbImpl implements AccountsEjb {
             return statementHeader;
         } catch (Exception ex) {
             log.error("receivedStatementHeaderMessage exception {}", ex.getMessage());
-            throw new EJBException(ex).initCause(ex);
+            throw new EJBException(ex);
         }
     }
 
     @Override
-    public List<BillingCycle> loansToCycle(LocalDate businessDate) throws Throwable {
+    public List<BillingCycle> loansToCycle(LocalDate businessDate) throws EJBException {
         try {
             log.trace("receivedLoansToCycleMessage: {}", businessDate);
             return accountManagementService.loansToCycle(businessDate);
         } catch (Exception ex) {
             log.error("receivedLoansToCycleMessage exception {}", ex.getMessage());
-            throw new EJBException(ex).initCause(ex);
+            throw new EJBException(ex);
         }
     }
 
     @Override
-    public RegisterEntryMessage billingCycleCharge(BillingCycleCharge billingCycleCharge) throws Throwable {
+    public RegisterEntryMessage billingCycleCharge(BillingCycleCharge billingCycleCharge) throws EJBException {
         try {
             log.debug("receivedBillingCycleChargeMessage: {}", billingCycleCharge);
             RegisterEntry re = registerManagementService.billingCycleCharge(billingCycleCharge);
@@ -78,12 +78,12 @@ public class AccountsEjbImpl implements AccountsEjb {
             return registerEntryMessage;
         } catch (Exception ex) {
             log.error("receivedBillingCycleChargeMessage exception {}", ex.getMessage());
-            throw new EJBException(ex).initCause(ex);
+            throw new EJBException(ex);
         }
     }
 
     @Override
-    public String queryAccountId(UUID id) throws Throwable {
+    public String queryAccountId(UUID id) throws EJBException {
         try {
             log.debug("receivedQueryAccountIdMessage: {}", id);
             Optional<Account> accountOpt = queryService.queryAccountId(id);
@@ -94,12 +94,12 @@ public class AccountsEjbImpl implements AccountsEjb {
             }
         } catch (Exception ex) {
             log.error("receivedQueryAccountIdMessage exception {}", ex.getMessage());
-            throw new EJBException(ex).initCause(ex);
+            throw new EJBException(ex);
         }
     }
 
     @Override
-    public String queryLoanId(UUID id) throws Throwable {
+    public String queryLoanId(UUID id) throws EJBException {
         try {
             log.debug("receivedQueryLoanIdMessage: {}", id);
             Optional<LoanDto> r = queryService.queryLoanId(id);
@@ -110,7 +110,7 @@ public class AccountsEjbImpl implements AccountsEjb {
             }
         } catch (Exception ex) {
             log.error("receivedQueryLoanIdMessage exception {}", ex.getMessage());
-            throw new EJBException(ex).initCause(ex);
+            throw new EJBException(ex);
         }
     }
 }

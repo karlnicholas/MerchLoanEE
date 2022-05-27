@@ -1,14 +1,14 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
+import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.JMSDestinationDefinition;
-import javax.jms.Message;
-import javax.jms.MessageListener;
+import javax.jms.*;
+import java.sql.SQLException;
 
 @JMSDestinationDefinition(
         name = "java:global/jms/queue/ServiceRequestResponseQueue",
@@ -26,12 +26,12 @@ public class ServiceRequestResponseListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-//        try {
-//            ServiceRequestResponse serviceRequest = (ServiceRequestResponse) ((ObjectMessage) message).getObject();
-//            log.debug("ServiceRequestResponse {}", serviceRequest);
-//            serviceRequestService.completeServiceRequest(serviceRequest);
-//        } catch (SQLException | JMSException ex) {
-//            log.error("ServiceRequestResponse", ex);
-//        }
+        try {
+            ServiceRequestResponse serviceRequest = (ServiceRequestResponse) ((ObjectMessage) message).getObject();
+            log.debug("ServiceRequestResponse {}", serviceRequest);
+            serviceRequestService.completeServiceRequest(serviceRequest);
+        } catch (SQLException | JMSException ex) {
+            log.error("ServiceRequestResponse", ex);
+        }
     }
 }

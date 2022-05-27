@@ -42,7 +42,7 @@ public class QueryService {
     private RegisterEntryDao registerEntryDao;
     @Inject
     private MQProducers mqProducers;
-    @EJB
+    @EJB(lookup = "ejb:/statement-1.0-SNAPSHOT/StatementEjbImpl!com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb")
     private StatementEjb statementEjb;
 
     public Optional<Account> queryAccountId(UUID id) throws SQLException {

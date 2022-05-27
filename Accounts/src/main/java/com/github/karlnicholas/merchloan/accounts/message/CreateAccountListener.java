@@ -26,7 +26,7 @@ public class CreateAccountListener implements MessageListener {
     private AccountManagementService accountManagementService;
     @Inject
     private JMSContext jmsContext;
-    @Resource(lookup = "java:jboss/exported/jms/queue/ServiceRequestQueue")
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue serviceRequestQueue;
 
     @Override

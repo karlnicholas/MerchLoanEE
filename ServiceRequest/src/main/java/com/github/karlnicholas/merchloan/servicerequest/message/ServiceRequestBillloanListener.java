@@ -1,14 +1,15 @@
 package com.github.karlnicholas.merchloan.servicerequest.message;
 
+import com.github.karlnicholas.merchloan.apimessage.message.StatementRequest;
+import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
+import com.github.karlnicholas.merchloan.servicerequest.component.ServiceRequestException;
 import com.github.karlnicholas.merchloan.servicerequest.service.ServiceRequestService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.JMSDestinationDefinition;
-import javax.jms.Message;
-import javax.jms.MessageListener;
+import javax.jms.*;
 
 @JMSDestinationDefinition(
         name = "java:global/jms/queue/ServiceRequestBillloanQueue",
@@ -27,19 +28,19 @@ public class ServiceRequestBillloanListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-//        try {
-//            BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
-//            log.debug("ServiceRequestBillloan: {}", billingCycle);
-//            serviceRequestService.statementStatementRequest(StatementRequest.builder()
-//                            .loanId(billingCycle.getLoanId())
-//                            .statementDate(billingCycle.getStatementDate())
-//                            .startDate(billingCycle.getStartDate())
-//                            .endDate(billingCycle.getEndDate())
-//                            .build(),
-//                    Boolean.FALSE, null);
-//        } catch (ServiceRequestException | JMSException ex) {
-//            log.error("ServiceRequestBillloan", ex);
-//        }
+        try {
+            BillingCycle billingCycle = (BillingCycle) ((ObjectMessage) message).getObject();
+            log.debug("ServiceRequestBillloan: {}", billingCycle);
+            serviceRequestService.statementStatementRequest(StatementRequest.builder()
+                            .loanId(billingCycle.getLoanId())
+                            .statementDate(billingCycle.getStatementDate())
+                            .startDate(billingCycle.getStartDate())
+                            .endDate(billingCycle.getEndDate())
+                            .build(),
+                    Boolean.FALSE, null);
+        } catch (ServiceRequestException | JMSException ex) {
+            log.error("ServiceRequestBillloan", ex);
+        }
 
     }
 }

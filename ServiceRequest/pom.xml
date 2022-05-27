@@ -58,6 +58,10 @@
             <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>dto</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>jmsmessage</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

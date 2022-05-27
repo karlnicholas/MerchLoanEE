@@ -14,11 +14,11 @@ import javax.jms.Queue;
 public class MQProducers {
     @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
     private ConnectionFactory connectionFactory;
-    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue servicerequestQueue;
-    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountLoanClosedQueue")
     private Queue accountLoanClosedQueue;
-    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestStatementCompleteQueue")
     private Queue serviceRequestStatementCompleteQueue;
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {

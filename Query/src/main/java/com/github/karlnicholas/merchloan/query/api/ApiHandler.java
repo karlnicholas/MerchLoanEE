@@ -34,7 +34,7 @@ public class ApiHandler {
 //        return Response.ok(mqProducers.queryStatements(id), MediaType.APPLICATION_JSON).build();
 //    }
 
-    public Response getCheckRequests() throws Throwable {
+    public Response getCheckRequests() throws EJBException {
         return Response.ok(mqProducers.queryCheckRequest(), MediaType.APPLICATION_JSON).build();
     }
 }

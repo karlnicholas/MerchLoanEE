@@ -55,7 +55,7 @@ public class QueryController {
     @GET
     @Path("checkrequests")
     @Produces(MediaType.APPLICATION_JSON)
-    public String checkRequests() throws Throwable {
+    public String checkRequests() throws EJBException {
         log.debug("checkRequests");
         return apiHandler.getCheckRequests().readEntity(Boolean.class).toString();
     }

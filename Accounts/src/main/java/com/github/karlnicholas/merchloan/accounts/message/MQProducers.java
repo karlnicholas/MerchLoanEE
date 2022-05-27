@@ -16,7 +16,7 @@ import javax.jms.JMSException;
 public class MQProducers {
     @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
     private ConnectionFactory connectionFactory;
-    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Destination serviceRequestQueue;
     @Resource(lookup = "java:global/jms/queue/StatementCloseStatementQueue")
     private Destination statementCloseStatementQueue;

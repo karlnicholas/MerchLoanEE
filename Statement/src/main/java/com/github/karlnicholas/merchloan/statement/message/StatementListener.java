@@ -36,7 +36,7 @@ public class StatementListener implements MessageListener {
     private StatementService statementService;
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
-    @EJB
+    @EJB(lookup = "ejb:/accounts-1.0-SNAPSHOT/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
     private AccountsEjb accountsEjb;
     @Override
     public void onMessage(Message message) {
@@ -91,7 +91,7 @@ public class StatementListener implements MessageListener {
                 mqProducers.accountLoanClosed(statementHeader);
                 loanClosed = true;
             }
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             log.error("StatementListener", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
