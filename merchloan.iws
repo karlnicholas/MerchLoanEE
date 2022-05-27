@@ -11,6 +11,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="964fe7b4-602d-4f66-8a16-4d9cb8e51c22" name="Changes" comment="Work in progress: Calls checkRequests.">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/merchloan.ipr" beforeDir="false" afterPath="$PROJECT_DIR$/merchloan.ipr" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/merchloan.iws" beforeDir="false" afterPath="$PROJECT_DIR$/merchloan.iws" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -50,7 +52,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "SONARLINT_PRECOMMIT_ANALYSIS": "true",
     "WebServerToolWindowFactoryState": "false",
-    "project.structure.last.edited": "Artifacts",
+    "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.36327344"
   }
@@ -152,7 +154,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1653616399509</updated>
-      <workItem from="1653616399720" duration="4558000" />
+      <workItem from="1653616399720" duration="5295000" />
     </task>
     <task id="LOCAL-00001" summary="Updates.">
       <created>1653616519949</created>
@@ -168,7 +170,14 @@
       <option name="project" value="LOCAL" />
       <updated>1653620079003</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Work in progress: Calls checkRequests.">
+      <created>1653621059212</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1653621059212</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
