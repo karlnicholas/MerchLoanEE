@@ -10,6 +10,7 @@
     <artifactId>accounts</artifactId>
     <name>Accounts</name>
     <description>Accounts</description>
+    <packaging>war</packaging>
     <properties>
         <java.version>11</java.version>
     </properties>
@@ -33,10 +34,6 @@
             <artifactId>redis</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>jms</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
@@ -46,6 +43,30 @@
             <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>sqlutil</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>jmsmessage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>accountsinterface</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>statementinterface</artifactId>
+        </dependency>
     </dependencies>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

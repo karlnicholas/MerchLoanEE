@@ -10,8 +10,10 @@ import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.github.karlnicholas.merchloan.statement.dao.StatementDao;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -22,16 +24,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class StatementService {
-    private final StatementDao statementDao;
-    private final ObjectMapper objectMapper;
-    private final DataSource dataSource;
+    @Inject
+    private StatementDao statementDao;
+    @Inject
+    private ObjectMapper objectMapper;
+    @Resource(lookup = "java:jboss/datasources/StatementDS")
+    private DataSource dataSource;
 
-    public StatementService(StatementDao statementDao, DataSource dataSource) {
-        this.statementDao = statementDao;
-        this.dataSource = dataSource;
+    public StatementService() {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 

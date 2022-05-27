@@ -1,48 +1,32 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
-import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
-import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.activemq.artemis.jms.client.ActiveMQQueue;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import jakarta.jms.*;
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSContext;
+import javax.jms.JMSException;
 
-import java.util.UUID;
-
-@Service
+@ApplicationScoped
 @Slf4j
 public class MQProducers {
-    private final ConnectionFactory connectionFactory;
-    private final ReplyWaitingHandler replyWaitingHandler;
-    private final Destination accountsReplyQueue;
-    private final Destination servicerequestQueue;
-    private final Destination statementCloseStatementQueue;
-    private final Destination statementQueryMostRecentStatementQueue;
-
-    @Autowired
-    public MQProducers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils) throws JMSException {
-        this.connectionFactory = connectionFactory;
-        servicerequestQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getServicerequestQueue());
-
-        statementCloseStatementQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getStatementCloseStatementQueue());
-
-        statementQueryMostRecentStatementQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getStatementQueryMostRecentStatementQueue());
-
-        replyWaitingHandler = new ReplyWaitingHandler();
-        JMSContext jmsContext = connectionFactory.createContext();
-        accountsReplyQueue = jmsContext.createTemporaryQueue();
-        jmsContext.createConsumer(accountsReplyQueue).setMessageListener(replyWaitingHandler::onMessage);
-
-    }
+    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
+    private ConnectionFactory connectionFactory;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    private Destination serviceRequestQueue;
+    @Resource(lookup = "java:global/jms/queue/StatementCloseStatementQueue")
+    private Destination statementCloseStatementQueue;
+    @Resource(lookup = "java:global/jms/queue/StatementQueryMostRecentStatementQueue")
+    private Destination statementQueryMostRecentStatementQueue;
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws JMSException {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(servicerequestQueue, jmsContext.createObjectMessage(serviceRequest));
+            jmsContext.createProducer().send(serviceRequestQueue, jmsContext.createObjectMessage(serviceRequest));
         }
     }
 
@@ -53,16 +37,16 @@ public class MQProducers {
         }
     }
 
-    public Object queryMostRecentStatement(UUID loanId) throws InterruptedException, JMSException {
-        log.debug("queryMostRecentStatement: {}", loanId);
-        String responseKey = UUID.randomUUID().toString();
-        replyWaitingHandler.put(responseKey);
-        try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            Message message = jmsContext.createObjectMessage(loanId);
-            message.setJMSCorrelationID(responseKey);
-            message.setJMSReplyTo(accountsReplyQueue);
-            jmsContext.createProducer().send(statementQueryMostRecentStatementQueue, message);
-            return replyWaitingHandler.getReply(responseKey);
-        }
-    }
+//    public Object queryMostRecentStatement(UUID loanId) throws InterruptedException, JMSException {
+//        log.debug("queryMostRecentStatement: {}", loanId);
+//        String responseKey = UUID.randomUUID().toString();
+//        replyWaitingHandler.put(responseKey);
+//        try ( JMSContext jmsContext = connectionFactory.createContext()) {
+//            Message message = jmsContext.createObjectMessage(loanId);
+//            message.setJMSCorrelationID(responseKey);
+//            message.setJMSReplyTo(accountsReplyQueue);
+//            jmsContext.createProducer().send(statementQueryMostRecentStatementQueue, message);
+//            return replyWaitingHandler.getReply(responseKey);
+//        }
+//    }
 }

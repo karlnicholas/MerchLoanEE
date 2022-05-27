@@ -1,9 +1,10 @@
 package com.github.karlnicholas.merchloan.query.message;
 
-import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestBeans;
+import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.enterprise.context.ApplicationScoped;
 import java.util.UUID;
 
@@ -22,15 +23,15 @@ public class MQProducers {
 //    private Queue statementQueryStatementQueue;
 //    @Resource(lookup = "java:global/jms/queue/StatementQueryStatementsQueue")
 //    private Queue statementQueryStatementsQueue;
-    @EJB(lookup = "ejb:/servicerequest-1.0-SNAPSHOT/ServiceRequestBeansImpl!com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestBeans")
-    private ServiceRequestBeans serviceRequestBeans;
+    @EJB(lookup = "ejb:/servicerequest-1.0-SNAPSHOT/ServiceRequestBeansImpl!com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb")
+    private ServiceRequestEjb serviceRequestEjb;
 
-    public Object queryServiceRequest(UUID id) throws Throwable {
-        return serviceRequestBeans.queryId(id);
+    public Object queryServiceRequest(UUID id) throws EJBException {
+        return serviceRequestEjb.queryId(id);
     }
 
-    public Object queryCheckRequest() throws Throwable {
-        return serviceRequestBeans.checkRequest();
+    public Object queryCheckRequest() throws EJBException {
+        return serviceRequestEjb.checkRequest();
     }
 
     //    public Object queryAccount(UUID id) {

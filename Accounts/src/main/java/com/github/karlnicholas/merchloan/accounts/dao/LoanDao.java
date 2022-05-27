@@ -3,15 +3,15 @@ package com.github.karlnicholas.merchloan.accounts.dao;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.StatementDatesConverter;
 import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
-import org.springframework.stereotype.Service;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 public class LoanDao {
     //id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state
     public void insert(Connection con, Loan loan) throws SQLException {

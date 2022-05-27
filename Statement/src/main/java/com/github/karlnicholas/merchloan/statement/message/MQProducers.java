@@ -1,73 +1,25 @@
 package com.github.karlnicholas.merchloan.statement.message;
 
-import com.github.karlnicholas.merchloan.jms.MQConsumerUtils;
-import com.github.karlnicholas.merchloan.jms.ReplyWaitingHandler;
-import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.activemq.artemis.jms.client.ActiveMQQueue;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import jakarta.jms.*;
+import javax.annotation.Resource;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSContext;
+import javax.jms.Queue;
 
-import java.util.UUID;
-
-@Component
 @Slf4j
 public class MQProducers {
-    private final ConnectionFactory connectionFactory;
-    private final ReplyWaitingHandler replyWaitingHandler;
-    private final Queue statementReplyQueue;
-    private final Queue accountBillingCycleChargeQueue;
-    private final Queue accountQueryStatementHeaderQueue;
-    private final Queue servicerequestQueue;
-    private final Queue accountLoanClosedQueue;
-    private final Queue serviceRequestStatementCompleteQueue;
-
-    @Autowired
-    public MQProducers(ConnectionFactory connectionFactory, MQConsumerUtils mqConsumerUtils) {
-        this.connectionFactory = connectionFactory;
-
-        accountBillingCycleChargeQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getAccountBillingCycleChargeQueue());
-        accountQueryStatementHeaderQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getAccountQueryStatementHeaderQueue());
-        servicerequestQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getServicerequestQueue());
-        accountLoanClosedQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getAccountLoanClosedQueue());
-        serviceRequestStatementCompleteQueue = ActiveMQQueue.createQueue(mqConsumerUtils.getServiceRequestStatementCompleteQueue());
-
-        replyWaitingHandler = new ReplyWaitingHandler();
-        JMSContext consumerContext = connectionFactory.createContext();
-        statementReplyQueue = consumerContext.createTemporaryQueue();
-        consumerContext.createConsumer(statementReplyQueue).setMessageListener(replyWaitingHandler::onMessage);
-    }
-
-    public Object accountBillingCycleCharge(BillingCycleCharge billingCycleCharge) throws InterruptedException, JMSException {
-        log.debug("accountBillingCycleCharge: {}", billingCycleCharge);
-        String responseKey = UUID.randomUUID().toString();
-        replyWaitingHandler.put(responseKey);
-        try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            Message message = jmsContext.createObjectMessage(billingCycleCharge);
-            message.setJMSCorrelationID(responseKey);
-            message.setJMSReplyTo(statementReplyQueue);
-            jmsContext.createProducer().send(accountBillingCycleChargeQueue, message);
-            return replyWaitingHandler.getReply(responseKey);
-        }
-    }
-
-    public Object accountQueryStatementHeader(StatementHeader statementHeader) throws InterruptedException, JMSException {
-        log.debug("accountQueryStatementHeader: {}", statementHeader);
-        String responseKey = UUID.randomUUID().toString();
-        replyWaitingHandler.put(responseKey);
-        try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            Message message = jmsContext.createObjectMessage(statementHeader);
-            message.setJMSCorrelationID(responseKey);
-            message.setJMSReplyTo(statementReplyQueue);
-            jmsContext.createProducer().send(accountQueryStatementHeaderQueue, message);
-            return replyWaitingHandler.getReply(responseKey);
-        }
-    }
+    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
+    private ConnectionFactory connectionFactory;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    private Queue servicerequestQueue;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    private Queue accountLoanClosedQueue;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestQueue")
+    private Queue serviceRequestStatementCompleteQueue;
 
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
@@ -76,14 +28,14 @@ public class MQProducers {
         }
     }
 
-    public void accountLoanClosed(StatementHeader statementHeader) throws JMSException {
+    public void accountLoanClosed(StatementHeader statementHeader) {
         log.debug("accountLoanClosed: {}", statementHeader);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
             jmsContext.createProducer().send(accountLoanClosedQueue, jmsContext.createObjectMessage(statementHeader));
         }
     }
 
-    public void serviceRequestStatementComplete(StatementCompleteResponse requestResponse) throws JMSException {
+    public void serviceRequestStatementComplete(StatementCompleteResponse requestResponse) {
         log.debug("serviceRequestStatementComplete: {}", requestResponse);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
             jmsContext.createProducer().send(serviceRequestStatementCompleteQueue, jmsContext.createObjectMessage(requestResponse));

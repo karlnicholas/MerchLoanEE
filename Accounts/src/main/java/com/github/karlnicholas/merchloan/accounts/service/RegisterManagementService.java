@@ -5,26 +5,23 @@ import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
+@ApplicationScoped
 @Slf4j
-@Transactional
 public class RegisterManagementService {
-    private final DataSource dataSource;
-    private final RegisterEntryDao registerEntryDao;
-
-    public RegisterManagementService(DataSource dataSource, RegisterEntryDao registerEntryDao) {
-        this.dataSource = dataSource;
-        this.registerEntryDao = registerEntryDao;
-    }
+    @Resource(lookup = "java:jboss/datasources/AccountsDS")
+    private DataSource dataSource;
+    @Inject
+    private RegisterEntryDao registerEntryDao;
 
     public void fundLoan(DebitLoan fundLoan, ServiceRequestResponse requestResponse) throws SQLException {
         try (Connection con = dataSource.getConnection()) {

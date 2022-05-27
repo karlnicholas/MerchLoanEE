@@ -3,8 +3,8 @@ package com.github.karlnicholas.merchloan.statement.dao;
 import com.github.karlnicholas.merchloan.sqlutil.SqlUtils;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.time.LocalDate;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class StatementDao {
 //    id, loan_id, statement_date, starting_balance, ending_balance, statement

@@ -2,6 +2,7 @@ package com.github.karlnicholas.merchloan.query.api;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.ejb.EJBException;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -19,7 +20,7 @@ public class QueryController {
     @GET
     @Path("/request/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getRequest(@PathParam("id") UUID id) throws Throwable {
+    public String getRequest(@PathParam("id") UUID id) throws EJBException {
         log.debug("getRequest: {}", id);
         return apiHandler.getRequest(id).readEntity(String.class);
     }

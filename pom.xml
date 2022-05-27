@@ -12,18 +12,15 @@
         <module>ApiMessage</module>
         <module>JmsMessage</module>
         <module>Dto</module>
-        <module>Jms</module>
         <module>SqlUtil</module>
         <module>Redis</module>
         <module>ServiceRequestInterface</module>
         <module>ServiceRequest</module>
         <module>Query</module>
         <module>AccountsInterface</module>
-<!--        <module>AccountsDb</module>-->
-<!--        <module>Accounts</module>-->
-<!--        <module>StatementDb</module>-->
-<!--        <module>Statement</module>-->
-<!--        <module>Redis</module>-->
+        <module>Accounts</module>
+        <module>StatementInterface</module>
+        <module>Statement</module>
 <!--        <module>BusinessDate</module>-->
 <!--        <module>Client</module>-->
     </modules>
@@ -54,6 +51,11 @@
             <dependency>
                 <groupId>com.github.karlnicholas.merchloan</groupId>
                 <artifactId>servicerequestinterface</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>statementinterface</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

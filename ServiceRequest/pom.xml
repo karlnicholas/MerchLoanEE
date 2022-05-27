@@ -41,10 +41,6 @@
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>jms</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>apimessage</artifactId>
         </dependency>
         <dependency>
@@ -57,6 +53,10 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
             <version>1.18.24</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>dto</artifactId>
         </dependency>
     </dependencies>
     <build>

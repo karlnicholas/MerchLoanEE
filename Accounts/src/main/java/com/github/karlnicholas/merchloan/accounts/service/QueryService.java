@@ -3,7 +3,6 @@ package com.github.karlnicholas.merchloan.accounts.service;
 import com.github.karlnicholas.merchloan.accounts.dao.AccountDao;
 import com.github.karlnicholas.merchloan.accounts.dao.LoanDao;
 import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
-import com.github.karlnicholas.merchloan.accounts.message.MQConsumers;
 import com.github.karlnicholas.merchloan.accounts.message.MQProducers;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
@@ -11,13 +10,15 @@ import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
-import jakarta.jms.JMSContext;
-import jakarta.jms.Session;
+import com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import jakarta.jms.JMSException;
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.ejb.EJBException;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.jms.JMSException;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,23 +29,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class QueryService {
-    private final DataSource dataSource;
-    private final AccountDao accountDao;
-    private final LoanDao loanDao;
-    private final RegisterEntryDao registerEntryDao;
-    private final MQProducers mqProducers;
-
-    @Autowired
-    public QueryService(DataSource dataSource, AccountDao accountDao, LoanDao loanDao, RegisterEntryDao registerEntryDao, MQProducers mqProducers) {
-        this.dataSource = dataSource;
-        this.accountDao = accountDao;
-        this.loanDao = loanDao;
-        this.registerEntryDao = registerEntryDao;
-        this.mqProducers = mqProducers;
-    }
+    @Resource(lookup = "java:jboss/datasources/AccountsDS")
+    private DataSource dataSource;
+    @Inject
+    private AccountDao accountDao;
+    @Inject
+    private LoanDao loanDao;
+    @Inject
+    private RegisterEntryDao registerEntryDao;
+    @Inject
+    private MQProducers mqProducers;
+    @EJB
+    private StatementEjb statementEjb;
 
     public Optional<Account> queryAccountId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
@@ -93,10 +92,10 @@ public class QueryService {
         }
     }
 
-    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws JMSException, InterruptedException, SQLException {
+    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws SQLException, EJBException {
         try (Connection con = dataSource.getConnection()) {
             // get most recent statement
-            MostRecentStatement mostRecentStatement = (MostRecentStatement) mqProducers.queryMostRecentStatement(loanId);
+            MostRecentStatement mostRecentStatement = (MostRecentStatement) statementEjb.queryMostRecentStatement(loanId);
             // generate a simulated new statement for current period
             StatementHeader statementHeader = StatementHeader.builder().build();
             statementHeader.setLoanId(loanId);

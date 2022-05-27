@@ -2,8 +2,10 @@ package com.github.karlnicholas.merchloan.statement.service;
 
 import com.github.karlnicholas.merchloan.statement.dao.StatementDao;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
-import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,15 +13,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 public class QueryService {
-    private final StatementDao statementDao;
-    private final DataSource dataSource;
-
-    public QueryService(StatementDao statementDao, DataSource dataSource) {
-        this.statementDao = statementDao;
-        this.dataSource = dataSource;
-    }
+    @Inject
+    private StatementDao statementDao;
+    @Resource(lookup = "java:jboss/datasources/StatementDS")
+    private DataSource dataSource;
 
     public Optional<Statement> findById(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
