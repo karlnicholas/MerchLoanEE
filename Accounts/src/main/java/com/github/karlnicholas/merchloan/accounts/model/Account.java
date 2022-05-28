@@ -12,7 +12,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Account {
     private UUID id;
-
     private String customer;
     private LocalDate createDate;
 }

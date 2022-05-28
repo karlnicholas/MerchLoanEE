@@ -6,6 +6,7 @@ import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
+import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
@@ -28,6 +29,7 @@ public class LoanClosedListener implements MessageListener {
             statementHeader = (StatementHeader) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedLoanClosedMessage exception", e);
+            throw new EJBException(e);
         }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
         try {
@@ -38,11 +40,7 @@ public class LoanClosedListener implements MessageListener {
             log.error("receivedLoanClosedMessage exception", ex);
             serviceRequestResponse.setError("receivedLoanClosedMessage exception: " + ex.getMessage());
         } finally {
-            try {
-                mqProducers.serviceRequestServiceRequest(serviceRequestResponse);
-            } catch (JMSException e) {
-                log.error("receivedLoanClosedMessage exception", e);
-            }
+            mqProducers.serviceRequestServiceRequest(serviceRequestResponse);
         }
 
     }

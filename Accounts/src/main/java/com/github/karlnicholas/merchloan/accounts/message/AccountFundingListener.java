@@ -8,6 +8,7 @@ import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
+import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
@@ -38,6 +39,7 @@ public class AccountFundingListener implements MessageListener {
             fundLoan = (FundLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedFundingMessage exception", e);
+            throw new EJBException(e);
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(fundLoan.getId())
@@ -60,11 +62,7 @@ public class AccountFundingListener implements MessageListener {
             log.error("receivedFundingMessage exception", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
-            try {
-                mqProducers.serviceRequestServiceRequest(requestResponse);
-            } catch (JMSException e) {
-                log.error("receivedFundingMessage exception", e.getMessage());
-            }
+            mqProducers.serviceRequestServiceRequest(requestResponse);
         }
 
     }

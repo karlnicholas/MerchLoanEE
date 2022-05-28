@@ -7,6 +7,7 @@ import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
+import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
@@ -31,6 +32,7 @@ public class ValidateCreditListener implements MessageListener {
             creditLoan = (CreditLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedValidateCreditMessage exception", e);
+            throw new EJBException(e);
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(creditLoan.getId())
@@ -51,11 +53,7 @@ public class ValidateCreditListener implements MessageListener {
             log.error("receivedValidateCreditMessage exception", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
-            try {
-                mqProducers.serviceRequestServiceRequest(requestResponse);
-            } catch (JMSException e) {
-                log.error("receivedValidateCreditMessage exception", e);
-            }
+            mqProducers.serviceRequestServiceRequest(requestResponse);
         }
     }
 }

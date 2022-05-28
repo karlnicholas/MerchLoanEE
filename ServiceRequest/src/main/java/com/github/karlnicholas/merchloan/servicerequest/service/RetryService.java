@@ -25,6 +25,7 @@ public class RetryService {
 
     public void retryServiceRequest(ServiceRequest serviceRequest, String requestType)  {
         try {
+            @SuppressWarnings("unchecked")
             Class<? extends ServiceRequestMessage> messageClass = (Class<? extends ServiceRequestMessage>) Class.forName(requestType);
             ServiceRequestMessage serviceRequestMessage = objectMapper.readValue(serviceRequest.getRequest(), messageClass);
             log.debug("retryServiceRequest: {}", serviceRequestMessage);

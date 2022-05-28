@@ -20,10 +20,8 @@ public class MQProducers {
     private Destination serviceRequestQueue;
     @Resource(lookup = "java:global/jms/queue/StatementCloseStatementQueue")
     private Destination statementCloseStatementQueue;
-    @Resource(lookup = "java:global/jms/queue/StatementQueryMostRecentStatementQueue")
-    private Destination statementQueryMostRecentStatementQueue;
 
-    public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) throws JMSException {
+    public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
             jmsContext.createProducer().send(serviceRequestQueue, jmsContext.createObjectMessage(serviceRequest));
@@ -37,16 +35,4 @@ public class MQProducers {
         }
     }
 
-//    public Object queryMostRecentStatement(UUID loanId) throws InterruptedException, JMSException {
-//        log.debug("queryMostRecentStatement: {}", loanId);
-//        String responseKey = UUID.randomUUID().toString();
-//        replyWaitingHandler.put(responseKey);
-//        try ( JMSContext jmsContext = connectionFactory.createContext()) {
-//            Message message = jmsContext.createObjectMessage(loanId);
-//            message.setJMSCorrelationID(responseKey);
-//            message.setJMSReplyTo(accountsReplyQueue);
-//            jmsContext.createProducer().send(statementQueryMostRecentStatementQueue, message);
-//            return replyWaitingHandler.getReply(responseKey);
-//        }
-//    }
 }
