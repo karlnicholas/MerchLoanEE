@@ -7,6 +7,7 @@ import com.github.karlnicholas.merchloan.jmsmessage.StatementCompleteResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import com.github.karlnicholas.merchloan.statement.model.Statement;
 import com.github.karlnicholas.merchloan.statement.service.StatementService;
+import com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -31,8 +32,9 @@ public class StatementListener implements MessageListener {
     private StatementService statementService;
     private final BigDecimal interestRate = new BigDecimal("0.10");
     private final BigDecimal interestMonths = new BigDecimal("12");
-    @EJB(lookup = "ejb:/accounts-1.0-SNAPSHOT/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
+    @EJB(lookup = "ejb:/merchloanee/accounts/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
     private AccountsEjb accountsEjb;
+
     @Override
     public void onMessage(Message message) {
         StatementHeader statementHeader = null;

@@ -7,6 +7,7 @@ import com.github.karlnicholas.merchloan.accounts.message.MQProducers;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
+import com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
@@ -41,7 +42,7 @@ public class QueryService {
     private RegisterEntryDao registerEntryDao;
     @Inject
     private MQProducers mqProducers;
-    @EJB(lookup = "ejb:/statement-1.0-SNAPSHOT/StatementEjbImpl!com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb")
+    @EJB(lookup = "ejb:merchloanee/statement/StatementEjbImpl!com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb")
     private StatementEjb statementEjb;
 
     public Optional<Account> queryAccountId(UUID id) throws SQLException {
