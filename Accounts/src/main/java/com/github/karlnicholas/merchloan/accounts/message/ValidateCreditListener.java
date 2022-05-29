@@ -32,7 +32,7 @@ public class ValidateCreditListener implements MessageListener {
             creditLoan = (CreditLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedValidateCreditMessage exception", e);
-            throw new EJBException(e);
+            return;
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(creditLoan.getId())

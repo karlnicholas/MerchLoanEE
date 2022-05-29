@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
+import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
@@ -31,6 +32,7 @@ public class CreateAccountListener implements MessageListener {
             createAccount = (CreateAccount) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedCreateAccountMessage exception {}", e);
+            return;
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder().id(createAccount.getId()).build();
         try {

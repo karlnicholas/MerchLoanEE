@@ -7,13 +7,13 @@ import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.ActivationConfigProperty;
-import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
+import java.sql.SQLException;
 import java.util.Optional;
 
 @MessageDriven(name = "CloseLoanMDB", activationConfig = {
@@ -35,7 +35,7 @@ public class CloseLoanListener implements MessageListener {
             closeLoan = (CloseLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedFundingMessage exception", e);
-            throw new EJBException(e);
+            return;
         }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(closeLoan.getId()).build();
         try {
@@ -78,10 +78,7 @@ public class CloseLoanListener implements MessageListener {
             } else {
                 serviceRequestResponse.setFailure("loan not found for id: " + closeLoan.getLoanId());
             }
-        } catch (InterruptedException iex) {
-            log.error("receivedCloseLoanMessage exception {}", iex.getMessage());
-            Thread.currentThread().interrupt();
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
             serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
         } finally {

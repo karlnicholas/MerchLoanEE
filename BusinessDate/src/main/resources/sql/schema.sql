@@ -1,1 +1,1 @@
-create table business_date (id bigint not null, business_date date, primary key (id));
+create table if not exists business_date (id bigint not null, business_date date, primary key (id));

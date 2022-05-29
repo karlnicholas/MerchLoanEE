@@ -1,14 +1,19 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate.service;
 
+import com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.dao.BusinessDateDao;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.message.MQProducers;
 import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
+import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
-import jakarta.jms.JMSException;
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.jms.JMSException;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -18,28 +23,29 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class BusinessDateService {
-    private final DataSource dataSource;
-    private final RedisComponent redisComponent;
-    private final BusinessDateDao businessDateDao;
-    private final MQProducers mqProducers;
+    @Resource(lookup = "java:jboss/datasources/BusinessDateDS")
+    private DataSource dataSource;
+    @Inject
+    private RedisComponent redisComponent;
+    @Inject
+    private BusinessDateDao businessDateDao;
+    @Inject
+    private MQProducers mqProducers;
+    @EJB(lookup = "ejb:/servicerequest-1.0-SNAPSHOT/ServiceRequestBeansImpl!com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb")
+    private ServiceRequestEjb serviceRequestEjb;
+    @EJB(lookup = "ejb:/accounts-1.0-SNAPSHOT/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
+    private AccountsEjb accountsEjb;
 
-    public BusinessDateService(DataSource dataSource, RedisComponent redisComponent, BusinessDateDao businessDateDao, MQProducers mqProducers) {
-        this.dataSource = dataSource;
-        this.redisComponent = redisComponent;
-        this.businessDateDao = businessDateDao;
-        this.mqProducers = mqProducers;
-    }
-
-    public BusinessDate updateBusinessDate(LocalDate businessDate) throws InterruptedException, SQLException, JMSException {
+    public BusinessDate updateBusinessDate(LocalDate businessDate) throws SQLException, JMSException {
         try (Connection con = dataSource.getConnection()) {
             Optional<BusinessDate> existingBusinessDate = businessDateDao.findById(con, 1L);
             if (existingBusinessDate.isPresent()) {
                 Instant start = Instant.now();
                 BusinessDate priorBusinessDate = BusinessDate.builder().date(existingBusinessDate.get().getDate()).build();
-                Object stillProcessing = mqProducers.servicerequestCheckRequest();
+                Object stillProcessing = serviceRequestEjb.checkRequest();
                 if (stillProcessing == null || ((Boolean)stillProcessing).booleanValue()) {
                     throw new IllegalStateException("Still processing prior business date" + priorBusinessDate.getDate());
                 }
@@ -67,8 +73,8 @@ public class BusinessDateService {
         }
     }
 
-    public void startBillingCycle(LocalDate priorBusinessDate) throws InterruptedException, JMSException {
-        List<BillingCycle> loansToCycle = (List<BillingCycle>) mqProducers.acccountQueryLoansToCycle(priorBusinessDate);
+    public void startBillingCycle(LocalDate priorBusinessDate) {
+        List<BillingCycle> loansToCycle = (List<BillingCycle>) accountsEjb.loansToCycle(priorBusinessDate);
         for( BillingCycle billingCycle: loansToCycle) {
             mqProducers.serviceRequestBillLoan(billingCycle);
         }

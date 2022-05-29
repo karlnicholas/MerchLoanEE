@@ -21,7 +21,8 @@
         <module>Accounts</module>
         <module>StatementInterface</module>
         <module>Statement</module>
-<!--        <module>BusinessDate</module>-->
+        <module>BusinessDate</module>
+        <module>MerchLoanEar</module>
 <!--        <module>Client</module>-->
     </modules>
     <dependencyManagement>
@@ -77,6 +78,36 @@
                 <groupId>com.github.karlnicholas.merchloan</groupId>
                 <artifactId>redis</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>accounts</artifactId>
+                <version>${project.version}</version>
+                <type>ejb</type>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>statement</artifactId>
+                <version>${project.version}</version>
+                <type>ejb</type>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>servicerequest</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>query</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>com.github.karlnicholas.merchloan</groupId>
+                <artifactId>businessdate</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
             </dependency>
         </dependencies>
     </dependencyManagement>

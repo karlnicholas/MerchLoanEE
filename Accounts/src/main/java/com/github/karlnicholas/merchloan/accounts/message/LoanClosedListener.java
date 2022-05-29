@@ -29,7 +29,7 @@ public class LoanClosedListener implements MessageListener {
             statementHeader = (StatementHeader) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedLoanClosedMessage exception", e);
-            throw new EJBException(e);
+            return;
         }
         ServiceRequestResponse serviceRequestResponse = ServiceRequestResponse.builder().id(statementHeader.getId()).build();
         try {

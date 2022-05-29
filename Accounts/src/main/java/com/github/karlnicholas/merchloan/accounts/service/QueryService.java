@@ -18,7 +18,6 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.jms.JMSException;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -51,7 +50,7 @@ public class QueryService {
         }
     }
 
-    public Optional<LoanDto> queryLoanId(UUID loanId) throws JMSException, InterruptedException, SQLException {
+    public Optional<LoanDto> queryLoanId(UUID loanId) throws SQLException {
         // get last statement
         // get register entries
         // return last statement date
@@ -95,7 +94,7 @@ public class QueryService {
     private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws SQLException, EJBException {
         try (Connection con = dataSource.getConnection()) {
             // get most recent statement
-            MostRecentStatement mostRecentStatement = (MostRecentStatement) statementEjb.queryMostRecentStatement(loanId);
+            MostRecentStatement mostRecentStatement = statementEjb.queryMostRecentStatement(loanId);
             // generate a simulated new statement for current period
             StatementHeader statementHeader = StatementHeader.builder().build();
             statementHeader.setLoanId(loanId);

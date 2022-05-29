@@ -32,7 +32,7 @@ public class ValidateDebitListener implements MessageListener {
             debitLoan = (DebitLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedValidateDebitMessage exception", e);
-            throw new EJBException(e);
+            return;
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(debitLoan.getId())

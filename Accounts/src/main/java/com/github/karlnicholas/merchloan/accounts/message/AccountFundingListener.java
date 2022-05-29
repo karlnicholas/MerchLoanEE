@@ -39,7 +39,7 @@ public class AccountFundingListener implements MessageListener {
             fundLoan = (FundLoan) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("receivedFundingMessage exception", e);
-            throw new EJBException(e);
+            return;
         }
         ServiceRequestResponse requestResponse = ServiceRequestResponse.builder()
                 .id(fundLoan.getId())

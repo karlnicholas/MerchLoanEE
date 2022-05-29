@@ -2,15 +2,15 @@ package com.github.karlnicholas.merchloan.businessdate.businessdate.dao;
 
 import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class BusinessDateDao {
     public Optional<BusinessDate> findById(Connection con, Long businessDateId) throws SQLException {

@@ -40,6 +40,7 @@ public class StatementListener implements MessageListener {
             statementHeader = (StatementHeader) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("StatementListener", e);
+            return;
         }
         StatementCompleteResponse requestResponse = StatementCompleteResponse.builder().id(statementHeader.getId()).statementDate(statementHeader.getStatementDate()).loanId(statementHeader.getLoanId()).build();
         boolean loanClosed = false;

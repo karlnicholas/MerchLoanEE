@@ -22,9 +22,7 @@ public class AccountsInit {
     public void init() {
         try {
             log.info("Database init: {}", SqlInitialization.initialize(dataSource.getConnection(), AccountsInit.class.getResourceAsStream("/sql/schema.sql")));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.accounts.message;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
@@ -16,6 +17,7 @@ import javax.ejb.EJBException;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -68,14 +70,13 @@ public class AccountsEjbImpl implements AccountsEjb {
         try {
             log.debug("receivedBillingCycleChargeMessage: {}", billingCycleCharge);
             RegisterEntry re = registerManagementService.billingCycleCharge(billingCycleCharge);
-            RegisterEntryMessage registerEntryMessage = RegisterEntryMessage.builder()
+            return RegisterEntryMessage.builder()
                     .date(re.getDate())
                     .credit(re.getCredit())
                     .debit(re.getDebit())
                     .description(re.getDescription())
                     .timeStamp(re.getTimeStamp())
                     .build();
-            return registerEntryMessage;
         } catch (Exception ex) {
             log.error("receivedBillingCycleChargeMessage exception {}", ex.getMessage());
             throw new EJBException(ex);
@@ -108,7 +109,7 @@ public class AccountsEjbImpl implements AccountsEjb {
             } else {
                 return "ERROR: Loan not found for id: " + id;
             }
-        } catch (Exception ex) {
+        } catch ( SQLException | JsonProcessingException ex) {
             log.error("receivedQueryLoanIdMessage exception {}", ex.getMessage());
             throw new EJBException(ex);
         }

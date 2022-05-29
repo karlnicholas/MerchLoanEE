@@ -33,6 +33,7 @@ public class CloseStatementListener implements MessageListener {
             statementHeader = (StatementHeader) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
             log.error("onCloseStatementMessage", e);
+            return;
         }
         try {
             log.debug("onCloseStatementMessage {}", statementHeader);

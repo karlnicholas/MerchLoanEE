@@ -10,10 +10,18 @@
     <artifactId>businessdate</artifactId>
     <name>BusinessDate</name>
     <description>BusinessDate</description>
+    <packaging>war</packaging>
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>8.0</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>sqlutil</artifactId>
@@ -29,8 +37,29 @@
             <version>1.18.24</version>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>jms</artifactId>
+            <artifactId>jmsmessage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>servicerequestinterface</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>accountsinterface</artifactId>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
