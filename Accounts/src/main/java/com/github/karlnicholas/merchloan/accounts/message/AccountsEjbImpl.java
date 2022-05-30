@@ -13,9 +13,7 @@ import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.ejb.EJBException;
-import javax.ejb.Remote;
-import javax.ejb.Stateless;
+import javax.ejb.*;
 import javax.inject.Inject;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -26,6 +24,7 @@ import java.util.UUID;
 @Stateless
 @Remote(AccountsEjb.class)
 @Slf4j
+@TransactionManagement(TransactionManagementType.BEAN)
 public class AccountsEjbImpl implements AccountsEjb {
     @Inject
     private AccountManagementService accountManagementService;

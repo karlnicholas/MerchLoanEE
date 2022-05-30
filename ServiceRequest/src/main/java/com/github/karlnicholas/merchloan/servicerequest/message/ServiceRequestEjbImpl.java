@@ -8,9 +8,7 @@ import com.github.karlnicholas.merchloan.servicerequest.service.QueryService;
 import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.ejb.EJBException;
-import javax.ejb.Remote;
-import javax.ejb.Stateless;
+import javax.ejb.*;
 import javax.inject.Inject;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -19,6 +17,7 @@ import java.util.UUID;
 @Stateless
 @Remote(ServiceRequestEjb.class)
 @Slf4j
+@TransactionManagement(TransactionManagementType.BEAN)
 public class ServiceRequestEjbImpl implements ServiceRequestEjb {
 
     private final QueryService queryService;

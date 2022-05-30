@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
+@Path("/")
 public class BusinessDateController {
     @Inject
     private BusinessDateService businessDateService;

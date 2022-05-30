@@ -36,7 +36,8 @@ public class BusinessDateService {
     private MQProducers mqProducers;
     @EJB(lookup = "ejb:merchloanee/servicerequest/ServiceRequestEjbImpl!com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb")
     private ServiceRequestEjb serviceRequestEjb;
-    @EJB(lookup = "ejb:/merchloanee/accounts/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
+    @EJB(lookup = "ejb:merchloanee/accounts/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
+
     private AccountsEjb accountsEjb;
 
     public BusinessDate updateBusinessDate(LocalDate businessDate) throws SQLException, JMSException {

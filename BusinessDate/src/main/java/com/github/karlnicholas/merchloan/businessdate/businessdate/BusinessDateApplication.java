@@ -1,20 +1,10 @@
 package com.github.karlnicholas.merchloan.businessdate.businessdate;
 
-import com.github.karlnicholas.merchloan.businessdate.businessdate.service.BusinessDateService;
-import com.github.karlnicholas.merchloan.sqlutil.SqlInitialization;
-
-import javax.sql.DataSource;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
 
-    @ApplicationPath("/api")
-public class BusinessDateApplication {
+@ApplicationPath("/api")
+public class BusinessDateApplication extends Application {
 
 //    public HttpMessageConverter<UUID> converter() {
 //

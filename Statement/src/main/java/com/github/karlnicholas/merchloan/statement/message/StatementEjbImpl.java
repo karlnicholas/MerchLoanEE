@@ -8,15 +8,14 @@ import com.github.karlnicholas.merchloan.statement.service.QueryService;
 import com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.ejb.EJBException;
-import javax.ejb.Remote;
-import javax.ejb.Stateless;
+import javax.ejb.*;
 import javax.inject.Inject;
 import java.util.UUID;
 
 @Stateless
 @Remote(StatementEjb.class)
 @Slf4j
+@TransactionManagement(TransactionManagementType.BEAN)
 public class StatementEjbImpl implements StatementEjb {
     @Inject
     private QueryService queryService;
