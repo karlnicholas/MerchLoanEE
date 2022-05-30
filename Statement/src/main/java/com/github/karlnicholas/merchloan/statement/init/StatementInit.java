@@ -1,4 +1,4 @@
-package com.github.karlnicholas.merchloan.accounts.init;
+package com.github.karlnicholas.merchloan.statement.init;
 
 import com.github.karlnicholas.merchloan.sqlutil.SqlInitialization;
 import lombok.extern.slf4j.Slf4j;
@@ -14,14 +14,14 @@ import java.sql.SQLException;
 @Startup
 @Singleton
 @Slf4j
-public class AccountsInit {
-    @Resource(lookup = "java:jboss/datasources/AccountsDS")
+public class StatementInit {
+    @Resource(lookup = "java:jboss/datasources/StatementDS")
     private DataSource dataSource;
 
     @PostConstruct
     public void init() {
         try {
-            log.info("Database init: {}", SqlInitialization.initialize(dataSource.getConnection(), AccountsInit.class.getResourceAsStream("/sql/schema.sql")));
+            log.info("Database init: {}", SqlInitialization.initialize(dataSource.getConnection(), StatementInit.class.getResourceAsStream("/sql/schema.sql")));
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }

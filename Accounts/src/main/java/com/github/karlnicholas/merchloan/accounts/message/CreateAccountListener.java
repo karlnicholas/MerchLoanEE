@@ -14,7 +14,7 @@ import javax.jms.*;
 
 @MessageDriven(name = "CreateAccountMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/CreateAccountQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountCreateAccountQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class CreateAccountListener implements MessageListener {

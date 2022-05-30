@@ -36,7 +36,6 @@ public class ServiceRequestService {
     @Resource(lookup = "java:jboss/datasources/ServiceRequestDS")
     private DataSource dataSource;
 
-    @Inject
     public ServiceRequestService() {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -166,8 +165,9 @@ public class ServiceRequestService {
 
     private void persistRequestWithId(ServiceRequestMessage requestMessage, UUID id) throws JsonProcessingException, SQLException {
         try (Connection con = dataSource.getConnection()) {
-            int retry = 0;
+            boolean retry;
             do {
+                retry = false;
                 try {
                     serviceRequestDao.insert(con,
                             ServiceRequest.builder()
@@ -180,17 +180,13 @@ public class ServiceRequestService {
                                     .build()
                     );
                 } catch (SQLException ex) {
-                    if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR && retry < 3) {
-                        retry++;
-                    } else {
-                        throw ex;
+                    if (ex.getErrorCode() == SqlUtils.DUPLICATE_ERROR ) {
+                        id = UUID.randomUUID();
+                        retry = true;
                     }
-                    log.error("createAccount {}", ex);
-                    id = UUID.randomUUID();
                 }
-            } while (retry < 3);
+            } while (retry);
         }
-
     }
 
     public void completeServiceRequest(ServiceRequestResponse serviceRequestResponse) throws SQLException {

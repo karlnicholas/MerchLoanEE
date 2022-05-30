@@ -1,33 +1,42 @@
 package com.github.karlnicholas.merchloan.redis.component;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
+import redis.clients.jedis.JedisPooled;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 
 @ApplicationScoped
 public class RedisComponent {
-    private final RedisClient client;
+    private final JedisPooled jedis;
 
     public RedisComponent() {
-        client = RedisClient.create("redis://localhost");
+        jedis = new JedisPooled("localhost", 6379);
     }
 
 
     public void updateBusinessDate(LocalDate businessDate) {
-        try ( StatefulRedisConnection<Long, LocalDate> connection = client.connect(new LocalLocalDateRedisCodec()) ) {
-            RedisCommands<Long, LocalDate> commands = connection.sync();
-            commands.getStatefulConnection().sync().set(1L, businessDate);
-        }
+        jedis.set(encodeKey(1L).array(), encodeValue(businessDate).array());
     }
 
     public LocalDate getBusinessDate() {
-        try ( StatefulRedisConnection<Long, LocalDate> connection = client.connect(new LocalLocalDateRedisCodec()) ) {
-            RedisCommands<Long, LocalDate> commands = connection.sync();
-            return commands.getStatefulConnection().sync().get(1L);
-        }
+        return decodeValue(ByteBuffer.wrap(jedis.get(encodeKey(1L).array())));
     }
 
+    private LocalDate decodeValue(ByteBuffer byteBuffer) {
+        byteBuffer.rewind();
+        return LocalDate.of(byteBuffer.getInt(), byteBuffer.getInt(), byteBuffer.getInt());
+    }
+
+    private ByteBuffer encodeKey(Long aLong) {
+        ByteBuffer bb = ByteBuffer.allocate(Long.BYTES);
+        return bb.putLong(aLong);
+    }
+
+    private ByteBuffer encodeValue(LocalDate localDate) {
+        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES*3);
+        bb.putInt(localDate.getYear());
+        bb.putInt(localDate.getMonthValue());
+        return bb.putInt(localDate.getDayOfMonth());
+    }
 }
