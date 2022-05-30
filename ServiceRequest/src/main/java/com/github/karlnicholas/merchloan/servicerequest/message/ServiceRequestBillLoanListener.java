@@ -11,12 +11,12 @@ import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
 
-@MessageDriven(name = "ServiceRequestBillloanMDB", activationConfig = {
+@MessageDriven(name = "ServiceRequestBillLoanMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/ServiceRequestBillloanQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/ServiceRequestBillLoanQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
-public class ServiceRequestBillloanListener implements MessageListener {
+public class ServiceRequestBillLoanListener implements MessageListener {
     @Inject
     private ServiceRequestService serviceRequestService;
 
