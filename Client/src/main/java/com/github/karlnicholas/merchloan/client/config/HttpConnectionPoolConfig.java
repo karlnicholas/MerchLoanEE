@@ -12,9 +12,9 @@ public class HttpConnectionPoolConfig {
     @Bean
     public PoolingHttpClientConnectionManager getPoolingHttpClientConnectionManager() {
         PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
-        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(HOST, 8080)), 100);
-        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(HOST, 8090)), 200);
-        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(HOST, 8100)), 1);
+        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(HOST, 8080)), 301);
+//        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(HOST, 8090)), 200);
+//        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(HOST, 8100)), 1);
         connManager.setMaxTotal(301);
 
         return connManager;

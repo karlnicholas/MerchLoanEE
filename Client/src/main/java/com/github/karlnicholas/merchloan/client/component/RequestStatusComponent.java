@@ -33,7 +33,7 @@ public class RequestStatusComponent {
     }
 
     private Optional<RequestStatusDto> requestStatus(UUID id) {
-        HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/request/" + id.toString());
+        HttpGet httpGet = new HttpGet("http://localhost:8080/query/api/query/request/" + id.toString());
         httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

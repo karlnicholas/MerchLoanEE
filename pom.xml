@@ -27,7 +27,7 @@
         <module>Statement</module>
         <module>BusinessDate</module>
         <module>Ear</module>
-<!--        <module>Client</module>-->
+        <module>Client</module>
     </modules>
     <dependencyManagement>
         <dependencies>

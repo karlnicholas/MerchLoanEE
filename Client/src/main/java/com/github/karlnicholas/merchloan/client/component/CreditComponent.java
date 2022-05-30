@@ -38,7 +38,7 @@ public class CreditComponent {
     private Optional<UUID> creditRequest(UUID loanId, BigDecimal amount, String description) throws JsonProcessingException {
         String strJson = objectMapper.writeValueAsString(new CreditRequest(loanId, amount, description));
         StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
-        HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/creditRequest");
+        HttpPost httpPost = new HttpPost("http://localhost:8080/servicerequest/api/v1/service/creditRequest");
         httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
         httpPost.setEntity(strEntity);
 

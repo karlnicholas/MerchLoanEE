@@ -33,7 +33,7 @@ public class LoanStateComponent {
     }
 
     private Optional<LoanDto> loanStatus(UUID loanId) {
-        HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/loan/" + loanId.toString());
+        HttpGet httpGet = new HttpGet("http://localhost:8080/query/api/query/loan/" + loanId.toString());
         httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

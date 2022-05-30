@@ -38,7 +38,7 @@ public class AccountComponent {
     private Optional<UUID> accountRequest(String customer) throws HttpException, IOException, ExecutionException, InterruptedException {
         String strJson = objectMapper.writeValueAsString(new AccountRequest(customer));
         StringEntity strEntity = new StringEntity(strJson, ContentType.APPLICATION_JSON);
-        HttpPost httpPost = new HttpPost("http://localhost:8080/api/v1/service/accountRequest");
+        HttpPost httpPost = new HttpPost("http://localhost:8080/servicerequest/api/v1/service/accountRequest");
         httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
         httpPost.setEntity(strEntity);
 

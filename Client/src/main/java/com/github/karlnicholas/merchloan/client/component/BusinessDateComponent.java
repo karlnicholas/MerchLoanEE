@@ -31,7 +31,7 @@ public class BusinessDateComponent {
     private Optional<Integer> postBusinessDate(LocalDate businessDate) {
         String date = businessDate.format(DateTimeFormatter.ISO_DATE);
         StringEntity strEntity = new StringEntity(date, ContentType.TEXT_PLAIN);
-        HttpPost httpPost = new HttpPost("http://localhost:8100/api/businessdate");
+        HttpPost httpPost = new HttpPost("http://localhost:8080/businessdate/api/businessdate");
         httpPost.setHeader("Accept", ContentType.WILDCARD.getMimeType());
         httpPost.setEntity(strEntity);
 
@@ -49,11 +49,11 @@ public class BusinessDateComponent {
     public boolean updateBusinessDate(LocalDate localDate) {
         if (!checkStillProcessingWithRetry())
             return false;
-        return openAccount(localDate);
+        return doUpdateBusinessDate(localDate);
     }
 
     private Optional<Boolean> checkStillProcessing() {
-        HttpGet httpGet = new HttpGet("http://localhost:8090/api/query/checkrequests");
+        HttpGet httpGet = new HttpGet("http://localhost:8080/query/api/query/checkrequests");
         httpGet.setHeader("Accept", ContentType.WILDCARD.getMimeType());
 
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
@@ -90,7 +90,7 @@ public class BusinessDateComponent {
     }
 
     // Open Account
-    private boolean openAccount(LocalDate localDate) {
+    private boolean doUpdateBusinessDate(LocalDate localDate) {
         int requestCount = 0;
         boolean loop = true;
         do {

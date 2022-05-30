@@ -8,6 +8,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.SQLException;
 import java.time.LocalDate;
 
@@ -19,7 +20,8 @@ public class BusinessDateController {
     @POST
     @Path("businessdate")
     @Consumes(MediaType.TEXT_PLAIN)
-    public void postBusinessDate(String businessDate) throws SQLException, JMSException {
+    public Response postBusinessDate(String businessDate) throws SQLException, JMSException {
         businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
+        return Response.ok().build();
     }
 }
