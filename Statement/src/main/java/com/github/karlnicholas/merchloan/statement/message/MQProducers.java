@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSContext;
 import javax.jms.Queue;
 
@@ -26,21 +27,21 @@ public class MQProducers {
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(servicerequestQueue, jmsContext.createObjectMessage(serviceRequest));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(servicerequestQueue, jmsContext.createObjectMessage(serviceRequest));
         }
     }
 
     public void accountLoanClosed(StatementHeader statementHeader) {
         log.debug("accountLoanClosed: {}", statementHeader);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(accountLoanClosedQueue, jmsContext.createObjectMessage(statementHeader));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountLoanClosedQueue, jmsContext.createObjectMessage(statementHeader));
         }
     }
 
     public void serviceRequestStatementComplete(StatementCompleteResponse requestResponse) {
         log.debug("serviceRequestStatementComplete: {}", requestResponse);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(serviceRequestStatementCompleteQueue, jmsContext.createObjectMessage(requestResponse));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestStatementCompleteQueue, jmsContext.createObjectMessage(requestResponse));
         }
     }
 

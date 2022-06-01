@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
+import javax.jms.*;
 
 @ApplicationScoped
 @Slf4j
@@ -24,14 +21,14 @@ public class MQProducers {
     public void serviceRequestServiceRequest(ServiceRequestResponse serviceRequest) {
         log.debug("serviceRequestServiceRequest: {}", serviceRequest);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(serviceRequestQueue, jmsContext.createObjectMessage(serviceRequest));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, jmsContext.createObjectMessage(serviceRequest));
         }
     }
 
     public void statementCloseStatement(StatementHeader statementHeader) {
         log.debug("statementCloseStatement: {}", statementHeader);
         try ( JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(statementCloseStatementQueue, jmsContext.createObjectMessage(statementHeader));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(statementCloseStatementQueue, jmsContext.createObjectMessage(statementHeader));
         }
     }
 

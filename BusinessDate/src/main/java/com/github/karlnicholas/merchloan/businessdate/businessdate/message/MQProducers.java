@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSContext;
 import javax.jms.Queue;
 
@@ -19,7 +20,7 @@ public class MQProducers {
 
     public void serviceRequestBillLoan(BillingCycle billingCycle) {
         try (JMSContext jmsContext = connectionFactory.createContext()) {
-            jmsContext.createProducer().send(serviceRequestBillLoanQueue, jmsContext.createObjectMessage(billingCycle));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestBillLoanQueue, jmsContext.createObjectMessage(billingCycle));
         }
     }
 

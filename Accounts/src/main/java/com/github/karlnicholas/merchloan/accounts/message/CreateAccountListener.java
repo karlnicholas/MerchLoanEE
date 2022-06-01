@@ -20,10 +20,10 @@ import javax.jms.*;
 public class CreateAccountListener implements MessageListener {
     @Inject
     private AccountManagementService accountManagementService;
-    @Inject
-    private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue serviceRequestQueue;
+    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
+    private ConnectionFactory connectionFactory;
 
     @Override
     public void onMessage(Message message) {
@@ -42,7 +42,9 @@ public class CreateAccountListener implements MessageListener {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
         } finally {
-            jmsContext.createProducer().send(serviceRequestQueue, jmsContext.createObjectMessage(requestResponse));
+            try ( JMSContext jmsContext = connectionFactory.createContext()) {
+                jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, jmsContext.createObjectMessage(requestResponse));
+            }
         }
     }
 }
