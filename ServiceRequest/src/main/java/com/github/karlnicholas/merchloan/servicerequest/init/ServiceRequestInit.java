@@ -21,10 +21,9 @@ public class ServiceRequestInit {
     @PostConstruct
     public void init() {
         try {
-            log.info("Database init: {}", SqlInitialization.initialize(dataSource.getConnection(), ServiceRequestInit.class.getResourceAsStream("/sql/schema.sql")));
+            SqlInitialization.initialize(dataSource.getConnection(), ServiceRequestInit.class.getResourceAsStream("/sql/schema.sql"));
+            log.info("Database init");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

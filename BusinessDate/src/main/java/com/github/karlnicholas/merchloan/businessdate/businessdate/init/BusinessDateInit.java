@@ -27,7 +27,7 @@ public class BusinessDateInit {
         try(Connection con = dataSource.getConnection()) {
             SqlInitialization.initialize(con, BusinessDateApplication.class.getResourceAsStream("/sql/schema.sql"));
             businessDateService.initializeBusinessDate();
-        } catch (SQLException | IOException e) {
+        } catch (SQLException  e) {
             throw new RuntimeException(e);
         }
     }

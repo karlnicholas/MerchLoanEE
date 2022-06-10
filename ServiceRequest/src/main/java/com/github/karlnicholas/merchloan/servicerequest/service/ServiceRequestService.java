@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @Slf4j
@@ -100,6 +101,7 @@ public class ServiceRequestService {
         try {
             StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
+log.info("{} ssr {}", id, retry);
             mqProducers.statementStatement(StatementHeader.builder()
                     .id(id)
                     .loanId(statementRequest.getLoanId())
@@ -198,12 +200,15 @@ public class ServiceRequestService {
                 sr.setStatusMessage(serviceRequestResponse.getStatusMessage());
                 serviceRequestDao.update(con, sr);
             } else {
-                log.error("void completeServiceRequest(ServiceRequestResponseListener serviceRequestResponse) not found: {}", serviceRequestResponse);
+                log.error("void completeServiceRequest(ServiceRequestResponseListener serviceRequestResponse) not found: {}", serviceRequestResponse.getId());
             }
         }
     }
 
     public void statementComplete(StatementCompleteResponse statementCompleteResponse) throws SQLException {
+        try (Connection con = dataSource.getConnection()) {
+            log.info("{} srs {}", statementCompleteResponse.getId(), serviceRequestDao.findAll(con).stream().map(sr->sr.getId()).collect(Collectors.toList()));
+        }
         completeServiceRequest(statementCompleteResponse);
     }
 

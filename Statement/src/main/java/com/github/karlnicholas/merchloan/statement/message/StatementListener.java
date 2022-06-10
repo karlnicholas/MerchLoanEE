@@ -44,7 +44,11 @@ public class StatementListener implements MessageListener {
             log.error("StatementListener", e);
             return;
         }
-        StatementCompleteResponse requestResponse = StatementCompleteResponse.builder().id(statementHeader.getId()).statementDate(statementHeader.getStatementDate()).loanId(statementHeader.getLoanId()).build();
+        StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
+                .id(statementHeader.getId())
+                .statementDate(statementHeader.getStatementDate())
+                .loanId(statementHeader.getLoanId())
+                .build();
         boolean loanClosed = false;
         try {
             log.debug("StatementListener {}", statementHeader);

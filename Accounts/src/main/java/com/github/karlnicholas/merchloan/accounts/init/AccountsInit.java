@@ -21,8 +21,9 @@ public class AccountsInit {
     @PostConstruct
     public void init() {
         try {
-            log.info("Database init: {}", SqlInitialization.initialize(dataSource.getConnection(), AccountsInit.class.getResourceAsStream("/sql/schema.sql")));
-        } catch (SQLException | IOException e) {
+            SqlInitialization.initialize(dataSource.getConnection(), AccountsInit.class.getResourceAsStream("/sql/schema.sql"));
+            log.info("Database init");
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }

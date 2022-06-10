@@ -91,4 +91,24 @@ public class ServiceRequestDao {
             }
         }
     }
+
+    public List<ServiceRequest> findAll(Connection con) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement("select id, request, request_type, local_date_time, status, status_message, retry_count from service_request")) {
+            try ( ResultSet rs = ps.executeQuery() ) {
+                List<ServiceRequest> serviceRequests = new ArrayList<>();
+                while (rs.next()) {
+                    serviceRequests.add(ServiceRequest.builder()
+                            .id(SqlUtils.toUUID(rs.getBytes(1)))
+                            .request(rs.getString(2))
+                            .requestType(rs.getString(3))
+                            .localDateTime(rs.getTimestamp(4).toLocalDateTime())
+                            .status(ServiceRequestMessage.STATUS.values()[rs.getInt(5)])
+                            .statusMessage(rs.getString(6))
+                            .retryCount(rs.getInt(7))
+                            .build());
+                }
+                return serviceRequests;
+            }
+        }
+    }
 }
