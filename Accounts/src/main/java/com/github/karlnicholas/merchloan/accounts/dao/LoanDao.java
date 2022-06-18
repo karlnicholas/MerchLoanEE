@@ -15,6 +15,7 @@ import java.util.UUID;
 public class LoanDao {
     //id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state
     public void insert(Connection con, Loan loan) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("insert into loan(id, account_id, start_date, statement_dates, funding, months, interest_rate, monthly_payments, loan_state) values(?, ?, ?, ?, ?, ?, ?, ?, ?)" )) {
             ps.setBytes(1, SqlUtils.uuidToBytes(loan.getId()));
             ps.setBytes(2, SqlUtils.uuidToBytes(loan.getAccountId()));
@@ -27,6 +28,7 @@ public class LoanDao {
             ps.setInt(9, loan.getLoanState().ordinal());
             ps.executeUpdate();
         }
+        con.commit();
     }
 
     public Optional<Loan> findById(Connection con, UUID loanId) throws SQLException {
@@ -75,10 +77,12 @@ public class LoanDao {
     }
 
     public void updateState(Connection con, UUID loanId, Loan.LOAN_STATE state) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("update loan set loan_state = ? where id = ?" )) {
             ps.setInt(1, state.ordinal());
             ps.setBytes(2, SqlUtils.uuidToBytes(loanId));
             ps.executeUpdate();
         }
+        con.commit();
     }
 }

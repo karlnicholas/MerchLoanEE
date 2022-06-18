@@ -101,7 +101,6 @@ public class ServiceRequestService {
         try {
             StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
-log.info("{} ssr {}", id, retry);
             mqProducers.statementStatement(StatementHeader.builder()
                     .id(id)
                     .loanId(statementRequest.getLoanId())
@@ -206,9 +205,9 @@ log.info("{} ssr {}", id, retry);
     }
 
     public void statementComplete(StatementCompleteResponse statementCompleteResponse) throws SQLException {
-        try (Connection con = dataSource.getConnection()) {
-            log.info("{} srs {}", statementCompleteResponse.getId(), serviceRequestDao.findAll(con).stream().map(sr->sr.getId()).collect(Collectors.toList()));
-        }
+//        try (Connection con = dataSource.getConnection()) {
+//            log.info("{} srs {}", statementCompleteResponse.getId(), serviceRequestDao.findAll(con).stream().map(sr->sr.getId()).collect(Collectors.toList()));
+//        }
         completeServiceRequest(statementCompleteResponse);
     }
 

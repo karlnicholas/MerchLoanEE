@@ -85,6 +85,7 @@ public class RegisterEntryDao {
     }
 
     public void insert(Connection con, RegisterEntry registerEntry) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("insert into register_entry(id, loan_id, date, description, debit, credit) values(?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, SqlUtils.uuidToBytes(registerEntry.getId()));
             ps.setBytes(2, SqlUtils.uuidToBytes(registerEntry.getLoanId()));
@@ -94,5 +95,6 @@ public class RegisterEntryDao {
             ps.setBigDecimal(6, registerEntry.getCredit());
             ps.executeUpdate();
         }
+        con.commit();
     }
 }

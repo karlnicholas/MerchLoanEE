@@ -16,12 +16,14 @@ import java.util.UUID;
 @Slf4j
 public class AccountDao {
     public void createAccount(Connection con, Account account) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("insert into account(id, create_date, customer) values(?, ?, ?)")) {
             ps.setBytes(1, SqlUtils.uuidToBytes(account.getId()));
             ps.setDate(2, java.sql.Date.valueOf(account.getCreateDate()));
             ps.setString(3, account.getCustomer());
             ps.executeUpdate();
         }
+        con.commit();
     }
 
     public Optional<Account> findById(Connection con, UUID accountId) throws SQLException {

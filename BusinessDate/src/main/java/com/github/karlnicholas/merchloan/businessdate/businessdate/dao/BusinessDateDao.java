@@ -29,18 +29,22 @@ public class BusinessDateDao {
     }
 
     public void updateDate(Connection con, BusinessDate businessDate) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("update business_date set business_date = ? where id = ?")) {
             ps.setDate(1, java.sql.Date.valueOf(businessDate.getDate()));
             ps.setLong(2, businessDate.getId());
             ps.executeUpdate();
         }
+        con.commit();
     }
 
     public void insert(Connection con, BusinessDate businessDate) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("insert into business_date(id, business_date) values(?, ?)")) {
             ps.setLong(1, businessDate.getId());
             ps.setDate(2, java.sql.Date.valueOf(businessDate.getDate()));
             ps.executeUpdate();
         }
+        con.commit();
     }
 }

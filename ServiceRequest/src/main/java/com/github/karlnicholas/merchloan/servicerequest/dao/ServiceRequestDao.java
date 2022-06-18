@@ -59,6 +59,7 @@ public class ServiceRequestDao {
     }
 
     public void update(Connection con, ServiceRequest serviceRequest) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("update service_request set status = ?, status_message = ?, retry_count = ? where id = ?")) {
             ps.setInt(1, serviceRequest.getStatus().ordinal());
             ps.setString(2, serviceRequest.getStatusMessage());
@@ -66,9 +67,11 @@ public class ServiceRequestDao {
             ps.setBytes(4, SqlUtils.uuidToBytes(serviceRequest.getId()));
             ps.executeUpdate();
         }
+        con.commit();
     }
 
     public void insert(Connection con, ServiceRequest serviceRequest) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("insert into service_request(id, request, request_type, local_date_time, status, status_message, retry_count) values(?, ?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, SqlUtils.uuidToBytes(serviceRequest.getId()));
             ps.setString(2, serviceRequest.getRequest());
@@ -79,6 +82,7 @@ public class ServiceRequestDao {
             ps.setInt(7, serviceRequest.getRetryCount());
             ps.executeUpdate();
         }
+        con.commit();
     }
 
     public Boolean existsStillProcessing(Connection con) throws SQLException {

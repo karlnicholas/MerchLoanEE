@@ -19,6 +19,7 @@ public class StatementDao {
 //    id, loan_id, statement_date, starting_balance, ending_balance, statement
 
     public void insert(Connection con, Statement statement) throws SQLException {
+        con.setAutoCommit(false);
         try (PreparedStatement ps = con.prepareStatement("insert into statement(id, loan_id, statement_date, starting_balance, ending_balance, statement) values(?, ?, ?, ?, ?, ?)")) {
             ps.setBytes(1, SqlUtils.uuidToBytes(statement.getId()));
             ps.setBytes(2, SqlUtils.uuidToBytes(statement.getLoanId()));
@@ -28,6 +29,7 @@ public class StatementDao {
             ps.setString(6, statement.getStatementDoc());
             ps.executeUpdate();
         }
+        con.commit();
     }
 
     public Optional<Statement> findById(Connection con, UUID id) throws SQLException {

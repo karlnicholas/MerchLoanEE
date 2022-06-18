@@ -13,7 +13,8 @@ public class SqlInitialization {
         throw new IllegalStateException("Do not construct utility class");
     }
 
-    public static void initialize(Connection con, InputStream inputStream) {
+    public static void initialize(Connection con, InputStream inputStream) throws SQLException {
+        con.setAutoCommit(false);
         new BufferedReader(
                 new InputStreamReader(inputStream, StandardCharsets.UTF_8))
                 .lines()
@@ -24,5 +25,6 @@ public class SqlInitialization {
                         throw new RuntimeException(e);
                     }
                 });
+        con.commit();
     }
 }
