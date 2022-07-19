@@ -1,4 +1,4 @@
-package com.github.karlnicholas.merchloan.query.api;
+package com.github.karlnicholas.merchloan.query.service;
 
 import com.github.karlnicholas.merchloan.query.message.MQProducers;
 
@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @ApplicationScoped
-public class ApiHandler {
+public class QueryService {
     @Inject
     private MQProducers mqProducers;
 
