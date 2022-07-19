@@ -22,7 +22,7 @@ public class CreateAccountListener implements MessageListener {
     private AccountManagementService accountManagementService;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue serviceRequestQueue;
-    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
+    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
     private ConnectionFactory connectionFactory;
 
     @Override

@@ -13,7 +13,7 @@ import javax.jms.Queue;
 @ApplicationScoped
 @Slf4j
 public class MQProducers {
-    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
+    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
     private ConnectionFactory connectionFactory;
     @Resource(lookup = "java:global/jms/queue/AccountCreateAccountQueue")
     private Queue accountCreateAccountQueue;

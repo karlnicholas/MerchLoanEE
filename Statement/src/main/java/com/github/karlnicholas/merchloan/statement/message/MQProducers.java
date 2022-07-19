@@ -15,7 +15,7 @@ import javax.jms.Queue;
 @Slf4j
 @ApplicationScoped
 public class MQProducers {
-    @Resource(lookup = "java:jboss/exported/jms/RemoteConnectionFactory")
+    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
     private ConnectionFactory connectionFactory;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue servicerequestQueue;
