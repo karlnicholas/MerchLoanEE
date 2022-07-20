@@ -5,7 +5,7 @@
     <groupId>com.github.karlnicholas.merchloan</groupId>
     <artifactId>merchloanee</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -14,7 +14,7 @@
         <url>https://github.com/karlnicholas/MerchLoanEE.git</url>
         <connection>scm:git:git@github.com:karlnicholas/MerchLoanEE.git</connection>
         <developerConnection>scm:git:git@github.com:karlnicholas/MerchLoanEE.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>merchloanee-1.0.1</tag>
     </scm>
     <modules>
         <module>ApiMessage</module>
