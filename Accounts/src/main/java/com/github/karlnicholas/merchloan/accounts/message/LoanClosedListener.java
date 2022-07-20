@@ -5,6 +5,9 @@ import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
@@ -17,10 +20,24 @@ import javax.jms.*;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class LoanClosedListener implements MessageListener {
+    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
+    private ConnectionFactory connectionFactory;
+    private JMSContext jmsContext;
+    private JMSProducer producer;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
+    private Destination serviceRequestQueue;
     @Inject
     private AccountManagementService accountManagementService;
-    @Inject
-    private MQProducers mqProducers;
+
+    @PostConstruct
+    public void postConstruct() {
+        jmsContext = connectionFactory.createContext();
+        producer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+    }
+    @PreDestroy
+    public void preDestroy() {
+        jmsContext.close();
+    }
 
     @Override
     public void onMessage(Message message) {
@@ -40,7 +57,7 @@ public class LoanClosedListener implements MessageListener {
             log.error("receivedLoanClosedMessage exception", ex);
             serviceRequestResponse.setError("receivedLoanClosedMessage exception: " + ex.getMessage());
         } finally {
-            mqProducers.serviceRequestServiceRequest(serviceRequestResponse);
+            producer.send(serviceRequestQueue, serviceRequestResponse);
         }
 
     }

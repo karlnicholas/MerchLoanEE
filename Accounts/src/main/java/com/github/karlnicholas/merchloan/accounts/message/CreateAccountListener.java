@@ -5,6 +5,8 @@ import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJBException;
@@ -18,13 +20,24 @@ import javax.jms.*;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class CreateAccountListener implements MessageListener {
-    @Inject
-    private AccountManagementService accountManagementService;
-    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
-    private Queue serviceRequestQueue;
     @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
     private ConnectionFactory connectionFactory;
+    private JMSContext jmsContext;
+    private JMSProducer producer;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
+    private Destination serviceRequestQueue;
+    @Inject
+    private AccountManagementService accountManagementService;
 
+    @PostConstruct
+    public void postConstruct() {
+        jmsContext = connectionFactory.createContext();
+        producer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+    }
+    @PreDestroy
+    public void preDestroy() {
+        jmsContext.close();
+    }
     @Override
     public void onMessage(Message message) {
         CreateAccount createAccount = null;
@@ -42,9 +55,7 @@ public class CreateAccountListener implements MessageListener {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
         } finally {
-            try ( JMSContext jmsContext = connectionFactory.createContext()) {
-                jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, jmsContext.createObjectMessage(requestResponse));
-            }
+            producer.send(serviceRequestQueue, requestResponse);
         }
     }
 }

@@ -3,11 +3,9 @@ package com.github.karlnicholas.merchloan.accounts.service;
 import com.github.karlnicholas.merchloan.accounts.dao.AccountDao;
 import com.github.karlnicholas.merchloan.accounts.dao.LoanDao;
 import com.github.karlnicholas.merchloan.accounts.dao.RegisterEntryDao;
-import com.github.karlnicholas.merchloan.accounts.message.MQProducers;
 import com.github.karlnicholas.merchloan.accounts.model.Account;
 import com.github.karlnicholas.merchloan.accounts.model.Loan;
 import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
-import com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
@@ -40,8 +38,6 @@ public class QueryService {
     private LoanDao loanDao;
     @Inject
     private RegisterEntryDao registerEntryDao;
-    @Inject
-    private MQProducers mqProducers;
     @EJB(lookup = "ejb:merchloanee/statement/StatementEjbImpl!com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb")
     private StatementEjb statementEjb;
 

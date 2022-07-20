@@ -6,13 +6,13 @@ import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.*;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.ObjectMessage;
+import javax.jms.*;
 import java.sql.SQLException;
 import java.util.Optional;
 
@@ -22,12 +22,27 @@ import java.util.Optional;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class CloseLoanListener implements MessageListener {
+    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
+    private ConnectionFactory connectionFactory;
+    private JMSContext jmsContext;
+    private JMSProducer producer;
+    @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
+    private Destination serviceRequestQueue;
+    @Resource(lookup = "java:global/jms/queue/StatementCloseStatementQueue")
+    private Destination statementCloseStatementQueue;
     @Inject
     private QueryService queryService;
     @Inject
     private RegisterManagementService registerManagementService;
-    @Inject
-    private MQProducers mqProducers;
+    @PostConstruct
+    public void postConstruct() {
+        jmsContext = connectionFactory.createContext();
+        producer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+    }
+    @PreDestroy
+    public void preDestroy() {
+        jmsContext.close();
+    }
     @Override
     public void onMessage(Message message) {
         CloseLoan closeLoan = null;
@@ -71,7 +86,7 @@ public class CloseLoanListener implements MessageListener {
                             .endDate(closeLoan.getDate())
                             .build();
                     registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-                    mqProducers.statementCloseStatement(statementHeader);
+                    producer.send(statementCloseStatementQueue, statementHeader);
                 } else {
                     serviceRequestResponse.setFailure("PayoffAmount incorrect. Required: " + loanOpt.get().getPayoffAmount());
                 }
@@ -82,7 +97,7 @@ public class CloseLoanListener implements MessageListener {
             log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
             serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
         } finally {
-            mqProducers.serviceRequestServiceRequest(serviceRequestResponse);
+            producer.send(serviceRequestQueue, serviceRequestResponse);
         }
     }
 }
