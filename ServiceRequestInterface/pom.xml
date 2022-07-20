@@ -4,11 +4,11 @@
     <parent>
         <artifactId>merchloanee</artifactId>
         <groupId>com.github.karlnicholas.merchloan</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
     <groupId>com.github.karlnicholas.merchloan</groupId>
     <artifactId>servicerequestinterface</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <name>ServiceRequestInterface</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
