@@ -28,24 +28,18 @@ import java.util.UUID;
 @ApplicationScoped
 @Slf4j
 public class ServiceRequestService {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/AccountCreateAccountQueue")
     private Queue accountCreateAccountQueue;
-    private JMSProducer accountCreateAccountProducer;
     @Resource(lookup = "java:global/jms/queue/AccountFundingQueue")
     private Queue accountFundingQueue;
-    private JMSProducer accountFundingProducer;
     @Resource(lookup = "java:global/jms/queue/AccountValidateCreditQueue")
     private Queue accountValidateCreditQueue;
-    private JMSProducer accountValidateCreditProducer;
     @Resource(lookup = "java:global/jms/queue/AccountValidateDebitQueue")
     private Queue accountValidateDebitQueue;
-    private JMSProducer accountValidateDebitProducer;
     @Resource(lookup = "java:global/jms/queue/StatementStatementQueue")
     private Queue statementStatementQueue;
-    private JMSProducer statementStatementProducer;
     @Resource(lookup = "java:global/jms/queue/AccountCloseLoanQueue")
     private Queue accountCloseLoanQueue;
     private JMSProducer accountCloseLoanProducer;    @Inject
@@ -60,26 +54,12 @@ public class ServiceRequestService {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        accountCreateAccountProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        accountFundingProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        accountValidateCreditProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        accountValidateDebitProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        statementStatementProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        accountCloseLoanProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }
 
     public UUID accountRequest(ServiceRequestMessage serviceRequestMessage, Boolean retry, UUID existingId) throws ServiceRequestException {
         try {
             AccountRequest accountRequest = (AccountRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(accountRequest);
-            accountCreateAccountProducer.send(accountCreateAccountQueue, jmsContext.createObjectMessage(
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountCreateAccountQueue, jmsContext.createObjectMessage(
             CreateAccount.builder()
                     .id(id)
                     .customer(accountRequest.getCustomer())
@@ -97,7 +77,7 @@ public class ServiceRequestService {
             FundingRequest fundingRequest = (FundingRequest) serviceRequestMessage;
             UUID id = null;
             id = retry == Boolean.TRUE ? existingId : persistRequest(fundingRequest);
-            accountFundingProducer.send(accountFundingQueue, jmsContext.createObjectMessage(FundLoan.builder()
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountFundingQueue, jmsContext.createObjectMessage(FundLoan.builder()
                     .id(id)
                     .accountId(fundingRequest.getAccountId())
                     .amount(fundingRequest.getAmount())
@@ -115,7 +95,7 @@ public class ServiceRequestService {
         try {
             CreditRequest creditRequest = (CreditRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(creditRequest);
-            accountValidateCreditProducer.send(accountValidateCreditQueue, jmsContext.createObjectMessage(CreditLoan.builder()
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountValidateCreditQueue, jmsContext.createObjectMessage(CreditLoan.builder()
                     .id(id)
                     .loanId(creditRequest.getLoanId())
                     .date(redisComponent.getBusinessDate())
@@ -133,7 +113,7 @@ public class ServiceRequestService {
         try {
             StatementRequest statementRequest = (StatementRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(statementRequest);
-            statementStatementProducer.send(statementStatementQueue, jmsContext.createObjectMessage(StatementHeader.builder()
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(statementStatementQueue, jmsContext.createObjectMessage(StatementHeader.builder()
                     .id(id)
                     .loanId(statementRequest.getLoanId())
                     .interestChargeId(UUID.randomUUID())
@@ -173,7 +153,7 @@ public class ServiceRequestService {
         try {
             DebitRequest debitRequest = (DebitRequest) serviceRequestMessage;
             UUID id = retry == Boolean.TRUE ? existingId : persistRequest(debitRequest);
-            accountValidateDebitProducer.send(accountValidateDebitQueue, jmsContext.createObjectMessage(DebitLoan.builder()
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountValidateDebitQueue, jmsContext.createObjectMessage(DebitLoan.builder()
                     .id(id)
                     .loanId(debitRequest.getLoanId())
                     .date(redisComponent.getBusinessDate())

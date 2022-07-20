@@ -51,7 +51,7 @@ public class ClientApplication {
 
     private void createLoanListeners() {
         loans = new ArrayList<>();
-        for ( int i =0; i < 1000; ++i ) {
+        for ( int i =0; i < 10000; ++i ) {
             int plusDays = ThreadLocalRandom.current().nextInt(30);
 //             int plusDays = 0;
             loans.add(new LoanCycle(creditComponent, accountComponent, loanComponent, loanStateComponent, requestStatusComponent, LocalDate.now().plusDays(plusDays), "Client " + i));

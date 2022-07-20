@@ -27,12 +27,10 @@ import java.util.Optional;
 @ApplicationScoped
 @Slf4j
 public class BusinessDateService {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestBillLoanQueue")
     private Queue serviceRequestBillLoanQueue;
-    private JMSProducer jmsProducer;
     @Resource(lookup = "java:jboss/datasources/BusinessDateDS")
     private DataSource dataSource;
     @Inject
@@ -43,17 +41,6 @@ public class BusinessDateService {
     private ServiceRequestEjb serviceRequestEjb;
     @EJB(lookup = "ejb:merchloanee/accounts/AccountsEjbImpl!com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb")
     private AccountsEjb accountsEjb;
-
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        jmsProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }
 
     public void updateBusinessDate(LocalDate businessDate) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
@@ -91,7 +78,7 @@ public class BusinessDateService {
     public void startBillingCycle(LocalDate priorBusinessDate) {
         List<BillingCycle> loansToCycle = accountsEjb.loansToCycle(priorBusinessDate);
         for( BillingCycle billingCycle: loansToCycle) {
-            jmsProducer.send(serviceRequestBillLoanQueue, jmsContext.createObjectMessage(billingCycle));
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestBillLoanQueue, jmsContext.createObjectMessage(billingCycle));
         }
     }
 }

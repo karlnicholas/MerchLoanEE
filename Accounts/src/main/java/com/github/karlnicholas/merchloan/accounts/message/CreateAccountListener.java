@@ -20,24 +20,13 @@ import javax.jms.*;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class CreateAccountListener implements MessageListener {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
-    private JMSProducer producer;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Destination serviceRequestQueue;
     @Inject
     private AccountManagementService accountManagementService;
 
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        producer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }
     @Override
     public void onMessage(Message message) {
         CreateAccount createAccount = null;
@@ -55,7 +44,7 @@ public class CreateAccountListener implements MessageListener {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
         } finally {
-            producer.send(serviceRequestQueue, requestResponse);
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, requestResponse);
         }
     }
 }

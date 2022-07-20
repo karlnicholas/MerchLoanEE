@@ -21,26 +21,14 @@ import javax.jms.*;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class ValidateDebitListener implements MessageListener {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
-    private JMSProducer producer;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Destination serviceRequestQueue;
     @Inject
     private AccountManagementService accountManagementService;
     @Inject
     private RegisterManagementService registerManagementService;
-
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        producer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }
 
     @Override
     public void onMessage(Message message) {
@@ -71,7 +59,7 @@ public class ValidateDebitListener implements MessageListener {
             log.error("receivedValidateDebitMessage exception", ex);
             requestResponse.setError(ex.getMessage());
         } finally {
-            producer.send(serviceRequestQueue, requestResponse);
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, requestResponse);
         }
     }
 }

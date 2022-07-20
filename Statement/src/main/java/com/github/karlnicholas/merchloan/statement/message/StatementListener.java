@@ -1,5 +1,6 @@
 package com.github.karlnicholas.merchloan.statement.message;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.karlnicholas.merchloan.accountsinterface.message.AccountsEjb;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycleCharge;
 import com.github.karlnicholas.merchloan.jmsmessage.RegisterEntryMessage;
@@ -11,15 +12,16 @@ import lombok.extern.slf4j.Slf4j;
 
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.util.Optional;
 
 @MessageDriven(name = "StatementMDB", activationConfig = {
@@ -28,24 +30,12 @@ import java.util.Optional;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class StatementListener implements MessageListener {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
-    private JMSProducer jmsProducer;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestStatementCompleteQueue")
     private Queue serviceRequestStatementCompleteQueue;
     @Resource(lookup = "java:global/jms/queue/AccountLoanClosedQueue")
     private Queue accountLoanClosedQueue;
-
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        jmsProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }
     @Inject
     private StatementService statementService;
     private final BigDecimal interestRate = new BigDecimal("0.10");
@@ -55,19 +45,18 @@ public class StatementListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-        StatementHeader statementHeader;
+        boolean loanClosed = false;
+        StatementHeader statementHeader = null;
         try {
             statementHeader = (StatementHeader) ((ObjectMessage) message).getObject();
         } catch (JMSException e) {
-            log.error("StatementListener", e);
-            return;
+            throw new EJBException(e);
         }
         StatementCompleteResponse requestResponse = StatementCompleteResponse.builder()
                 .id(statementHeader.getId())
                 .statementDate(statementHeader.getStatementDate())
                 .loanId(statementHeader.getLoanId())
                 .build();
-        boolean loanClosed = false;
         try {
             log.debug("StatementListener {}", statementHeader);
             statementHeader = accountsEjb.statementHeader(statementHeader);
@@ -108,15 +97,16 @@ public class StatementListener implements MessageListener {
             statementService.saveStatement(statementHeader, startingBalance, endingBalance);
             requestResponse.setSuccess();
             if (endingBalance.compareTo(BigDecimal.ZERO) <= 0) {
-                jmsProducer.send(accountLoanClosedQueue, statementHeader);
+                jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountLoanClosedQueue, statementHeader);
                 loanClosed = true;
             }
-        } catch (Exception ex) {
-            log.error("StatementListener", ex);
-            requestResponse.setError(ex.getMessage());
+        } catch (SQLException e) {
+            log.error("StatementListener {}", e);
+        } catch (JsonProcessingException e) {
+            log.error("StatementListener {}", e);
         } finally {
             if (!loanClosed) {
-                jmsProducer.send(serviceRequestStatementCompleteQueue, requestResponse);
+                jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestStatementCompleteQueue, requestResponse);
             }
         }
     }

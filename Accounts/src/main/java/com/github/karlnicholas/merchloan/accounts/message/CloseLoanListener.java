@@ -22,10 +22,8 @@ import java.util.Optional;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class CloseLoanListener implements MessageListener {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
-    private JMSProducer producer;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Destination serviceRequestQueue;
     @Resource(lookup = "java:global/jms/queue/StatementCloseStatementQueue")
@@ -34,15 +32,6 @@ public class CloseLoanListener implements MessageListener {
     private QueryService queryService;
     @Inject
     private RegisterManagementService registerManagementService;
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        producer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }
     @Override
     public void onMessage(Message message) {
         CloseLoan closeLoan = null;
@@ -86,7 +75,7 @@ public class CloseLoanListener implements MessageListener {
                             .endDate(closeLoan.getDate())
                             .build();
                     registerManagementService.setStatementHeaderRegisterEntryies(statementHeader);
-                    producer.send(statementCloseStatementQueue, statementHeader);
+                    jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(statementCloseStatementQueue, statementHeader);
                 } else {
                     serviceRequestResponse.setFailure("PayoffAmount incorrect. Required: " + loanOpt.get().getPayoffAmount());
                 }
@@ -97,7 +86,7 @@ public class CloseLoanListener implements MessageListener {
             log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
             serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
         } finally {
-            producer.send(serviceRequestQueue, serviceRequestResponse);
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, serviceRequestResponse);
         }
     }
 }

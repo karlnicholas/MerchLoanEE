@@ -25,25 +25,14 @@ import java.util.Optional;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class CloseStatementListener implements MessageListener {
-    @Resource(lookup = "java:comp/DefaultJMSConnectionFactory")
-    private ConnectionFactory connectionFactory;
+    @Inject
     private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue servicerequestQueue;
     @Resource(lookup = "java:global/jms/queue/AccountLoanClosedQueue")
     private Queue accountLoanClosedQueue;
-    private JMSProducer jmsProducer;
     @Inject
     private StatementService statementService;
-    @PostConstruct
-    public void postConstruct() {
-        jmsContext = connectionFactory.createContext();
-        jmsProducer = jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-    @PreDestroy
-    public void preDestroy() {
-        jmsContext.close();
-    }    @Override
     public void onMessage(Message message) {
         StatementHeader statementHeader = null;
         try {
@@ -75,12 +64,12 @@ public class CloseStatementListener implements MessageListener {
             }
             // just to save bandwidth
             statementHeader.setRegisterEntries(null);
-            jmsProducer.send(accountLoanClosedQueue, statementHeader);
+            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(accountLoanClosedQueue, statementHeader);
         } catch (Exception ex) {
             log.error("onCloseStatementMessage", ex);
             try {
                 ServiceRequestResponse requestResponse = new ServiceRequestResponse(statementHeader.getId(), ServiceRequestMessage.STATUS.ERROR, ex.getMessage());
-                jmsProducer.send(servicerequestQueue, requestResponse);
+                jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(servicerequestQueue, requestResponse);
             } catch (Exception innerEx) {
                 log.error("ERROR SENDING ERROR", innerEx);
             }
