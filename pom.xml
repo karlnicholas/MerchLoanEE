@@ -22,7 +22,6 @@
         <module>Dto</module>
         <module>SqlUtil</module>
         <module>Redis</module>
-        <module>ServiceRequestInterface</module>
         <module>ServiceRequest</module>
         <module>Query</module>
         <module>AccountsInterface</module>

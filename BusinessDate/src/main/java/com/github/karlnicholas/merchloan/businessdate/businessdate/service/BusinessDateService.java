@@ -5,11 +5,8 @@ import com.github.karlnicholas.merchloan.businessdate.businessdate.dao.BusinessD
 import com.github.karlnicholas.merchloan.businessdate.businessdate.model.BusinessDate;
 import com.github.karlnicholas.merchloan.jmsmessage.BillingCycle;
 import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
-import com.github.karlnicholas.merchloan.servicerequestinterface.message.ServiceRequestEjb;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
@@ -28,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 public class BusinessDateService {
     @Inject
-    private JMSContext jmsContext;
+    private Session session;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestBillLoanQueue")
     private Queue serviceRequestBillLoanQueue;
     @Resource(lookup = "java:jboss/datasources/BusinessDateDS")

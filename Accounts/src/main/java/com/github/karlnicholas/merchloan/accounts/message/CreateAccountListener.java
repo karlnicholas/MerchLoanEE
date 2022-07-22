@@ -5,11 +5,8 @@ import com.github.karlnicholas.merchloan.jmsmessage.CreateAccount;
 import com.github.karlnicholas.merchloan.jmsmessage.ServiceRequestResponse;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
-import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
 import javax.jms.*;
@@ -21,7 +18,7 @@ import javax.jms.*;
 @Slf4j
 public class CreateAccountListener implements MessageListener {
     @Inject
-    private JMSContext jmsContext;
+    private Session session;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Destination serviceRequestQueue;
     @Inject
@@ -44,7 +41,13 @@ public class CreateAccountListener implements MessageListener {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
         } finally {
-            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, requestResponse);
+            try {
+                MessageProducer p = session.createProducer(serviceRequestQueue);
+                p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+                p.send(session.createObjectMessage(requestResponse));
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

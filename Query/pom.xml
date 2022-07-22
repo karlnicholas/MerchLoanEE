@@ -31,10 +31,6 @@
             <version>1.18.24</version>
         </dependency>
         <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>servicerequestinterface</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

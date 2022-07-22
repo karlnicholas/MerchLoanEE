@@ -45,10 +45,6 @@
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>servicerequestinterface</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>accountsinterface</artifactId>
         </dependency>
     </dependencies>

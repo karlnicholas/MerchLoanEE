@@ -37,10 +37,6 @@
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>servicerequestinterface</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
             <artifactId>apimessage</artifactId>
         </dependency>
         <dependency>
