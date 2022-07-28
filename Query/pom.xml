@@ -36,11 +36,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>accountsinterface</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>statementinterface</artifactId>
+            <artifactId>replywaiting</artifactId>
         </dependency>
     </dependencies>
     <build>

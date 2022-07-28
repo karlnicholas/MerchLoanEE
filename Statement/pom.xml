@@ -38,11 +38,6 @@
             <artifactId>sqlutil</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>statementinterface</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
@@ -54,7 +49,11 @@
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>accountsinterface</artifactId>
+            <artifactId>jmsmessage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karlnicholas.merchloan</groupId>
+            <artifactId>replywaiting</artifactId>
         </dependency>
     </dependencies>
     <build>

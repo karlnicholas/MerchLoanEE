@@ -46,7 +46,7 @@ public class CreateAccountListener implements MessageListener {
                 p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
                 p.send(session.createObjectMessage(requestResponse));
             } catch (JMSException e) {
-                throw new RuntimeException(e);
+                log.error("receivedCreateAccountMessage exception {}", e);
             }
         }
     }

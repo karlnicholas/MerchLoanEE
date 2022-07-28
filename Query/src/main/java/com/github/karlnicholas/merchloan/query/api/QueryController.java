@@ -5,11 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.ejb.EJBException;
 import javax.inject.Inject;
+import javax.jms.JMSException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Path("/query")
@@ -21,43 +23,43 @@ public class QueryController {
     @GET
     @Path("/request/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getRequest(@PathParam("id") UUID id) throws EJBException {
+    public Response getRequest(@PathParam("id") UUID id) throws JMSException, InterruptedException {
         log.debug("getRequest: {}", id);
-        return queryService.getRequest(id).readEntity(String.class);
+        return queryService.getRequest(id);
     }
     @GET
     @Path("/account/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getAccount(@PathParam("id") UUID id) {
+    public Response getAccount(@PathParam("id") UUID id) throws JMSException, InterruptedException{
         log.debug("getAccount: {}", id);
-        return queryService.getAccount(id).readEntity(String.class);
+        return queryService.getAccount(id);
     }
     @GET
     @Path("/loan/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getLoan(@PathParam("id") UUID id) {
+    public Response getLoan(@PathParam("id") UUID id) throws JMSException, InterruptedException {
         log.debug("getLoan: {}", id);
-        return queryService.getLoan(id).readEntity(String.class);
+        return queryService.getLoan(id);
     }
     @GET
     @Path("statement/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getStatement(@PathParam("id") UUID id) {
+    public Response getStatement(@PathParam("id") UUID id) throws JMSException, InterruptedException {
         log.debug("getStatement: {}", id);
-        return queryService.getStatement(id).readEntity(String.class);
+        return queryService.getStatement(id);
     }
     @GET
     @Path("statements/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getStatements(@PathParam("id") UUID id) {
+    public Response getStatements(@PathParam("id") UUID id) throws JMSException, InterruptedException {
         log.debug("getStatements: {}", id);
-        return queryService.getStatements(id).readEntity(String.class);
+        return queryService.getStatements(id);
     }
     @GET
     @Path("checkrequests")
     @Produces(MediaType.APPLICATION_JSON)
-    public String checkRequests() throws EJBException {
+    public Response checkRequests() throws EJBException, JMSException, InterruptedException {
         log.debug("checkRequests");
-        return queryService.getCheckRequests().readEntity(Boolean.class).toString();
+        return queryService.getCheckRequests();
     }
 }

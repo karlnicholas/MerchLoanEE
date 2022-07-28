@@ -7,10 +7,7 @@ import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
+import javax.jms.*;
 import java.sql.SQLException;
 
 @MessageDriven(name = "ServiceRequestCheckRequestMDB", activationConfig = {
@@ -20,18 +17,18 @@ import java.sql.SQLException;
 @Slf4j
 public class ServiceRequestCheckRequestListener implements MessageListener {
     @Inject
-    private Session session;
-    private final QueryService queryService;
-
+    private JMSContext jmsContext;
     @Inject
-    public ServiceRequestCheckRequestListener(QueryService queryService) {
-        this.queryService = queryService;
-    }
+    private QueryService queryService;
+
     @Override
     public void onMessage(Message message) {
-        log.trace("receivedCheckRequestMessage");
         try {
-            session.createProducer(message.getJMSReplyTo()).send(session.createObjectMessage(queryService.checkRequest()));
+            log.trace("receivedCheckRequestMessage");
+            jmsContext.createProducer()
+                    .setDeliveryMode(DeliveryMode.NON_PERSISTENT)
+                    .setJMSCorrelationID(message.getJMSCorrelationID())
+                    .send(message.getJMSReplyTo(), jmsContext.createObjectMessage(queryService.checkRequest()));
         } catch (SQLException | JMSException e) {
             log.error("receivedCheckRequestMessage", e);
             throw new EJBException(e);

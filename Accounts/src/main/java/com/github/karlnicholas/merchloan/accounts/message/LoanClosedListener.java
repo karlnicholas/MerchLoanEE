@@ -45,7 +45,9 @@ public class LoanClosedListener implements MessageListener {
             log.error("receivedLoanClosedMessage exception", ex);
             serviceRequestResponse.setError("receivedLoanClosedMessage exception: " + ex.getMessage());
         } finally {
-            jmsContext.createProducer().setDeliveryMode(DeliveryMode.NON_PERSISTENT).send(serviceRequestQueue, serviceRequestResponse);
+            jmsContext.createProducer()
+                    .setDeliveryMode(DeliveryMode.NON_PERSISTENT)
+                    .send(serviceRequestQueue, serviceRequestResponse);
         }
     }
 }

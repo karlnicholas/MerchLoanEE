@@ -11,9 +11,7 @@ import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJBException;
 import javax.ejb.MessageDriven;
 import javax.inject.Inject;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
+import javax.jms.*;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,13 +22,12 @@ import java.util.UUID;
 @Slf4j
 public class ServiceRequestQueryIdListener implements MessageListener {
     @Inject
-    private Session session;
-    private final QueryService queryService;
+    private JMSContext jmsContext;
+    @Inject
+    private QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    @Inject
-    public ServiceRequestQueryIdListener(QueryService queryService) {
-        this.queryService = queryService;
+    public ServiceRequestQueryIdListener() {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
@@ -52,7 +49,10 @@ public class ServiceRequestQueryIdListener implements MessageListener {
             } else {
                 response = "ERROR: id not found: " + id;
             }
-            session.createProducer(message.getJMSReplyTo()).send(session.createObjectMessage(response));
+            jmsContext.createProducer()
+                    .setDeliveryMode(DeliveryMode.NON_PERSISTENT)
+                    .setJMSCorrelationID(message.getJMSCorrelationID())
+                    .send(message.getJMSReplyTo(), jmsContext.createObjectMessage(response));
         } catch (Exception e) {
             log.error("receivedCheckRequestMessage", e);
             throw new EJBException(e);

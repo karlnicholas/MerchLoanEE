@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.karlnicholas.merchloan</groupId>
-            <artifactId>accountsinterface</artifactId>
+            <artifactId>replywaiting</artifactId>
         </dependency>
     </dependencies>
     <build>

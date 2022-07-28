@@ -134,7 +134,7 @@ public class AccountManagementService {
         return requestResponse;
     }
 
-    public List<BillingCycle> loansToCycle(LocalDate businessDate) {
+    public ArrayList<BillingCycle> loansToCycle(LocalDate businessDate) {
         try (Connection con = dataSource.getConnection()) {
             List<Loan> loans = loanDao.findByLoanState(con, Loan.LOAN_STATE.OPEN);
             ArrayList<BillingCycle> loansToCycle = new ArrayList<>();
