@@ -20,7 +20,7 @@ public class BusinessDateController {
     @POST
     @Path("businessdate")
     @Consumes(MediaType.TEXT_PLAIN)
-    public Response postBusinessDate(String businessDate) throws SQLException, JMSException {
+    public Response postBusinessDate(String businessDate) throws SQLException, JMSException, InterruptedException {
         businessDateService.updateBusinessDate(LocalDate.parse(businessDate));
         return Response.ok().build();
     }

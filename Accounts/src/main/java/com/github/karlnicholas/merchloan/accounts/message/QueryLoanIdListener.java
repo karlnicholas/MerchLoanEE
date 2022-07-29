@@ -16,9 +16,9 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
-@MessageDriven(name = "StatementHeaderMDB", activationConfig = {
+@MessageDriven(name = "QueryLoanIdMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountStatementHeaderQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountQueryLoanIdQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class QueryLoanIdListener implements MessageListener {
@@ -48,7 +48,7 @@ public class QueryLoanIdListener implements MessageListener {
                     .setDeliveryMode(DeliveryMode.NON_PERSISTENT)
                     .setJMSCorrelationID(message.getJMSCorrelationID())
                     .send(message.getJMSReplyTo(), jmsContext.createObjectMessage(result));
-        } catch (SQLException | JsonProcessingException | JMSException e ) {
+        } catch (SQLException | JsonProcessingException | JMSException | InterruptedException e ) {
             throw new EJBException(e);
         }
     }

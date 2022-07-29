@@ -11,9 +11,9 @@ import javax.inject.Inject;
 import javax.jms.*;
 import java.util.UUID;
 
-@MessageDriven(name = "ServiceRequestCheckRequestMDB", activationConfig = {
+@MessageDriven(name = "QueryMostRecentStatementMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/ServiceRequestCheckRequestQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/StatementQueryMostRecentStatementQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge")})
 @Slf4j
 public class QueryMostRecentStatementListener implements MessageListener {
@@ -26,7 +26,7 @@ public class QueryMostRecentStatementListener implements MessageListener {
     public void onMessage(Message message) {
         try {
             UUID loanId = message.getBody(UUID.class);
-            log.debug("onQueryMostRecentStatementMessage {}", loanId);
+            log.debug("QueryMostRecentStatementListener {}", loanId);
             MostRecentStatement mostRecentStatement = queryService.findMostRecentStatement(loanId)
                     .map(statement -> MostRecentStatement.builder()
                             .id(statement.getId())
@@ -44,7 +44,7 @@ public class QueryMostRecentStatementListener implements MessageListener {
                     .setJMSCorrelationID(message.getJMSCorrelationID())
                     .send(message.getJMSReplyTo(), jmsContext.createObjectMessage(mostRecentStatement));
         } catch (Exception ex) {
-            log.error("onQueryMostRecentStatementMessage exception", ex);
+            log.error("QueryMostRecentStatementListener exception", ex);
             throw new EJBException(ex);
         }
 

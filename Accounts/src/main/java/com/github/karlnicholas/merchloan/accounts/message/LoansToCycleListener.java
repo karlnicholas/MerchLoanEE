@@ -16,9 +16,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@MessageDriven(name = "StatementHeaderMDB", activationConfig = {
+@MessageDriven(name = "LoansToCycleMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountStatementHeaderQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountLoansToCycleQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class LoansToCycleListener implements MessageListener {

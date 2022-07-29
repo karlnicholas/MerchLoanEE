@@ -15,9 +15,9 @@ import javax.jms.JMSContext;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-@MessageDriven(name = "StatementHeaderMDB", activationConfig = {
+@MessageDriven(name = "BillingCycleChargeMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountStatementHeaderQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountBillingCycleChargeQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class BillingCycleChargeListener implements MessageListener {

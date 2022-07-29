@@ -82,7 +82,7 @@ public class CloseLoanListener implements MessageListener {
             } else {
                 serviceRequestResponse.setFailure("loan not found for id: " + closeLoan.getLoanId());
             }
-        } catch (SQLException ex) {
+        } catch (SQLException | JMSException | InterruptedException ex) {
             log.error("receivedCloseLoanMessage exception {}", ex.getMessage());
             serviceRequestResponse.setError("receivedCloseLoanMessage exception " + ex.getMessage());
         } finally {

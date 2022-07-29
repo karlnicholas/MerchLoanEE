@@ -21,6 +21,7 @@
         <module>JmsMessage</module>
         <module>Dto</module>
         <module>SqlUtil</module>
+        <module>ReplyWaiting</module>
         <module>Redis</module>
         <module>ServiceRequest</module>
         <module>Query</module>

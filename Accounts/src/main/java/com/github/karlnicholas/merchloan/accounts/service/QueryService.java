@@ -9,14 +9,13 @@ import com.github.karlnicholas.merchloan.accounts.model.RegisterEntry;
 import com.github.karlnicholas.merchloan.dto.LoanDto;
 import com.github.karlnicholas.merchloan.jmsmessage.MostRecentStatement;
 import com.github.karlnicholas.merchloan.jmsmessage.StatementHeader;
-import com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb;
+import com.github.karlnicholas.merchloan.replywaiting.ReplyWaitingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.EJBException;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.jms.*;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,22 +31,30 @@ import java.util.UUID;
 public class QueryService {
     @Resource(lookup = "java:jboss/datasources/AccountsDS")
     private DataSource dataSource;
+    @Resource(lookup = "java:global/jms/queue/StatementMostRecentStatementQueue")
+    private Queue statementMostRecentStatementQueue;
     @Inject
     private AccountDao accountDao;
     @Inject
     private LoanDao loanDao;
     @Inject
     private RegisterEntryDao registerEntryDao;
-    @EJB(lookup = "ejb:merchloanee/statement/StatementEjbImpl!com.github.karlnicholas.merchloan.statementinterface.message.StatementEjb")
-    private StatementEjb statementEjb;
-
+    private final JMSContext jmsContext;
+    private final TemporaryQueue accountsMostRecentStatementReplyQueue;
+    private final ReplyWaitingHandler replyWaitingHandler;
+    @Inject
+    public QueryService(JMSContext jmsContext) {
+        this.jmsContext = jmsContext;
+        accountsMostRecentStatementReplyQueue = jmsContext.createTemporaryQueue();
+        replyWaitingHandler = new ReplyWaitingHandler();
+    }
     public Optional<Account> queryAccountId(UUID id) throws SQLException {
         try (Connection con = dataSource.getConnection()) {
             return accountDao.findById(con, id);
         }
     }
 
-    public Optional<LoanDto> queryLoanId(UUID loanId) throws SQLException {
+    public Optional<LoanDto> queryLoanId(UUID loanId) throws SQLException, JMSException, InterruptedException {
         // get last statement
         // get register entries
         // return last statement date
@@ -88,10 +95,17 @@ public class QueryService {
         }
     }
 
-    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws SQLException, EJBException {
+    private void computeLoanValues(UUID loanId, Loan loan, LoanDto loanDto) throws SQLException, JMSException, InterruptedException {
         try (Connection con = dataSource.getConnection()) {
             // get most recent statement
-            MostRecentStatement mostRecentStatement = statementEjb.queryMostRecentStatement(loanId);
+//            MostRecentStatement mostRecentStatement = statementEjb.queryMostRecentStatement(loanId);
+            String correlationId = UUID.randomUUID().toString();
+            ObjectMessage msMessage = jmsContext.createObjectMessage(loanId);
+            msMessage.setJMSCorrelationID(correlationId);
+            msMessage.setJMSReplyTo(accountsMostRecentStatementReplyQueue);
+            replyWaitingHandler.put(correlationId);
+            jmsContext.createProducer().send(statementMostRecentStatementQueue, jmsContext.createObjectMessage(loanId));
+            MostRecentStatement mostRecentStatement = (MostRecentStatement) replyWaitingHandler.getReply(correlationId);
             // generate a simulated new statement for current period
             StatementHeader statementHeader = StatementHeader.builder().build();
             statementHeader.setLoanId(loanId);
@@ -150,7 +164,7 @@ public class QueryService {
                 loanDto.setLastStatementDate(mostRecentStatement.getStatementDate());
                 loanDto.setLastStatementBalance(mostRecentStatement.getEndingBalance());
             }
-        }
+         }
     }
 
     public List<RegisterEntry> queryRegisterByLoanId(UUID id) throws SQLException {

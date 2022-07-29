@@ -42,9 +42,9 @@ public class AccountManagementService {
             } else {
                 requestResponse.setError(ex.getMessage());
             }
-            log.error("createAccount {}", ex);
+            log.error("createAccount", ex);
         } catch (Exception ex) {
-            log.error("createAccount {}", ex);
+            log.error("createAccount", ex);
             requestResponse.setError(ex.getMessage());
         }
     }
@@ -80,9 +80,9 @@ public class AccountManagementService {
             } else {
                 requestResponse.setError(ex.getMessage());
             }
-            log.error("fundAccount {}", ex);
+            log.error("fundAccount", ex);
         } catch (Exception ex) {
-            log.error("fundAccount {}", ex);
+            log.error("fundAccount", ex);
             requestResponse.setError(ex.getMessage());
         }
     }
@@ -96,7 +96,7 @@ public class AccountManagementService {
                 requestResponse.setError("Loan not found for " + loanId);
             }
         } catch (Exception ex) {
-            log.error("validateLoan {}", ex);
+            log.error("validateLoan", ex);
             requestResponse.setError(ex.getMessage());
         }
     }
@@ -126,9 +126,9 @@ public class AccountManagementService {
             } else {
                 requestResponse.setError(ex.getMessage());
             }
-            log.error("statementHeader {}", ex);
+            log.error("statementHeader", ex);
         } catch (Exception ex) {
-            log.error("statementHeader {}", ex);
+            log.error("statementHeader", ex);
             requestResponse.setError(ex.getMessage());
         }
         return requestResponse;
@@ -153,8 +153,8 @@ public class AccountManagementService {
             });
             return loansToCycle;
         } catch (Exception ex) {
-            log.error("loansToCycle {}", ex);
-            return Collections.emptyList();
+            log.error("loansToCycle", ex);
+            return new ArrayList<>();
         }
     }
 
@@ -162,7 +162,7 @@ public class AccountManagementService {
         try (Connection con = dataSource.getConnection()) {
             loanDao.updateState(con, loanId, Loan.LOAN_STATE.CLOSED);
         } catch (Exception ex) {
-            log.error("closeLoan {}", ex);
+            log.error("closeLoan", ex);
         }
     }
 }
