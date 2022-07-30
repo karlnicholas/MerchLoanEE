@@ -15,7 +15,7 @@ import javax.jms.*;
 
 @MessageDriven(name = "AccountFundingMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountFundingQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsFundingQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class AccountFundingListener implements MessageListener {

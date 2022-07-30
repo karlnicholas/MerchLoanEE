@@ -37,7 +37,7 @@ public class BusinessDateService {
     private Queue serviceRequestCheckRequestQueue;
     private final TemporaryQueue checkRequestReplyQueue;
     private final ReplyWaitingHandler replyWaitingHandlerCheckRequest;
-    @Resource(lookup = "java:global/jms/queue/accountsLoansToCycleQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsLoansToCycleQueue")
     private Queue accountsLoansToCycleQueue;
     private final TemporaryQueue loansToCycleReplyQueue;
     private final ReplyWaitingHandler replyWaitingHandlerLoansToCycle;

@@ -29,7 +29,7 @@ public class CloseStatementListener implements MessageListener {
     private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Queue servicerequestQueue;
-    @Resource(lookup = "java:global/jms/queue/AccountLoanClosedQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsLoanClosedQueue")
     private Queue accountLoanClosedQueue;
     @Inject
     private StatementService statementService;

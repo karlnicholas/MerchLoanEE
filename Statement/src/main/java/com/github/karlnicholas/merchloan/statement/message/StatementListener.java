@@ -33,7 +33,7 @@ public class StatementListener implements MessageListener {
     private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestStatementCompleteQueue")
     private Queue serviceRequestStatementCompleteQueue;
-    @Resource(lookup = "java:global/jms/queue/AccountLoanClosedQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsLoanClosedQueue")
     private Queue accountLoanClosedQueue;
     @Inject
     private StatementService statementService;

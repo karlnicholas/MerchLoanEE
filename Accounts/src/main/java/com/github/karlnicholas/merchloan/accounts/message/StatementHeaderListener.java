@@ -14,7 +14,7 @@ import javax.jms.*;
 
 @MessageDriven(name = "StatementHeaderMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountStatementHeaderQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsStatementHeaderQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class StatementHeaderListener implements MessageListener {

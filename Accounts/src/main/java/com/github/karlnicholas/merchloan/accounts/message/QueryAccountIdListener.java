@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @MessageDriven(name = "QueryAccountIdMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountQueryAccountIdQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsQueryAccountIdQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class QueryAccountIdListener implements MessageListener {

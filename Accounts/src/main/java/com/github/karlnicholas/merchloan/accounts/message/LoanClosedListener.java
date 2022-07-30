@@ -16,7 +16,7 @@ import javax.jms.*;
 
 @MessageDriven(name = "LoanClosedMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountLoanClosedQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsLoanClosedQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge")})
 @Slf4j
 public class LoanClosedListener implements MessageListener {

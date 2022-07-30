@@ -18,7 +18,7 @@ import java.util.List;
 
 @MessageDriven(name = "LoansToCycleMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountLoansToCycleQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsLoansToCycleQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
 public class LoansToCycleListener implements MessageListener {

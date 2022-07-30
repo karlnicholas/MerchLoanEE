@@ -30,17 +30,17 @@ import java.util.UUID;
 public class ServiceRequestService {
     @Inject
     private JMSContext jmsContext;
-    @Resource(lookup = "java:global/jms/queue/AccountCreateAccountQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsCreateAccountQueue")
     private Queue accountCreateAccountQueue;
-    @Resource(lookup = "java:global/jms/queue/AccountFundingQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsFundingQueue")
     private Queue accountFundingQueue;
-    @Resource(lookup = "java:global/jms/queue/AccountValidateCreditQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsValidateCreditQueue")
     private Queue accountValidateCreditQueue;
-    @Resource(lookup = "java:global/jms/queue/AccountValidateDebitQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsValidateDebitQueue")
     private Queue accountValidateDebitQueue;
     @Resource(lookup = "java:global/jms/queue/StatementStatementQueue")
     private Queue statementStatementQueue;
-    @Resource(lookup = "java:global/jms/queue/AccountCloseLoanQueue")
+    @Resource(lookup = "java:global/jms/queue/AccountsCloseLoanQueue")
     private Queue accountCloseLoanQueue;
     private JMSProducer accountCloseLoanProducer;    @Inject
     private ServiceRequestDao serviceRequestDao;
