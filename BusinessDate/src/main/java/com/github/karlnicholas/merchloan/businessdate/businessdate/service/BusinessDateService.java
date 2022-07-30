@@ -7,6 +7,7 @@ import com.github.karlnicholas.merchloan.redis.component.RedisComponent;
 import com.github.karlnicholas.merchloan.replywaiting.ReplyWaitingHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -24,7 +25,8 @@ import java.util.UUID;
 @ApplicationScoped
 @Slf4j
 public class BusinessDateService {
-    private final JMSContext jmsContext;
+    @Inject
+    private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestBillLoanQueue")
     private Queue serviceRequestBillLoanQueue;
     @Resource(lookup = "java:jboss/datasources/BusinessDateDS")
@@ -35,17 +37,15 @@ public class BusinessDateService {
     private BusinessDateDao businessDateDao;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestCheckRequestQueue")
     private Queue serviceRequestCheckRequestQueue;
-    private final TemporaryQueue checkRequestReplyQueue;
-    private final ReplyWaitingHandler replyWaitingHandlerCheckRequest;
+    private TemporaryQueue checkRequestReplyQueue;
+    private ReplyWaitingHandler replyWaitingHandlerCheckRequest;
     @Resource(lookup = "java:global/jms/queue/AccountsLoansToCycleQueue")
     private Queue accountsLoansToCycleQueue;
-    private final TemporaryQueue loansToCycleReplyQueue;
-    private final ReplyWaitingHandler replyWaitingHandlerLoansToCycle;
+    private TemporaryQueue loansToCycleReplyQueue;
+    private ReplyWaitingHandler replyWaitingHandlerLoansToCycle;
 
-    @Inject
-    public BusinessDateService(JMSContext jmsContext) {
-        this.jmsContext = jmsContext;
-
+    @PostConstruct
+    public void postConstruct() {
         replyWaitingHandlerCheckRequest = new ReplyWaitingHandler();
         checkRequestReplyQueue = jmsContext.createTemporaryQueue();
         JMSConsumer checkRequestReplyConsumer = jmsContext.createConsumer(checkRequestReplyQueue);

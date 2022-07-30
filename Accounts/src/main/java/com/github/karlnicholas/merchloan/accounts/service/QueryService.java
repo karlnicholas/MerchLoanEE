@@ -29,6 +29,8 @@ import java.util.UUID;
 @ApplicationScoped
 @Slf4j
 public class QueryService {
+    @Inject
+    private JMSContext jmsContext;
     @Resource(lookup = "java:jboss/datasources/AccountsDS")
     private DataSource dataSource;
     @Resource(lookup = "java:global/jms/queue/StatementMostRecentStatementQueue")
@@ -39,12 +41,10 @@ public class QueryService {
     private LoanDao loanDao;
     @Inject
     private RegisterEntryDao registerEntryDao;
-    private final JMSContext jmsContext;
     private final TemporaryQueue accountsMostRecentStatementReplyQueue;
     private final ReplyWaitingHandler replyWaitingHandler;
-    @Inject
-    public QueryService(JMSContext jmsContext) {
-        this.jmsContext = jmsContext;
+
+    public QueryService() {
         accountsMostRecentStatementReplyQueue = jmsContext.createTemporaryQueue();
         replyWaitingHandler = new ReplyWaitingHandler();
     }

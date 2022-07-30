@@ -13,7 +13,8 @@ import java.util.UUID;
 @ApplicationScoped
 @Slf4j
 public class QueryService {
-    private final JMSContext jmsContext;
+    @Inject
+    private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestQueryIdQueue")
     private Queue serviceRequestQueryIdQueue;
     private final TemporaryQueue queryIdReplyQueue;
@@ -39,10 +40,7 @@ public class QueryService {
     private final TemporaryQueue statementQueryStatementsReplyQueue;
     private final ReplyWaitingHandler replyWaitingHandlerQueryStatements;
 
-    @Inject
-    public QueryService(JMSContext jmsContext) throws JMSException {
-        this.jmsContext = jmsContext;
-
+    public QueryService() throws JMSException {
         replyWaitingHandlerQueryId = new ReplyWaitingHandler();
         queryIdReplyQueue = jmsContext.createTemporaryQueue();
         JMSConsumer queryIdReplyConsumer = jmsContext.createConsumer(queryIdReplyQueue);

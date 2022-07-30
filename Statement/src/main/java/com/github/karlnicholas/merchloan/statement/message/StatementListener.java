@@ -11,6 +11,7 @@ import com.github.karlnicholas.merchloan.statement.service.StatementService;
 import lombok.extern.slf4j.Slf4j;
 
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJBException;
@@ -41,14 +42,15 @@ public class StatementListener implements MessageListener {
     private final BigDecimal interestMonths = new BigDecimal("12");
     @Resource(lookup = "java:global/jms/queue/AccountsStatementHeaderQueue")
     private Queue accountsStatementHeaderQueue;
-    private final TemporaryQueue accountsStatementHeaderReplyQueue;
-    private final ReplyWaitingHandler replyWaitingHandlerStatementHeader;
+    private TemporaryQueue accountsStatementHeaderReplyQueue;
+    private ReplyWaitingHandler replyWaitingHandlerStatementHeader;
     @Resource(lookup = "java:global/jms/queue/AccountsBillingCycleChargeQueue")
     private Queue accountsBillingCycleChargeQueue;
-    private final TemporaryQueue accountsBillingCycleChargeReplyQueue;
-    private final ReplyWaitingHandler replyWaitingHandlerBillingCycleCharge;
+    private TemporaryQueue accountsBillingCycleChargeReplyQueue;
+    private ReplyWaitingHandler replyWaitingHandlerBillingCycleCharge;
 
-    public StatementListener() {
+    @PostConstruct
+    public void postConstruct() {
 
         replyWaitingHandlerStatementHeader = new ReplyWaitingHandler();
         accountsStatementHeaderReplyQueue = jmsContext.createTemporaryQueue();

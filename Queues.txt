@@ -4,8 +4,8 @@
                 <jms-queue name="queue/AccountsCreateAccountQueue" entries="java:/global/jms/queue/AccountsCreateAccountQueue"/>
                 <jms-queue name="queue/AccountsLoanClosedQueue" entries="java:/global/jms/queue/AccountsLoanClosedQueue"/>
                 <jms-queue name="queue/AccountsLoansToCycleQueue" entries="java:/global/jms/queue/AccountsLoansToCycleQueue"/>
-                <jms-queue name="queue/AccountsQueryAccountIdQueue" entries="java:/global/jms/queue/AccountsQueryAccountIdQueue"/>
-                <jms-queue name="queue/AccountsQueryLoanIdQueue" entries="java:/global/jms/queue/AccountsQueryLoanIdQueue"/>
+                <jms-queue name="queue/AccountsAccountIdQueue" entries="java:/global/jms/queue/AccountsAccountIdQueue"/>
+                <jms-queue name="queue/AccountsLoanIdQueue" entries="java:/global/jms/queue/AccountsLoanIdQueue"/>
                 <jms-queue name="queue/AccountsStatementHeaderQueue" entries="java:/global/jms/queue/AccountsStatementHeaderQueue"/>
                 <jms-queue name="queue/AccountsValidateCreditQueue" entries="java:/global/jms/queue/AccountsValidateCreditQueue"/>
                 <jms-queue name="queue/AccountsValidateDebitQueue" entries="java:/global/jms/queue/AccountsValidateDebitQueue"/>

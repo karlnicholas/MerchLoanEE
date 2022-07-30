@@ -18,7 +18,7 @@ import javax.jms.*;
 @Slf4j
 public class CreateAccountListener implements MessageListener {
     @Inject
-    private Session session;
+    private JMSContext jmsContext;
     @Resource(lookup = "java:global/jms/queue/ServiceRequestResponseQueue")
     private Destination serviceRequestQueue;
     @Inject
@@ -41,13 +41,9 @@ public class CreateAccountListener implements MessageListener {
             log.error("receivedCreateAccountMessage exception {}", ex.getMessage());
             requestResponse.setError(ex.getMessage());
         } finally {
-            try {
-                MessageProducer p = session.createProducer(serviceRequestQueue);
-                p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-                p.send(session.createObjectMessage(requestResponse));
-            } catch (JMSException e) {
-                log.error("receivedCreateAccountMessage exception {}", e);
-            }
+            JMSProducer p = jmsContext.createProducer();
+            p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            p.send(serviceRequestQueue, jmsContext.createObjectMessage(requestResponse));
         }
     }
 }

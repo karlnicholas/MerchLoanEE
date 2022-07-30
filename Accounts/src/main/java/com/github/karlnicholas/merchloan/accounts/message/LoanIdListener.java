@@ -16,19 +16,19 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
-@MessageDriven(name = "QueryLoanIdMDB", activationConfig = {
+@MessageDriven(name = "LoanIdMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsQueryLoanIdQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsLoanIdQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
-public class QueryLoanIdListener implements MessageListener {
+public class LoanIdListener implements MessageListener {
     @Inject
     private JMSContext jmsContext;
     @Inject
     private QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public QueryLoanIdListener() {
+    public LoanIdListener() {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }

@@ -17,19 +17,19 @@ import javax.jms.MessageListener;
 import java.util.Optional;
 import java.util.UUID;
 
-@MessageDriven(name = "QueryAccountIdMDB", activationConfig = {
+@MessageDriven(name = "AccountIdMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsQueryAccountIdQueue"),
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/AccountsAccountIdQueue"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @Slf4j
-public class QueryAccountIdListener implements MessageListener {
+public class AccountIdListener implements MessageListener {
     @Inject
     private JMSContext jmsContext;
     @Inject
     private QueryService queryService;
     private final ObjectMapper objectMapper;
 
-    public QueryAccountIdListener() {
+    public AccountIdListener() {
         this.objectMapper = new ObjectMapper().findAndRegisterModules()
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
